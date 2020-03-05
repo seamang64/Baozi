@@ -1,0 +1,8 @@
+(library
+	(name syntax))
+
+;; parsing rule
+(ocamlyacc parser)
+
+;; lexing rule
+(ocamllex lexer)

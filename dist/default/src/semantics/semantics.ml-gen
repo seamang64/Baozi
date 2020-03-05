@@ -1,0 +1,2 @@
+(** @canonical Semantics.Analyse *)
+module Analyse = Semantics__Analyse

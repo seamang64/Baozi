@@ -1,0 +1,8 @@
+(executable
+	(name main)
+	(libraries syntax codegen semantics))
+
+;; disable fatal error on warnings
+(env
+  (dev
+    (flags (:standard -warn-error -A))))

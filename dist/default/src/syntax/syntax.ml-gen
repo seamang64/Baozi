@@ -1,0 +1,8 @@
+(** @canonical Syntax.Lexer *)
+module Lexer = Syntax__Lexer
+
+(** @canonical Syntax.Parser *)
+module Parser = Syntax__Parser
+
+(** @canonical Syntax.Tree *)
+module Tree = Syntax__Tree
