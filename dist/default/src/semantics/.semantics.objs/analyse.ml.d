@@ -1,1 +1,1 @@
-src/semantics/analyse.ml: Printf Syntax
+src/semantics/analyse.ml: Hashtbl Printf Syntax

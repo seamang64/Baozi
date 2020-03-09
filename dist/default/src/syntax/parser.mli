@@ -1,5 +1,5 @@
 type token =
-  | IDENT of (Tree.ident)
+  | IDENT of (Dict.ident)
   | DOT
   | COLON
   | LCURL

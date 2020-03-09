@@ -1,12 +1,6 @@
-type ident = string
+open Dict
 
 type otype = string
-
-type def = string
-
-type name = 
-  { x_name: ident; 		          
-    mutable x_def: def option } (* variable,  or class *)
 
 and expr_guts =
     Name of name
@@ -34,7 +28,7 @@ and m_method =
   { m_name: name;
     m_type: otype;
     m_static: bool;
-    mutable m_arugments: property list;
+    mutable m_arguments: property list;
     mutable m_body: stmt }
 
 and c_class =
@@ -51,10 +45,10 @@ let createClass (n, p, arr, props, meths) =
   { c_name=n; c_pname=p; c_array=arr; c_properties=props; c_methods=meths }
 
 let createMethod (n, static, args, t, stmt) =
-  { m_name=n; m_type=t; m_static=static; m_arugments=args; m_body=stmt }
+  { m_name=n; m_type=t; m_static=static; m_arguments=args; m_body=stmt }
 
 let createExpr guts =
   { e_guts=guts; e_type="voidtype" }
 
 let createName n =
-  { x_name=n; x_def=None }
+  { x_name=n; x_offset=0; x_def=None }

@@ -15,7 +15,11 @@
   let lookup s =
     try Hashtbl.find kwtable s with
       Not_found -> 
+        Hashtbl.replace idtable s ();
         IDENT s
+
+  let get_vars () = 
+    Hashtbl.fold (fun k () ks -> k::ks) idtable []
 }
 
 let letter = ['A'-'Z''a'-'z']
