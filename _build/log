@@ -1,9 +1,9 @@
-# C:\OCaml64\home\graem\.opam\4.09.0+mingw64c\bin\dune.exe exec ./dist/default/src/main.bc test/minimal.jenn
+# C:\OCaml64\home\graem\.opam\4.09.0+mingw64c\bin\dune.exe exec ./dist/default/src/main.bc test/properties.bao
 # OCAMLPARAM: unset
 # Workspace root: "D:\\Documents\\Work\\Computer Science\\4th Year Project\\compiler"
 # Auto-detected concurrency: 8
 # disable binary cache
-$ C:\OCaml64\home\graem\.opam\4.09.0+mingw64c\bin\ocamlc.opt.exe -config > C:\OCaml64\tmp\dune6d3907.output
+$ C:\OCaml64\home\graem\.opam\4.09.0+mingw64c\bin\ocamlc.opt.exe -config > C:\OCaml64\tmp\duneecd0fa.output
 # Dune context:
 #  { name = "default"
 #  ; kind = "default"

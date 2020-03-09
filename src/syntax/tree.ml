@@ -1,12 +1,6 @@
-type ident = string
+open Dict
 
 type otype = string
-
-type def = string
-
-type name = 
-  { x_name: ident; 		          
-    mutable x_def: def option } (* variable,  or class *)
 
 and expr_guts =
     Name of name
