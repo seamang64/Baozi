@@ -1,34 +1,35 @@
 open Syntax.Tree
 open Printf
 
-let propertyOffset = 12
+let propertyOffset = -4
 let argumentOffset = 16
 
-let rec getAllClasses classes classTable =
-	match classes with
-	| c::cs -> printf "%s\n" c.c_name.x_name; Hashtbl.add classTable c.c_name.x_name c; getAllClasses cs classTable
-	| _ -> ()
-
-let getClassNames progam = 
+let anotate_classes progam = 
 	match progam with
-	| Program(cs) -> let ct = Hashtbl.create 100 in getAllClasses cs ct; ct
+	| Program(cs) -> List.iter (fun c -> printf "%s\n" c.c_name.x_name; c.c_name.x_def <- ClassDef; Hashtbl.add classTable c.c_name.x_name c) cs
 
-let rec anotateArguments args index = 
+let rec anotate_arguments args index = 
   match args with
-  | (Prop(x, _))::props -> x.x_offset <- argumentOffset + index; anotateArguments props (index+1)
+  | (Prop(x, _))::props -> x.x_def <- VariableDef(argumentOffset + index); anotate_arguments props (index+4)
   | _ -> ()
 
-let rec anotateProperties properties index =
+let rec anotate_properties properties index =
   match properties with
-  | (Prop(x, _))::props -> x.x_offset <- propertyOffset + index; anotateProperties props (index+1)
+  | (Prop(x, _))::props -> x.x_def <- PropertyDef(index) + index; anotateProperties props (index+4)
   | _ -> ()
 
-let rec anotateMethods methods index =
+let rec anotate_methods classname methods index =
   match methods with
-  | m::ms -> m.m_name.x_offset <- index; anotateArguments m.m_arguments 0 ; anotateMethods ms (index+1)
+  | m::ms -> m.m_name.x_def <- MethodDef(index); 
+            if m.m_static then anotate_arguments m.m_arguments 1
+            else anotate_arguments m.m_arguments 0;
+            anotate_methods classname ms (index+4)
   | _ -> ()
 
-let rec anotateMembers classes =
-  match classes with
-  | c::cs -> anotateProperties c.c_properties 0; anotateMethods c.c_methods 0; anotateMembers cs
-  | _ -> ()
+let anotate_members prog =
+  match prog with
+  | Program(cs) -> List.iter 
+      (fun c -> anotate_properties c.c_properties 0; 
+                anotate_methods c.c_name.x_name c.c_methods 1; 
+                anotate_bodies c.c_methods 0) 
+      cs

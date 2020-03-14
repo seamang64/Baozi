@@ -26,7 +26,10 @@ let main () =
 
   (**if !debug > 0 then Tree.print_tree stdout "" prog;**)
 
-  ignore (Analyse.getClassNames prog);
+  let types = Analyse.getClassNames prog in
+  Analyse.anotateMembers prog;
+  Check.check prog types;
+ 
 
   printf "MODULE Main 0 0\n";
   printf "IMPORT Lib 0\n";

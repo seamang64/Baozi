@@ -1,1 +1,1 @@
-src/main.ml: Analyse Arg Lexer Lexing List Parser Parsing Printf Semantics Syntax
+src/main.ml: Analyse Arg Check Lexer Lexing List Parser Parsing Printf Semantics Syntax

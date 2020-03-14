@@ -1,2 +1,5 @@
 (** @canonical Semantics.Analyse *)
 module Analyse = Semantics__Analyse
+
+(** @canonical Semantics.Check *)
+module Check = Semantics__Check

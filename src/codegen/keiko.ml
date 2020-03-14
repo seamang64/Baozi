@@ -1,5 +1,5 @@
-type keiko_label = int
-type keiko_symbol = string
+type label = int
+type symbol = string
 
 let current_label = ref 0
 
@@ -7,17 +7,14 @@ let label () = incr current_label; !current_label
 
 let reset_labels () = current_label := 0
 
-
 type keiko_type =
     PTR
   | VOID
-
   | SHORT
   | INT
   | LONG
   | FLOAT
   | DOUBLE
-
   | CHAR
 
 let ktype_of_string str =
@@ -97,10 +94,10 @@ type instruction =
 
   | ERROR of int * int
 
-  | PROC of keiko_symbol * int * int * int * bool array
+  | PROC of keiko_symbol * int * int * int
   | STKMAP of int * bool array
   | CALL of int * keiko_type
-  | RETURN of keiko_type
+  | RETURN of int
   | END
 
   | DUP of int
