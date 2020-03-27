@@ -2,78 +2,57 @@ open Syntax.Tree
 open Syntax.Dict
 open Printf
 
-let find_class t env =
-  let d = try lookup t env with
-    Not_found -> printf "Unkown type: %s" t; exit 1 in
-  match d.x_def with
-  | ClassDef -> d
-  | _ -> expr2
+let check_compatible t1 t2 =
+  t1.c_name.x_name == t2.c_name.x_name
 
 let find_method method cls = 
   try List.find (fun m-> m.m_name == method) cls.c_methods with
   Not_found -> printf "Unkown method: %s" method
 
-let find_propertyType prop cls = 
-  try 
-    let p = List.find (fun Prop(_, t) -> t == prop) cls.c_properties in 
-      match p with
-      | Prop(_, t) -> t
-  with
-  Not_found -> printf "Unkown Property: %s" prop
-
-let rec check_args args margs c env =
+let rec check_args args margs=
   match (args, margs) with
-  | (e::es, Prop(_, t)::ms) -> 
-    if check_expr e c env != t 
-    then printf "Error. Incorrect type. Expected %s" t; exit 1
-    else check_args es ms c env
+  | (e::es, Prop(x, _)::ms) -> 
+    let t = check_expr e in
+      if check_compatible t x.x_def.d_type
+      then check_args es ms
+      else printf "Incorrect type"; exit 1
   | _ -> ()
 
-let rec check_expr e types c env =
+let rec check_expr e =
   match e.e_guts with
-  | Name -> (** Find in env, else find in classes **)
-  | MethodCall(e1, m, args) -> let t = check_expr t1 c env in
-                               let m = find_method m (find_class t) in
-                               check_args args m._arguments c env;
-                               e.e_type <- m.m_type; m.m_type
-  | Property(e1, n) -> let t = check_expr e1 c env in
-                       let p = find_property_type n (find_class t) in
-                       e.e_type <- p; p
+  | Name n -> n.x_def.d_type
+  | MethodCall(e1, m, args) -> let t = check_expr e1 in
+                               check_args args (find_method m t).m_arguments;
+                               m.x_def.d_type
+  | Property(e1, n) -> check_expr e1;
+                       n.x_def.d_type
 
-let rec check_stmt s types ret c env =
+let rec check_stmt s ret =
   match s with
-  | Assign(e1, e2) -> if check_expr e1 types c env != check_expr e2 types c env then
+  | Assign(e1, e2) -> if check_compatible (check_expr e1) (check_expr e2) then
                       printf "Error in assigment"; exit 1
                       else ()
-  | Delc(x, t, e) -> ignore(find_class t);
-                     if check_expr e types c env != t then
+  | Delc(x, t, e) -> if check_compatible (x.x_def.d_type) (check_expr e2) then
                        printf "Error in delcaration"; exit 1
                      else ()
   | Call(e) -> match e with
-               | MethodCall(e1, m, args) -> ignore (check_expr MethodCall(e1, m, args) c env)
+               | MethodCall(e1, m, args) -> ignore (check_expr e)
                | _ -> "Incomplete statement"; exit 1
   | Return(r) -> match r with
                  | Some e -> 
-                   let t = check_expr e types c env in
-                   if ret != t then printf "Incorrect return type"; exit 1
-                   else t
+                   let t = check_expr e in
+                   if !(check_compatible ret t) then printf "Incorrect return type"; exit 1
+                   else ()
                  | None -> 
                    if ret != "voidtype"then printf "Incorrect return type"; exit 1
                    else "voidtype"
-  | Seq(ss) -> List.iter (fun st -> check_stmt st types ret env) ss 
+  | Seq(ss) -> List.iter (fun st -> check_stmt st ret) ss 
 
-let check_property types prop =
-  match prop with
-  | Prop(_, t) -> ignore(find_class t)
+let check_method meth = 
+  check_stmt meth.m_body meth.m_name.x_def.d_type
 
-let check_method c types meth = 
-  List.iter (check_property types) meth.m_arguments;
-  ignore(find_class meth.m_type);
-  check_stmt meth.m_body types meth.m_type c.c_name.x_name(** Some env **)
-
-let check_class types c =
-  List.iter (check_property types) c.c_properties;
-  List.iter (check_method c types) c.c_methods
+let check_class c =
+  List.iter check_method c.c_methods
 
 let check_program program types = 
   match program with

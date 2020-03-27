@@ -6,9 +6,9 @@ and v_table = 4
 and gen_addr n =
   match n.x_def with
   | ClassDef -> SEQ [GLOBAL n.x_name]
-  | VariableDef off = SEQ [LOCAL off]
-  | PropertyDef off = SEQ [CONST off; OFFSET]
-  | MethodDef index = SEQ [CONST v_table; OFFSET; LOAD; CONST index; OFFSET]
+  | VariableDef off -> SEQ [LOCAL off]
+  | PropertyDef off -> SEQ [CONST off; OFFSET]
+  | MethodDef index -> SEQ [CONST v_table; OFFSET; LOAD; CONST index; OFFSET]
 
 and gen_assigment e1 e2 =
   let v = gen_expr e1 in
