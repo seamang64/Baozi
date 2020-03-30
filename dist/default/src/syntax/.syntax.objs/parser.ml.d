@@ -1,1 +1,1 @@
-src/syntax/parser.ml: Dict Lexing Obj Parsing Tree
+src/syntax/parser.ml: Lexing Obj Parsing Tree

@@ -1,1 +1,1 @@
-src/syntax/parser.mli: Dict Lexing Tree
+src/syntax/parser.mli: Lexing Tree

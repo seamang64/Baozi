@@ -1,9 +1,8 @@
 %{
   open Tree
-  open Dict
 %}
 
-%token <Dict.ident> IDENT
+%token <Tree.ident> IDENT
 
 %token DOT COLON LCURL RCURL COMMA LPAR RPAR EOF
 %token ASSIGN EOF BADTOKEN AS ARRAY OF PROPERTIES METHOD CLASSMETHOD RETURN BY

@@ -1,1 +1,1 @@
-src/semantics/check.ml: Hashtbl List Printf Syntax
+src/semantics/check.ml: List Option Printf Syntax

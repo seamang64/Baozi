@@ -1,2 +1,3 @@
 (library
-	(name codegen))
+	(name codegen)
+	(libraries syntax))

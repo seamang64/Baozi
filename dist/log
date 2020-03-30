@@ -3,7 +3,7 @@
 # Workspace root: "D:\\Documents\\Work\\Computer Science\\4th Year Project\\compiler"
 # Auto-detected concurrency: 8
 # disable binary cache
-$ C:\OCaml64\home\graem\.opam\4.09.0+mingw64c\bin\ocamlc.opt.exe -config > C:\OCaml64\tmp\dunee93910.output
+$ C:\OCaml64\home\graem\.opam\4.09.0+mingw64c\bin\ocamlc.opt.exe -config > C:\OCaml64\tmp\dunea6191d.output
 # Dune context:
 #  { name = "default"
 #  ; kind = "default"
@@ -160,42 +160,6 @@ $ C:\OCaml64\home\graem\.opam\4.09.0+mingw64c\bin\ocamlc.opt.exe -config > C:\OC
 #  }
 $ (cd dist/default && C:\OCaml64\home\graem\.opam\4.09.0+mingw64c\bin\ocamldep.opt.exe -modules -impl src/semantics/check.ml) > dist/default/src/semantics/.semantics.objs/check.ml.d
 $ (cd dist/default && C:\OCaml64\home\graem\.opam\4.09.0+mingw64c\bin\ocamlc.opt.exe -w @1..3@5..28@30..39@43@46..47@49..57@61..62-40 -strict-sequence -strict-formats -short-paths -keep-locs -warn-error -A -g -bin-annot -I src/semantics/.semantics.objs/byte -I src/syntax/.syntax.objs/byte -I src/syntax/.syntax.objs/native -no-alias-deps -opaque -open Semantics -o src/semantics/.semantics.objs/byte/semantics__Check.cmo -c -impl src/semantics/check.ml)
-> File "src/semantics/check.ml", line 5, characters 8-18:
-> 5 | let rec check_stmt s types env = ()
->             ^^^^^^^^^^
-> Warning 39: unused rec flag.
-> File "src/semantics/check.ml", line 23, characters 4-5:
-> 23 |   | _ -> printf "Unkown Program"; exit 1
->          ^
-> Warning 11: this match case is unused.
-> File "src/semantics/check.ml", line 2, characters 0-16:
-> 2 | open Syntax.Dict
->     ^^^^^^^^^^^^^^^^
-> Warning 33: unused open Syntax.Dict.
-> File "src/semantics/check.ml", line 5, characters 19-20:
-> 5 | let rec check_stmt s types env = ()
->                        ^
-> Warning 27: unused variable s.
-> File "src/semantics/check.ml", line 5, characters 21-26:
-> 5 | let rec check_stmt s types env = ()
->                          ^^^^^
-> Warning 27: unused variable types.
-> File "src/semantics/check.ml", line 5, characters 27-30:
-> 5 | let rec check_stmt s types env = ()
->                                ^^^
-> Warning 27: unused variable env.
-> File "src/semantics/check.ml", line 7, characters 17-18:
-> 7 | let check_method c types meth = ()
->                      ^
-> Warning 27: unused variable c.
-> File "src/semantics/check.ml", line 7, characters 19-24:
-> 7 | let check_method c types meth = ()
->                        ^^^^^
-> Warning 27: unused variable types.
-> File "src/semantics/check.ml", line 7, characters 25-29:
-> 7 | let check_method c types meth = ()
->                              ^^^^
-> Warning 27: unused variable meth.
 $ (cd dist/default && C:\OCaml64\home\graem\.opam\4.09.0+mingw64c\bin\ocamlc.opt.exe -w @1..3@5..28@30..39@43@46..47@49..57@61..62-40 -strict-sequence -strict-formats -short-paths -keep-locs -warn-error -A -g -a -o src/semantics/semantics.cma src/semantics/.semantics.objs/byte/semantics.cmo src/semantics/.semantics.objs/byte/semantics__Check.cmo src/semantics/.semantics.objs/byte/semantics__Analyse.cmo)
 $ (cd dist/default && C:\OCaml64\home\graem\.opam\4.09.0+mingw64c\bin\ocamlc.opt.exe -w @1..3@5..28@30..39@43@46..47@49..57@61..62-40 -strict-sequence -strict-formats -short-paths -keep-locs -warn-error -A -g -bin-annot -I src/.main.eobjs/byte -I src/codegen/.codegen.objs/byte -I src/codegen/.codegen.objs/native -I src/semantics/.semantics.objs/byte -I src/semantics/.semantics.objs/native -I src/syntax/.syntax.objs/byte -I src/syntax/.syntax.objs/native -no-alias-deps -opaque -o src/.main.eobjs/byte/main.cmo -c -impl src/main.ml)
 > File "src/main.ml", line 15, characters 2-80:
@@ -206,7 +170,8 @@ $ (cd dist/default && C:\OCaml64\home\graem\.opam\4.09.0+mingw64c\bin\ocamlc.opt
 > 27 |   (**if !debug > 0 then Tree.print_tree stdout "" prog;**)
 >        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 > Warning 50: unattached documentation comment (ignored)
-> File "src/main.ml", line 37, characters 0-12:
-> 37 | (** KGEN **)
+> File "src/main.ml", line 36, characters 0-12:
+> 36 | (** KGEN **)
 >      ^^^^^^^^^^^^
 > Warning 50: unattached documentation comment (ignored)
+$ (cd dist/default && C:\OCaml64\home\graem\.opam\4.09.0+mingw64c\bin\ocamlc.opt.exe -w @1..3@5..28@30..39@43@46..47@49..57@61..62-40 -strict-sequence -strict-formats -short-paths -keep-locs -warn-error -A -g -o src/main.bc src/syntax/syntax.cma src/codegen/codegen.cma src/semantics/semantics.cma src/.main.eobjs/byte/main.cmo)

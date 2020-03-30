@@ -1,6 +1,3 @@
-(** @canonical Syntax.Dict *)
-module Dict = Syntax__Dict
-
 (** @canonical Syntax.Lexer *)
 module Lexer = Syntax__Lexer
 
