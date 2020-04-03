@@ -36,13 +36,21 @@ methods :
 
 omethod :
     METHOD name LCURL pairs RCURL DOUBLEARROW IDENT START stmts END      
-        { createMethod($2, false, $4, $7, $9) }
+        { createMethod($2, false, $4, TempType($7), $9) }
+  | METHOD name LCURL pairs RCURL DOUBLEARROW LCURL RCURL START stmts END
+        { createMethod($2, false, $4, VoidType, $10) }
   | CLASSMETHOD name LCURL pairs RCURL DOUBLEARROW IDENT START stmts END 
-        { createMethod($2, true, $4, $7, $9) } ;
+        { createMethod($2, true, $4, TempType($7), $9) }
+  | CLASSMETHOD name LCURL pairs RCURL DOUBLEARROW LCURL RCURL START stmts END
+        { createMethod($2, true, $4, VoidType, $10) }
+
+pair:
+  name COLON IDENT  { Prop ($1, TempType($3)) }
 
 pairs:
     /* empty */     { [] }
-  | name COLON IDENT COMMA pairs { Prop ($1, $3) :: $5 } ;
+  | pair            { [$1] }
+  | pair COMMA pairs { $1 :: $3 } ;
 
 stmts :
     stmt_list        { Seq $1 } ;
@@ -53,7 +61,7 @@ stmt_list :
 
 stmt :
     expr ASSIGN expr                 { Assign($1, $3) }
-  | name COLON IDENT ASSIGN expr     { Delc($1, $3, $5) }
+  | name COLON IDENT ASSIGN expr     { Delc($1, TempType($3), $5) }
   | RETURN expr                      { Return (Some $2) }
   | RETURN                           { Return None }
   | expr                             { Call($1) } ;
@@ -69,7 +77,8 @@ expr:
   | ME                             { createExpr(Me) } ;
 
 arguments :
-    /* empty */            { [] }
+  |  /* empty */           { [] }
+  | expr                   { [$1] }  
   | expr COMMA arguments   { $1 :: $3 } ;
 
 name :  

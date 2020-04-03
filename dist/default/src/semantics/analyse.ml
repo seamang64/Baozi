@@ -5,29 +5,38 @@ let propertyOffset = -4
 let argumentOffset = 16
 let variableIndex = ref 0
 
-let create_def kind c = { d_kind=kind; d_type= Some c }
+let create_def kind t = { d_kind=kind; d_type = t }
 
-let remove_option t = 
+let get_class t env = 
   match t with
-  | Some c -> c
-  | None -> printf "Unassigned class"; exit 1
+  | TempType n -> let d = lookup n env in d.d_type
+  | VoidType -> VoidType
+  | _ -> printf "Error. Double assigment"; exit 1
 
-let get_class t env = let d = lookup t env in remove_option d.d_type (** ensure that it is a class **)
+let find_method meth cls = 
+  match cls with
+  | ClassType c ->
+      begin
+        try (List.find (fun m -> meth = m.m_name.x_name) c.c_methods).m_name with
+          Not_found -> printf "\nUnknown Method: %s" meth; exit 1
+      end
+  | VoidType -> printf "Error in Method Call"; exit 1
+  | _ -> printf "Error - Unassigned Class"; exit 1
 
-let find_method meth methods = 
-  try (List.find (fun m -> meth == m.m_name.x_name) methods).m_name
-  with Not_found ->
-    printf "Unknown Method: %s" meth; exit 1
-
-let find_properties prop properties = 
-  try List.find (fun n -> prop == n) (List.map (fun (Prop(n, _)) -> n) properties)
-  with Not_found -> 
-    printf "Unknown Property: %s" prop.x_name; exit 1
+let find_properties prop cls = 
+  match cls with
+  | ClassType c -> 
+    begin
+        try List.find (fun n -> prop = n) (List.map (fun (Prop(n, _)) -> n) c.c_properties) with 
+          Not_found -> printf "Unknown Property: %s" prop.x_name; exit 1
+    end
+  | VoidType -> printf "Error in property call"; exit 1
+  | _ -> printf "Error - Unassigned Class"; exit 1
 
 let rec annotate_classes classes env = 
   match classes with
   | c::cs -> printf "%s\n" c.c_name.x_name; 
-            c.c_name.x_def <- create_def ClassDef c;
+            c.c_name.x_def <- create_def ClassDef (ClassType c);
             let env' = define c.c_name.x_name c.c_name.x_def env in
               annotate_classes cs env'
   | _ -> env
@@ -47,14 +56,14 @@ let rec annotate_properties properties index env =
 let rec annotate_expr expr env =
   match expr.e_guts with
   | Name n -> let d = lookup n.x_name env in n.x_def <- d; n.x_def
-  | MethodCall (e, m, args) -> let t = annotate_expr e env in (** Voidtype **)
-                               let c = remove_option t.d_type in
-                                 m.x_def <- (find_method m.x_name c.c_methods).x_def; (** Handle static methods here? **)
+  | MethodCall (e, m, args) -> let t = annotate_expr e env in
+                               let c =  t.d_type in
+                                 m.x_def <- (find_method m.x_name c).x_def; (** Handle static methods here? **)
                                  List.iter (fun x -> ignore(annotate_expr x env)) args;
                                  m.x_def  
   | Property (e, n) -> let t = annotate_expr e env in
-                       let c = remove_option t.d_type in
-                         n.x_def <- (find_properties n c.c_properties).x_def;
+                       let c =  t.d_type in
+                         n.x_def <- (find_properties n c).x_def;
                          n.x_def
 
 let rec annotate_stmt stmt env =

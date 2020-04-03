@@ -1,3 +1,5 @@
+open Printf
+
 type ident = string
 and otype = string
 
@@ -16,16 +18,16 @@ and expr =
 
 and stmt =
     Assign of expr * expr
-  | Delc of name * otype * expr
+  | Delc of name * dtype * expr
   | Call of expr
   | Return of expr option
   | Seq of stmt list
 
-and property = Prop of name * otype
+and property = Prop of name * dtype
 
 and m_method =
   { m_name: name;
-    m_type: otype;
+    m_type: dtype;
     m_static: bool;
     mutable m_arguments: property list;
     mutable m_body: stmt }
@@ -46,7 +48,12 @@ and def_kind =
 
 and def = 
   { d_kind: def_kind;
-    d_type: c_class option}
+    d_type: dtype}
+
+and dtype =
+  | ClassType of c_class
+  | TempType of otype
+  | VoidType
 
 and name = 
   { x_name: ident;      
@@ -63,7 +70,9 @@ module IdMap =
 
 type environment = Env of def IdMap.t
 
-let lookup id (Env(ids)) = IdMap.find id ids (** Try-catch here? **)
+let lookup id (Env(ids)) = 
+  try IdMap.find id ids with
+    Not_found -> printf "The name %s does not exist" id; exit 1
 
 let add_def id classDef n = IdMap.add id classDef n
 
@@ -73,7 +82,7 @@ let can f x = try f x; true with Not_found -> false
 
 let empty = Env(IdMap.empty)
 
-let empty_def = {d_kind=NoneKind; d_type=None}
+let empty_def = {d_kind=NoneKind; d_type=VoidType}
 
 let createClass (n, p, arr, props, meths) = 
   { c_name=n; c_pname=p; c_array=arr; c_properties=props; c_methods=meths }

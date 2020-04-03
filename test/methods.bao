@@ -1,0 +1,17 @@
+Define A
+$>
+	Method DoSomething{a : A, b : B} => A
+	$>
+		x : A = a.
+		b->DoSomething<-{x}.
+		Return a.
+	<$
+<$
+
+Define B
+$>
+	Method DoSomething{x : A} => {}
+	$>	
+		Return.
+	<$
+<$

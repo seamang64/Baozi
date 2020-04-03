@@ -27,7 +27,9 @@ let main () =
   (**if !debug > 0 then Tree.print_tree stdout "" prog;**)
 
   ignore(Analyse.annotate_program prog);
+  printf "Done Analysis\n";
   Check.check_program prog;
+  printf "Done Check\n";
  
 
   printf "MODULE Main 0 0\n";

@@ -3,7 +3,7 @@
 # Workspace root: "D:\\Documents\\Work\\Computer Science\\4th Year Project\\compiler"
 # Auto-detected concurrency: 8
 # disable binary cache
-$ C:\OCaml64\home\graem\.opam\4.09.0+mingw64c\bin\ocamlc.opt.exe -config > C:\OCaml64\tmp\dunea6191d.output
+$ C:\OCaml64\home\graem\.opam\4.09.0+mingw64c\bin\ocamlc.opt.exe -config > C:\OCaml64\tmp\dunece7ab3.output
 # Dune context:
 #  { name = "default"
 #  ; kind = "default"
@@ -158,20 +158,3 @@ $ C:\OCaml64\home\graem\.opam\4.09.0+mingw64c\bin\ocamlc.opt.exe -config > C:\OC
 #            "C:\\OCaml64\\home\\graem\\.opam\\4.09.0+mingw64c\\bin\\ocamlobjinfo.opt.exe"
 #      }
 #  }
-$ (cd dist/default && C:\OCaml64\home\graem\.opam\4.09.0+mingw64c\bin\ocamldep.opt.exe -modules -impl src/semantics/check.ml) > dist/default/src/semantics/.semantics.objs/check.ml.d
-$ (cd dist/default && C:\OCaml64\home\graem\.opam\4.09.0+mingw64c\bin\ocamlc.opt.exe -w @1..3@5..28@30..39@43@46..47@49..57@61..62-40 -strict-sequence -strict-formats -short-paths -keep-locs -warn-error -A -g -bin-annot -I src/semantics/.semantics.objs/byte -I src/syntax/.syntax.objs/byte -I src/syntax/.syntax.objs/native -no-alias-deps -opaque -open Semantics -o src/semantics/.semantics.objs/byte/semantics__Check.cmo -c -impl src/semantics/check.ml)
-$ (cd dist/default && C:\OCaml64\home\graem\.opam\4.09.0+mingw64c\bin\ocamlc.opt.exe -w @1..3@5..28@30..39@43@46..47@49..57@61..62-40 -strict-sequence -strict-formats -short-paths -keep-locs -warn-error -A -g -a -o src/semantics/semantics.cma src/semantics/.semantics.objs/byte/semantics.cmo src/semantics/.semantics.objs/byte/semantics__Check.cmo src/semantics/.semantics.objs/byte/semantics__Analyse.cmo)
-$ (cd dist/default && C:\OCaml64\home\graem\.opam\4.09.0+mingw64c\bin\ocamlc.opt.exe -w @1..3@5..28@30..39@43@46..47@49..57@61..62-40 -strict-sequence -strict-formats -short-paths -keep-locs -warn-error -A -g -bin-annot -I src/.main.eobjs/byte -I src/codegen/.codegen.objs/byte -I src/codegen/.codegen.objs/native -I src/semantics/.semantics.objs/byte -I src/semantics/.semantics.objs/native -I src/syntax/.syntax.objs/byte -I src/syntax/.syntax.objs/native -no-alias-deps -opaque -o src/.main.eobjs/byte/main.cmo -c -impl src/main.ml)
-> File "src/main.ml", line 15, characters 2-80:
-> 15 |   (**if List.length !fns <> 1 then fprintf stderr "$\n" [fStr usage]; exit 2;**)
->        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> Warning 50: unattached documentation comment (ignored)
-> File "src/main.ml", line 27, characters 2-58:
-> 27 |   (**if !debug > 0 then Tree.print_tree stdout "" prog;**)
->        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> Warning 50: unattached documentation comment (ignored)
-> File "src/main.ml", line 36, characters 0-12:
-> 36 | (** KGEN **)
->      ^^^^^^^^^^^^
-> Warning 50: unattached documentation comment (ignored)
-$ (cd dist/default && C:\OCaml64\home\graem\.opam\4.09.0+mingw64c\bin\ocamlc.opt.exe -w @1..3@5..28@30..39@43@46..47@49..57@61..62-40 -strict-sequence -strict-formats -short-paths -keep-locs -warn-error -A -g -o src/main.bc src/syntax/syntax.cma src/codegen/codegen.cma src/semantics/semantics.cma src/.main.eobjs/byte/main.cmo)
