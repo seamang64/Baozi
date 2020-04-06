@@ -8,6 +8,7 @@ type token =
   | LPAR
   | RPAR
   | EOF
+  | NEW
   | ASSIGN
   | BADTOKEN
   | AS

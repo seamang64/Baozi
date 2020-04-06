@@ -1,6 +1,7 @@
 open Printf
 open Syntax
 open Semantics
+open Kgen
 
 let debug = ref 0
 
@@ -27,15 +28,14 @@ let main () =
   (**if !debug > 0 then Tree.print_tree stdout "" prog;**)
 
   ignore(Analyse.annotate_program prog);
-  printf "Done Analysis\n";
   Check.check_program prog;
-  printf "Done Check\n";
- 
 
   printf "MODULE Main 0 0\n";
   printf "IMPORT Lib 0\n";
-  printf "ENDHDR\n\n";
-(** KGEN **)
+  printf "ENDHDR\n";
+
+  Keiko.print_keiko(Codegen.gen_program prog);
+
   printf "! End\n";
   exit 0;;
 

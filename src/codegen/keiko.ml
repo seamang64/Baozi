@@ -1,3 +1,5 @@
+open Printf
+
 type codelab = int
 type symbol = string
 let current_label = ref 0
@@ -8,12 +10,18 @@ type op = Plus | Minus | Times | Div | Mod | Eq
   | Uminus | Lt | Gt | Leq | Geq | Neq | And | Or | Not
   | Lsl | Lsr | Asr | BitAnd | BitOr | BitNot
 
+type word =
+    SYMBOL of symbol
+  | DEC of int 
+
 type code =
     MODULE of symbol * int * int
   | IMPORT of symbol * int
   | ENDHDR
   | GLOVAR of symbol * int
   | DEFINE of symbol
+  | WORD of word
+  | PROC of symbol * int * int * int
   
   | CONST of int                (* Constant (value) *)
   | GLOBAL of symbol            (* Constant (symbol) *)
@@ -21,7 +29,7 @@ type code =
   | LOAD of int                 (* Load (size) *)
   | STORE of int                (* Store (size) *)
   | FIXCOPY                     (* Copy multiple values (size) *)
-  | PCALL of int * int          (* Call procedure (nparams, rsize) *)
+  | CALLW of int                (* Call procedure (nparams, rsize) *)
   | RETURN of int               (* Procedure return (rsize) *)
   | MONOP of op                 (* Perform unary operation (op) *)
   | BINOP of op                 (* Perform binary operation (op) *)
@@ -47,6 +55,7 @@ type code =
 
   | SEQ of code list            (* Sequence of other instructions *)
   | NOP                         (* Null operation *)
+  | END
 
 let flatten_instructions x =
   let rec accum x ys =
@@ -64,3 +73,21 @@ let flatten_instructions x =
           end
       | _ -> x :: ys in
   accum x []
+
+let rec print_keiko prog =
+  match prog with
+   | DEFINE s -> printf "\nDEFINE %s\n" s
+   | WORD (SYMBOL s) -> printf "WORD %s\n" s
+   | WORD (DEC n ) -> printf "WORD %d\n" n
+   | PROC (d, n, i, f) -> printf "\nPROC %s %d %d %d\n" d n i f
+   | CONST n -> printf "CONST %d\n" n
+   | GLOBAL s -> printf "GLOBAL %s\n" s
+   | LOCAL n -> printf "LOCAL %d\n" n
+   | LOAD n -> printf "LOAD %d\n" n
+   | STORE n -> printf "STORE %d\n" n
+   | CALLW n -> printf "CALLW %d\n" n
+   | RETURN n -> printf "RETURN %d\n" n 
+   | OFFSET -> printf "OFFSET\n"
+   | SEQ ss -> List.iter print_keiko ss
+   | END -> printf "END\n"
+   | _ -> printf "Unrecongised Keiko"; exit 1

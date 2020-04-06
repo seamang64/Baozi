@@ -1,0 +1,23 @@
+Define A
+$>
+	Properties
+	$>
+		x: B,
+	<$
+
+	Method DoSomething {} => {}
+	$>
+		a : A = New A.
+		b : B = New B.
+		a->x = b->DoSomethingElse<-{b}.
+		Return.
+	<$
+<$
+
+Define B
+$>
+	Method DoSomethingElse {i: B} => B
+	$>
+		Return i.
+	<$
+<$

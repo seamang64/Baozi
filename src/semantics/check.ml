@@ -10,7 +10,7 @@ let find_method meth cls =
   match cls with
   | ClassType c ->
     begin
-      try List.find (fun m-> m.m_name = meth) c.c_methods with
+      try List.find (fun m-> m.m_name.x_name = meth.x_name) c.c_methods with
         Not_found -> printf "Unkown method: %s" meth.x_name; exit 1
     end
   | VoidType -> printf "Error in Method Call"; exit 1
@@ -35,6 +35,7 @@ and check_expr e =
   | Property (e1, n) -> 
       ignore(check_expr e1);
       n.x_def.d_type
+  | New n -> n.x_def.d_type
   | _ -> printf "Unkown expression"; exit 1
 
 let check_return r ret =
@@ -48,7 +49,7 @@ let check_return r ret =
 
 let rec check_stmt s ret =
   match s with
-  | Assign (e1, e2) ->
+  | Assign (e1, e2) -> (** Check e1 is property of variable, check e2 is not a class **)
       if check_compatible (check_expr e1) (check_expr e2) then ()
       else (printf "Error in assigment"; exit 1)
   | Delc (x, _, e) -> 

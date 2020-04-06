@@ -27,7 +27,7 @@ let find_properties prop cls =
   match cls with
   | ClassType c -> 
     begin
-        try List.find (fun n -> prop = n) (List.map (fun (Prop(n, _)) -> n) c.c_properties) with 
+        try List.find (fun n -> prop.x_name = n.x_name) (List.map (fun (Prop(n, _)) -> n) c.c_properties) with 
           Not_found -> printf "Unknown Property: %s" prop.x_name; exit 1
     end
   | VoidType -> printf "Error in property call"; exit 1
@@ -35,8 +35,7 @@ let find_properties prop cls =
 
 let rec annotate_classes classes env = 
   match classes with
-  | c::cs -> printf "%s\n" c.c_name.x_name; 
-            c.c_name.x_def <- create_def ClassDef (ClassType c);
+  | c::cs -> c.c_name.x_def <- create_def ClassDef (ClassType c);
             let env' = define c.c_name.x_name c.c_name.x_def env in
               annotate_classes cs env'
   | _ -> env
@@ -65,6 +64,13 @@ let rec annotate_expr expr env =
                        let c =  t.d_type in
                          n.x_def <- (find_properties n c).x_def;
                          n.x_def
+  | New n -> 
+    let d = lookup n.x_name env in 
+      begin
+        match d.d_kind with
+        | ClassDef -> n.x_def <- d; n.x_def
+        | _ -> printf "Must declare New with a class name"; exit 1
+      end
 
 let rec annotate_stmt stmt env =
   match stmt with
@@ -87,13 +93,14 @@ let rec annotate_stmt stmt env =
 let rec annotate_methods methods index env =
   match methods with
   | m::ms -> m.m_name.x_def <- create_def (MethodDef(index)) (get_class m.m_type env);
-             annotate_methods ms (index+4) env
+             annotate_methods ms (index - 4) env
   | _ -> ()
 
 let annotate_body meth env =
   let newEnv = annotate_arguments meth.m_arguments 0 env in
   variableIndex := 0;
-  annotate_stmt meth.m_body newEnv
+  ignore(annotate_stmt meth.m_body newEnv);
+  meth.m_size <- -1 * !variableIndex
 
 let annotate_bodies cls env =
   List.iter (fun m -> ignore(annotate_body m env)) cls.c_methods

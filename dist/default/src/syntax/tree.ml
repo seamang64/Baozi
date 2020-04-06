@@ -10,6 +10,7 @@ and expr_guts =
   | Nil
   | MethodCall of expr * name * expr list
   | Property of expr * name
+  | New of name
   | Me
 
 and expr = 
@@ -18,17 +19,18 @@ and expr =
 
 and stmt =
     Assign of expr * expr
-  | Delc of name * dtype * expr
+  | Delc of name * def_type * expr
   | Call of expr
   | Return of expr option
   | Seq of stmt list
 
-and property = Prop of name * dtype
+and property = Prop of name * def_type
 
 and m_method =
   { m_name: name;
-    m_type: dtype;
+    m_type: def_type;
     m_static: bool;
+    mutable m_size: int;
     mutable m_arguments: property list;
     mutable m_body: stmt }
 
@@ -36,6 +38,7 @@ and c_class =
   { c_name: name;
     c_pname: ident;
     c_array: bool;
+    c_size: int;
     mutable c_properties: property list;
     mutable c_methods: m_method list }
 
@@ -48,9 +51,9 @@ and def_kind =
 
 and def = 
   { d_kind: def_kind;
-    d_type: dtype}
+    d_type: def_type}
 
-and dtype =
+and def_type =
   | ClassType of c_class
   | TempType of otype
   | VoidType
@@ -85,10 +88,10 @@ let empty = Env(IdMap.empty)
 let empty_def = {d_kind=NoneKind; d_type=VoidType}
 
 let createClass (n, p, arr, props, meths) = 
-  { c_name=n; c_pname=p; c_array=arr; c_properties=props; c_methods=meths }
+  { c_name=n; c_pname=p; c_array=arr; c_size=(List.length props) * 4; c_properties=props; c_methods=meths }
 
 let createMethod (n, static, args, t, stmt) =
-  { m_name=n; m_type=t; m_static=static; m_arguments=args; m_body=stmt }
+  { m_name=n; m_type=t; m_static=static; m_size=0; m_arguments=args; m_body=stmt }
 
 let createExpr guts =
   { e_guts=guts; e_type="voidtype" }

@@ -1,6 +1,6 @@
 EXCLUDE_QUERY_DIR
 B ../dist/default/src/.main.eobjs/byte
-B ../dist/default/src/codegen/.codegen.objs/byte
+B ../dist/default/src/codegen/.kgen.objs/byte
 B ../dist/default/src/semantics/.semantics.objs/byte
 B ../dist/default/src/syntax/.syntax.objs/byte
 S .

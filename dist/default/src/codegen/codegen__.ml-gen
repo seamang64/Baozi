@@ -1,5 +1,0 @@
-(** @canonical Codegen.Keiko *)
-module Keiko = Codegen__Keiko
-
-(** @canonical Codegen.Mach *)
-module Mach = Codegen__Mach

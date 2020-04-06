@@ -1,0 +1,8 @@
+(** @canonical Kgen.Codegen *)
+module Codegen = Kgen__Codegen
+
+(** @canonical Kgen.Keiko *)
+module Keiko = Kgen__Keiko
+
+(** @canonical Kgen.Mach *)
+module Mach = Kgen__Mach

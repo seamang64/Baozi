@@ -1,6 +1,6 @@
 (executable
 	(name main)
-	(libraries syntax codegen semantics))
+	(libraries syntax kgen semantics))
 
 ;; disable fatal error on warnings
 (env
