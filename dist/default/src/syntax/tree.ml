@@ -1,4 +1,5 @@
 open Printf
+open Errors
 
 type ident = string
 and otype = string
@@ -75,7 +76,7 @@ type environment = Env of def IdMap.t
 
 let lookup id (Env(ids)) = 
   try IdMap.find id ids with
-    Not_found -> printf "The name %s does not exist" id; exit 1
+    Not_found -> raise (UnknownName id)
 
 let add_def id classDef n = IdMap.add id classDef n
 

@@ -1,5 +1,12 @@
 open Syntax.Tree
 open Printf
+open Errors
+
+let print_type t =
+  match t with
+  | ClassType c -> c.c_name.x_name
+  | VoidType -> "Void"
+  | TempType n -> n 
 
 let check_compatible t1 t2 =
   match (t1, t2) with
@@ -11,10 +18,10 @@ let find_method meth cls =
   | ClassType c ->
     begin
       try List.find (fun m-> m.m_name.x_name = meth.x_name) c.c_methods with
-        Not_found -> printf "Unkown method: %s" meth.x_name; exit 1
+        Not_found -> raise (UnknownName meth.x_name)
     end
-  | VoidType -> printf "Error in Method Call"; exit 1
-  | _ -> printf "Error - Unassigned Class"; exit 1
+  | VoidType -> raise VoidOperation
+  | TempType n -> raise (UnannotatedName n)
 
 let rec check_args args margs =
   match (args, margs) with
@@ -22,8 +29,9 @@ let rec check_args args margs =
       let t = check_expr e in
         if check_compatible t x.x_def.d_type then
           check_args es ms
-        else (printf "Incorrect type"; exit 1)
-  | _ -> ()
+        else raise (TypeError ((print_type t), x.x_name))
+  | ([], []) -> ()
+  | _ -> raise IncorrectArgumentCount
 
 and check_expr e =
   match e.e_guts with 
@@ -36,30 +44,32 @@ and check_expr e =
       ignore(check_expr e1);
       n.x_def.d_type
   | New n -> n.x_def.d_type
-  | _ -> printf "Unkown expression"; exit 1
+  | _ -> raise UnknownExpression
 
 let check_return r ret =
   match (r, ret) with
   | (Some e, ClassType _) -> 
     let t = check_expr e in
       if check_compatible t ret then ()
-      else (printf "Incorrect Return statement"; exit 1)
+      else raise (TypeError ((print_type t), (print_type ret)))
   | (None, VoidType) -> ()
-  | _ -> printf "Incorrect Return statement"; exit 1
+  | _ -> raise InvalidReturn
 
 let rec check_stmt s ret =
   match s with
   | Assign (e1, e2) -> (** Check e1 is property of variable, check e2 is not a class **)
-      if check_compatible (check_expr e1) (check_expr e2) then ()
-      else (printf "Error in assigment"; exit 1)
+      let (t1, t2) = ((check_expr e1), (check_expr e2)) in
+        if check_compatible t1 t2 then ()
+        else raise (TypeError ((print_type t1), (print_type t2)))
   | Delc (x, _, e) -> 
-      if check_compatible x.x_def.d_type (check_expr e) then ()
-      else (printf "Error in delcaration"; exit 1)
+      let t = check_expr e in
+        if check_compatible x.x_def.d_type t then ()
+        else raise (TypeError (x.x_name, (print_type t)))
   | Call e ->
       begin
         match e.e_guts with
         | MethodCall(_, _, _) -> ignore (check_expr e)
-        | _ -> printf "Incomplete statement"; exit 1
+        | _ -> raise IncompleteStatement
       end
   | Return r -> check_return r ret;
   | Seq(ss) -> List.iter (fun st -> check_stmt st ret) ss

@@ -2,6 +2,7 @@ open Printf
 open Syntax
 open Semantics
 open Kgen
+open Errors
 
 let debug = ref 0
 
@@ -27,16 +28,18 @@ let main () =
 
   (**if !debug > 0 then Tree.print_tree stdout "" prog;**)
 
-  ignore(Analyse.annotate_program prog);
-  Check.check_program prog;
+  try 
+    ignore(Analyse.annotate_program prog);
+    Check.check_program prog;
 
-  printf "MODULE Main 0 0\n";
-  printf "IMPORT Lib 0\n";
-  printf "ENDHDR\n";
+    printf "MODULE Main 0 0\n";
+    printf "IMPORT Lib 0\n";
+    printf "ENDHDR\n";
 
-  Keiko.print_keiko(Codegen.gen_program prog);
+    Keiko.print_keiko(Codegen.gen_program prog);
 
-  printf "! End\n";
-  exit 0;;
+    printf "! End\n";
+    exit 0;
+  with err -> Errors.print_exception err;;
 
 main ();;

@@ -1,8 +1,11 @@
 open Syntax.Tree
 open Printf
+open Errors
 
-let propertyOffset = -4
+let propertyOffset = 4
 let argumentOffset = 16
+let variableOffset = -4
+let vtableOffset = 12
 let variableIndex = ref 0
 
 let create_def kind t = { d_kind=kind; d_type = t }
@@ -11,27 +14,27 @@ let get_class t env =
   match t with
   | TempType n -> let d = lookup n env in d.d_type
   | VoidType -> VoidType
-  | _ -> printf "Error. Double assigment"; exit 1
+  | ClassType c -> raise (DuplicateName c.c_name.x_name)
 
 let find_method meth cls = 
   match cls with
   | ClassType c ->
       begin
         try (List.find (fun m -> meth = m.m_name.x_name) c.c_methods).m_name with
-          Not_found -> printf "\nUnknown Method: %s" meth; exit 1
+          Not_found -> raise (UnknownName meth)
       end
-  | VoidType -> printf "Error in Method Call"; exit 1
-  | _ -> printf "Error - Unassigned Class"; exit 1
+  | VoidType -> raise VoidOperation
+  | TempType n -> raise (UnannotatedName n)
 
 let find_properties prop cls = 
   match cls with
   | ClassType c -> 
     begin
         try List.find (fun n -> prop.x_name = n.x_name) (List.map (fun (Prop(n, _)) -> n) c.c_properties) with 
-          Not_found -> printf "Unknown Property: %s" prop.x_name; exit 1
+          Not_found -> raise (UnknownName prop.x_name)
     end
-  | VoidType -> printf "Error in property call"; exit 1
-  | _ -> printf "Error - Unassigned Class"; exit 1
+  | VoidType -> raise VoidOperation
+  | TempType n -> raise (UnannotatedName n)
 
 let rec annotate_classes classes env = 
   match classes with
@@ -42,14 +45,18 @@ let rec annotate_classes classes env =
 
 let rec annotate_arguments args index env = 
   match args with
-  | (Prop(x, t))::props -> x.x_def <- create_def (VariableDef(argumentOffset + index)) (get_class t env); 
-                           let env' = define x.x_name x.x_def env in
-                           annotate_arguments props (index+4) env'
+  | (Prop(x, t))::props -> 
+      x.x_def <- create_def (VariableDef(argumentOffset + index)) (get_class t env); 
+      let env' = define x.x_name x.x_def env in
+        annotate_arguments props (index+4) env'
+
   | _ -> env
 
 let rec annotate_properties properties index env =
   match properties with
-  | (Prop(x, t))::props -> x.x_def <- create_def (PropertyDef(propertyOffset + index)) (get_class t env); annotate_properties props (index-4) env
+  | (Prop(x, t))::props -> 
+      x.x_def <- create_def (PropertyDef(propertyOffset + index)) (get_class t env); 
+      annotate_properties props (index+4) env
   | _ -> ()
 
 let rec annotate_expr expr env =
@@ -69,13 +76,17 @@ let rec annotate_expr expr env =
       begin
         match d.d_kind with
         | ClassDef -> n.x_def <- d; n.x_def
-        | _ -> printf "Must declare New with a class name"; exit 1
+        | _ -> raise (InvalidNew n.x_name)
       end
 
 let rec annotate_stmt stmt env =
   match stmt with
   | Assign (e1, e2) -> ignore(annotate_expr e1 env); ignore(annotate_expr e2 env); env
-  | Delc (n, t, e) -> ignore(annotate_expr e env); n.x_def <- create_def (VariableDef(!variableIndex)) (get_class t env); variableIndex := !variableIndex - 4; define n.x_name n.x_def env
+  | Delc (n, t, e) -> 
+      ignore(annotate_expr e env); 
+      n.x_def <- create_def (VariableDef(variableOffset - !variableIndex)) (get_class t env);
+      variableIndex := !variableIndex + 4;
+      define n.x_name n.x_def env
   | Call e -> ignore(annotate_expr e env); env
   | Return r ->
     begin
@@ -92,15 +103,15 @@ let rec annotate_stmt stmt env =
 
 let rec annotate_methods methods index env =
   match methods with
-  | m::ms -> m.m_name.x_def <- create_def (MethodDef(index)) (get_class m.m_type env);
-             annotate_methods ms (index - 4) env
+  | m::ms -> m.m_name.x_def <- create_def (MethodDef(vtableOffset + index)) (get_class m.m_type env);
+             annotate_methods ms (index + 4) env
   | _ -> ()
 
 let annotate_body meth env =
   let newEnv = annotate_arguments meth.m_arguments 0 env in
   variableIndex := 0;
   ignore(annotate_stmt meth.m_body newEnv);
-  meth.m_size <- -1 * !variableIndex
+  meth.m_size <- !variableIndex
 
 let annotate_bodies cls env =
   List.iter (fun m -> ignore(annotate_body m env)) cls.c_methods

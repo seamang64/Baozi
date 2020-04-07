@@ -1,1 +1,1 @@
-src/semantics/check.ml: List Printf Syntax
+src/semantics/check.ml: Errors List Printf Syntax

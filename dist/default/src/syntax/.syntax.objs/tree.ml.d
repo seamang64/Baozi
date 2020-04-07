@@ -1,1 +1,1 @@
-src/syntax/tree.ml: List Map Printf
+src/syntax/tree.ml: Errors List Map Printf

@@ -1,1 +1,1 @@
-src/semantics/analyse.ml: List Printf Syntax
+src/semantics/analyse.ml: Errors List Printf Syntax
