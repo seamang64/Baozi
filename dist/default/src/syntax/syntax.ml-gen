@@ -1,3 +1,6 @@
+(** @canonical Syntax.Keiko *)
+module Keiko = Syntax__Keiko
+
 (** @canonical Syntax.Lexer *)
 module Lexer = Syntax__Lexer
 

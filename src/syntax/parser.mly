@@ -3,8 +3,9 @@
 %}
 
 %token <Tree.ident> IDENT
+%token <int> NUMBER
 
-%token DOT COLON LCURL RCURL COMMA LPAR RPAR EOF NEW
+%token DOT COLON LCURL RCURL COMMA LPAR RPAR EOF NEW PLUS
 %token ASSIGN EOF BADTOKEN AS ARRAY OF PROPERTIES METHOD CLASSMETHOD RETURN BY
 %token START END DEFINE LEFTARROW RIGHTARROW DOUBLEARROW UPARROW LSQUARE RSQUARE NIL ME
 
@@ -68,6 +69,8 @@ stmt :
 
 expr:
     name                           { createExpr (Name $1) }
+  | NUMBER                         { createExpr (Constant $1)}
+  | expr PLUS expr                 { createExpr (MethodCall($1, createName "add", [$3])) }
   | expr UPARROW                   { createExpr (Parent $1) }
   | expr LSQUARE expr RSQUARE      { createExpr (Sub($1, $3)) }
   | NIL                            { createExpr Nil }

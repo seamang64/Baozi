@@ -1,0 +1,14 @@
+Define A
+$>
+	Properties
+	$>
+		n: Int,
+	<$
+
+	Method DoSomething {} => {}
+	$>
+		a : A = New A.
+		a->n = 5 + 4.
+		Return.
+	<$
+<$

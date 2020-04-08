@@ -2,7 +2,6 @@ open Printf
 open Syntax
 open Semantics
 open Kgen
-open Errors
 
 let debug = ref 0
 

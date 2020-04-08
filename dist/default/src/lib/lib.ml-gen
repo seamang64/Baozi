@@ -1,0 +1,2 @@
+(** @canonical Lib.Int *)
+module Int = Lib__Int

@@ -11,6 +11,7 @@ and expr_guts =
   | Nil
   | MethodCall of expr * name * expr list
   | Property of expr * name
+  | Constant of int
   | New of name
   | Me
 
@@ -24,6 +25,7 @@ and stmt =
   | Call of expr
   | Return of expr option
   | Seq of stmt list
+  | Nop
 
 and property = Prop of name * def_type
 
@@ -47,7 +49,7 @@ and def_kind =
   | ClassDef
   | VariableDef of int
   | PropertyDef of int
-  | MethodDef of int
+  | MethodDef of int * bool
   | NoneKind
 
 and def = 

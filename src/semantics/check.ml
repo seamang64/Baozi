@@ -1,6 +1,6 @@
 open Syntax.Tree
-open Printf
 open Errors
+open Lib.Int
 
 let print_type t =
   match t with
@@ -25,21 +25,23 @@ let find_method meth cls =
 
 let rec check_args args margs =
   match (args, margs) with
-  | (e::es, Prop(x, _)::ms) -> 
-      let t = check_expr e in
-        if check_compatible t x.x_def.d_type then
-          check_args es ms
-        else raise (TypeError ((print_type t), x.x_name))
+  | (t::ts, Prop(x, _)::ms) -> 
+      if check_compatible t x.x_def.d_type then
+        check_args ts ms
+      else raise (TypeError ((print_type t), (print_type x.x_def.d_type)))
   | ([], []) -> ()
   | _ -> raise IncorrectArgumentCount
 
 and check_expr e =
   match e.e_guts with 
   | Name n ->  n.x_def.d_type
+  | Constant _ -> integer_def.d_type
   | MethodCall (e1, m, args) -> 
       let t = check_expr e1 in
-        check_args args (find_method m t).m_arguments;
-        m.x_def.d_type
+        let meth = find_method m t in
+          if meth.m_static then check_args (List.map check_expr args) meth.m_arguments
+          else  check_args (t::(List.map check_expr args)) meth.m_arguments;
+          m.x_def.d_type
   | Property (e1, n) -> 
       ignore(check_expr e1);
       n.x_def.d_type

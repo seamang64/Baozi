@@ -1,7 +1,8 @@
 open Syntax.Tree
-open Keiko
+open Syntax.Keiko
 open Errors
 open Printf
+open Lib.Int
 
 let me_pointer = 4
 
@@ -10,13 +11,22 @@ let get_size x =
   | ClassType c -> c.c_size
   | _ -> raise (InvalidNew x.x_name)
 
+let is_int x = 
+  match x.x_def.d_type with
+  | ClassType c -> c.c_name.x_name = "Integer"
+  | _ -> false
+
+let is_static m =
+  match m.x_def.d_kind with
+  | MethodDef(_, s) -> s
+  | _ -> raise (UnknownName m.x_name)
 
 let gen_addr n =
   match n.x_def.d_kind with
   | ClassDef -> SEQ [GLOBAL (n.x_name ^ ".%desc")]
   | VariableDef off -> SEQ [LOCAL off]
   | PropertyDef off -> SEQ [CONST off; OFFSET]
-  | MethodDef off -> SEQ [CONST off; OFFSET]
+  | MethodDef (off, _) -> SEQ [CONST off; OFFSET]
 
 let rec gen_expr e = 
   match e.e_guts with
@@ -26,15 +36,30 @@ let rec gen_expr e =
       | ClassDef -> SEQ [GLOBAL n.x_name]
       | _ -> SEQ [gen_addr n; LOAD 4]
     end
+  | Constant x ->
+      SEQ [
+        CONST 4;
+        GLOBAL "Integer.%desc";
+        GLOBAL "NEW";
+        CALLW 2;
+        DUP;
+        CONST x;
+        SWAP;
+        CONST 4;
+        OFFSET;
+        STORE 4;
+      ]
   | MethodCall (e1, m, args) ->
       SEQ [ 
         SEQ (List.map gen_expr (List.rev args));
-        gen_expr e1; 
+        gen_expr e1;
+        if is_static m then NOP
+        else SEQ[ DUP; LOAD 4];
         gen_addr m;
         LOAD 4;
         CALLW (List.length args)
       ]
-  | Property (e1, n) -> SEQ [gen_expr e; gen_addr n; LOAD 4]
+  | Property (e1, n) -> SEQ [gen_expr e1; gen_addr n; LOAD 4]
   | New n ->  SEQ [CONST (get_size n); GLOBAL (n.x_name ^ ".%desc"); GLOBAL "NEW"; CALLW 2]
 
 and gen_assigment e1 e2 =
@@ -76,6 +101,7 @@ and gen_class c =
 
 and gen_program (Program(cs)) =
   SEQ [
+    integer_code;
     SEQ (List.map gen_methods cs);
     SEQ (List.map gen_class cs)
   ]

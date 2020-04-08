@@ -1,5 +1,6 @@
 type token =
   | IDENT of (Tree.ident)
+  | NUMBER of (int)
   | DOT
   | COLON
   | LCURL
@@ -9,6 +10,7 @@ type token =
   | RPAR
   | EOF
   | NEW
+  | PLUS
   | ASSIGN
   | BADTOKEN
   | AS

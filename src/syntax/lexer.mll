@@ -32,6 +32,8 @@ let notqq = [^'"''\n']
 
 rule token = parse
     letter (letter | digit)* as s { lookup s }
+  | digit+ as s         { NUMBER (int_of_string s)}
+  | "+"                 { PLUS }
   | "."                 { DOT }
   | ":"                 { COLON }
   | ","                 { COMMA }
