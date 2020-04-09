@@ -11,6 +11,7 @@ type token =
   | EOF
   | NEW
   | PLUS
+  | MAIN
   | ASSIGN
   | BADTOKEN
   | AS

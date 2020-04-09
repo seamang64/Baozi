@@ -8,7 +8,7 @@
 
   let kwtable = make_hash 64
       [ "As", AS; "Array", ARRAY; "BY", BY; "Class-Method", CLASSMETHOD;
-        "Define", DEFINE; "Method", METHOD; "Me", ME; "My", ME; "Myself", ME; "Nil", NIL; 
+        "Define", DEFINE; "Main", MAIN; "Method", METHOD; "Me", ME; "My", ME; "Myself", ME; "Nil", NIL; 
         "New", NEW; "Of", OF; "Properties", PROPERTIES; "Return", RETURN]
 
   let idtable = Hashtbl.create 64

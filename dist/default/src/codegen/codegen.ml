@@ -54,7 +54,7 @@ let rec gen_expr e =
         SEQ (List.map gen_expr (List.rev args));
         gen_expr e1;
         if is_static m then NOP
-        else DUP;
+        else SEQ[ DUP; LOAD 4];
         gen_addr m;
         LOAD 4;
         CALLW (List.length args)

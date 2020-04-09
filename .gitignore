@@ -1,0 +1,26 @@
+*.annot
+*.cmo
+*.cma
+*.cmi
+*.a
+*.o
+*.cmx
+*.cmxs
+*.cmxa
+
+# build files
+/dist/
+/src/**/*.merlin
+
+# test build files
+/test/**/*.k
+/test/**/*.o
+/test/**/*.out
+
+# build targets
+*.byte
+*.native
+
+# oasis generated files
+setup.data
+setup.log

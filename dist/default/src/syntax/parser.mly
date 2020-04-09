@@ -5,7 +5,7 @@
 %token <Tree.ident> IDENT
 %token <int> NUMBER
 
-%token DOT COLON LCURL RCURL COMMA LPAR RPAR EOF NEW PLUS
+%token DOT COLON LCURL RCURL COMMA LPAR RPAR EOF NEW PLUS MAIN
 %token ASSIGN EOF BADTOKEN AS ARRAY OF PROPERTIES METHOD CLASSMETHOD RETURN BY
 %token START END DEFINE LEFTARROW RIGHTARROW DOUBLEARROW UPARROW LSQUARE RSQUARE NIL ME
 
@@ -37,13 +37,15 @@ methods :
 
 omethod :
     METHOD name LCURL pairs RCURL DOUBLEARROW IDENT START stmts END      
-        { createMethod($2, false, $4, TempType($7), $9) }
+        { createMethod($2, false, $4, TempType($7), $9, true) }
   | METHOD name LCURL pairs RCURL DOUBLEARROW LCURL RCURL START stmts END
-        { createMethod($2, false, $4, VoidType, $10) }
+        { createMethod($2, false, $4, VoidType, $10, true) }
   | CLASSMETHOD name LCURL pairs RCURL DOUBLEARROW IDENT START stmts END 
-        { createMethod($2, true, $4, TempType($7), $9) }
+        { createMethod($2, true, $4, TempType($7), $9, true) }
   | CLASSMETHOD name LCURL pairs RCURL DOUBLEARROW LCURL RCURL START stmts END
-        { createMethod($2, true, $4, VoidType, $10) }
+        { createMethod($2, true, $4, VoidType, $10, true) }
+  | CLASSMETHOD MAIN LCURL RCURL DOUBLEARROW LCURL RCURL START stmts END
+        { createMethod(createName "Main", true, [], VoidType, $9, true) }
 
 pair:
   name COLON IDENT  { Prop ($1, TempType($3)) }

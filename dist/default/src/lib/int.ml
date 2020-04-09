@@ -11,7 +11,7 @@ and integer_def =
   {d_kind=ClassDef; d_type=(ClassType integer_class)}
 
 and method_add =
-  { m_name=add_name; m_type=(ClassType integer_class); m_static=false; m_size=4; m_arguments=[Prop(arg_x, VoidType); Prop(arg_y, VoidType)]; m_body=Nop}
+  { m_name=add_name; m_type=(ClassType integer_class); m_static=false; m_size=4; m_arguments=[Prop(arg_x, VoidType); Prop(arg_y, VoidType)]; m_body=Nop; m_main=false}
 
 and add_name =
   {x_name="add"; x_def={d_kind=MethodDef (12, false); d_type=(ClassType integer_class)}}
