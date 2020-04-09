@@ -1,5 +1,0 @@
-(** @canonical Kgen.Codegen *)
-module Codegen = Kgen__Codegen
-
-(** @canonical Kgen.Mach *)
-module Mach = Kgen__Mach

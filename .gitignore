@@ -10,6 +10,7 @@
 
 # build files
 /dist/
+/_build/
 /src/**/*.merlin
 
 # test build files
