@@ -26,10 +26,10 @@ type code =
   | CONST of int                (* Constant (value) *)
   | GLOBAL of symbol            (* Constant (symbol) *)
   | LOCAL of int                (* Local address (offset) *)
-  | LOAD of int                 (* Load (size) *)
-  | STORE of int                (* Store (size) *)
+  | LOADW                       (* Load (size) *)
+  | STOREW                      (* Store (size) *)
   | FIXCOPY                     (* Copy multiple values (size) *)
-  | CALLW of int                (* Call procedure (nparams, rsize) *)
+  | PCALLW of int               (* Call procedure (nparams, rsize) *)
   | RETURN of int               (* Procedure return (rsize) *)
   | MONOP of op                 (* Perform unary operation (op) *)
   | BINOP of op                 (* Perform binary operation (op) *)
@@ -55,7 +55,7 @@ type code =
 
   | SEQ of code list            (* Sequence of other instructions *)
   | SWAP
-  | DUP
+  | DUP of int
   | NOP                         (* Null operation *)
   | END
 
@@ -81,6 +81,9 @@ let print_op op =
   | Plus -> "PLUS"
   | _ -> printf "Unrecongised Keiko"; exit 1
 
+let fType = 
+  function 0 -> "" | 1 -> "W"
+
 let rec print_keiko prog =
   match prog with
    | DEFINE s -> printf "\nDEFINE %s\n" s
@@ -90,15 +93,15 @@ let rec print_keiko prog =
    | CONST n -> printf "CONST %d\n" n
    | GLOBAL s -> printf "GLOBAL %s\n" s
    | LOCAL n -> printf "LOCAL %d\n" n
-   | LOAD n -> printf "LOAD %d\n" n
-   | STORE n -> printf "STORE %d\n" n
-   | CALLW n -> printf "CALLW %d\n" n
-   | RETURN n -> printf "RETURN %d\n" n 
-   | BINOP op -> printf "BINOP %s\n" (print_op op)
+   | LOADW -> printf "LOADW\n"
+   | STOREW -> printf "STOREW\n"
+   | PCALLW n -> printf "PCALLW %d\n" n
+   | RETURN n -> printf "RETURN%s\n" (fType n) 
+   | BINOP op -> printf "%s\n" (print_op op)
    | OFFSET -> printf "OFFSET\n"
    | SEQ ss -> List.iter print_keiko ss
    | SWAP -> printf "SWAP\n"
-   | DUP -> printf "DUP\n";
+   | DUP n -> printf "DUP %d\n" n
    | END -> printf "END\n"
-   | NOP -> printf "NOP\n"
+   | NOP -> ()
    | _ -> printf "Unrecongised Keiko"; exit 1

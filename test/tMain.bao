@@ -1,0 +1,25 @@
+Define A
+$>
+	Properties
+	$>
+		n: Int,
+	<$
+
+	Method DoSomething {} => {}
+	$>
+		a : A = New A.
+		a->n = 5 + 4.
+		Output->Int<-{a->n}.
+		Return.
+	<$
+<$
+
+Define Program
+$>
+	ClassMethod Main {} => {}
+	$>
+		a : A = New A.
+		a->DoSomething<-{}.
+		Return.
+	<$
+<$

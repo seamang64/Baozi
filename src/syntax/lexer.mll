@@ -6,9 +6,25 @@
     List.iter (fun (k, v) -> Hashtbl.add t k v) ps; t
 
   let kwtable = make_hash 64
-      [ "As", AS; "Array", ARRAY; "BY", BY; "Class-Method", CLASSMETHOD;
-        "Define", DEFINE; "Main", MAIN; "Method", METHOD; "Me", ME; "My", ME; "Myself", ME; "Nil", NIL; 
-        "New", NEW; "Of", OF; "Properties", PROPERTIES; "Return", RETURN]
+      [ 
+        "Define", K_DEFINE;
+        "As", K_AS; 
+        "Array", K_ARRAY;
+        "Of", K_OF; 
+
+        "ClassMethod", K_CLASSMETHOD;
+        "Main", K_MAIN; 
+        "Method", K_METHOD;
+        "Properties", K_PROPERTIES; 
+
+        "Me", K_ME;
+        "My", K_ME; 
+        "Myself", K_ME;
+        "Nil", K_NIL; 
+        
+        "New", K_NEW; 
+        "Return", K_RETURN
+      ]
 
   let idtable = Hashtbl.create 64
 
@@ -33,22 +49,26 @@ let notqq = [^'"''\n']
 rule token = parse
     letter (letter | digit)* as s { lookup s }
   | digit+ as s         { NUMBER (int_of_string s)}
-  | "+"                 { PLUS }
-  | "."                 { DOT }
-  | ":"                 { COLON }
-  | ","                 { COMMA }
-  | "("                 { LPAR }
-  | ")"                 { RPAR }
-  | "["                 { LSQUARE }
-  | "]"                 { RSQUARE }
-  | "{"                 { LCURL }
-  | "}"                 { RCURL }
-  | "="                 { ASSIGN }
-  | "->"                { RIGHTARROW }
-  | "<-"                { LEFTARROW }
-  | "=>"                { DOUBLEARROW }
-  | "$>"                { START }
-  | "<$"                { END }
+
+  | "+"                 { O_PLUS }
+  | "="                 { O_ASSIGN }
+  | "->"                { O_RIGHTARROW }
+  | "<-"                { O_LEFTARROW }
+  | "^"                 { O_UPARROW }
+
+  | "."                 { P_DOT }
+  | ":"                 { P_COLON }
+  | ","                 { P_COMMA }
+  | "("                 { P_LPAR }
+  | ")"                 { P_RPAR }
+  | "["                 { P_LSQUARE }
+  | "]"                 { P_RSQUARE }
+  | "{"                 { P_LCURL }
+  | "}"                 { P_RCURL }
+  | "=>"                { P_DOUBLEARROW }
+  | "$>"                { P_START }
+  | "<$"                { P_END }
+
   | [' ''\t''\n''\r']+  { token lexbuf }
   | _                   { BADTOKEN }
   | eof                 { EOF }

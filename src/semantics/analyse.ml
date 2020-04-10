@@ -1,6 +1,8 @@
 open Syntax.Tree
+open Kgen.Codegen
 open Errors
 open Lib.Int
+open Lib.Out
 
 let propertyOffset = 4
 let argumentOffset = 16
@@ -115,6 +117,7 @@ let rec annotate_methods methods index env =
 
 let annotate_body meth cls env =
   if not meth.m_static then meth.m_arguments <- (create_me cls) :: meth.m_arguments;
+  if meth.m_main then mainMethod := cls.c_name.x_name ^ "." ^ meth.m_name.x_name;
   let newEnv = annotate_arguments meth.m_arguments 0 env in
   variableIndex := 0;
   ignore(annotate_stmt meth.m_body newEnv);
@@ -127,8 +130,10 @@ let annotate_members cls env =
   annotate_methods cls.c_methods 0 env;
   annotate_properties cls.c_properties 0 env
 
+let start_env = define "Output" out_def (define "Int" integer_def empty)
+
 let annotate_program (Program(cs)) =
-  let env = annotate_classes cs (define "Int" integer_def empty) in
+  let env = annotate_classes cs start_env in
   List.iter (fun c -> annotate_members c env) cs;
   List.iter (fun c -> annotate_bodies c env) cs;
   env

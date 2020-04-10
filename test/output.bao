@@ -1,0 +1,8 @@
+Define Program
+$>
+	ClassMethod Main {} => {}
+	$>
+		Output->Int<-{5}.
+		Return.
+	<$
+<$

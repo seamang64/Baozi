@@ -3,8 +3,10 @@ open Syntax.Keiko
 open Errors
 open Printf
 open Lib.Int
+open Lib.Out
 
 let me_pointer = 4
+let mainMethod = ref ""
 
 let get_size x =
   match x.x_def.d_type with
@@ -33,46 +35,46 @@ let rec gen_expr e =
   | Name n ->
     begin
       match n.x_def.d_kind with
-      | ClassDef -> SEQ [GLOBAL n.x_name]
-      | _ -> SEQ [gen_addr n; LOAD 4]
+      | ClassDef -> SEQ [GLOBAL (n.x_name ^ ".%desc")]
+      | _ -> SEQ [gen_addr n; LOADW]
     end
   | Constant x ->
       SEQ [
         CONST 4;
         GLOBAL "Integer.%desc";
-        GLOBAL "NEW";
-        CALLW 2;
-        DUP;
+        GLOBAL "lib.new";
+        PCALLW 2;
+        DUP 0;
         CONST x;
         SWAP;
         CONST 4;
         OFFSET;
-        STORE 4;
+        STOREW;
       ]
   | MethodCall (e1, m, args) ->
       SEQ [ 
         SEQ (List.map gen_expr (List.rev args));
         gen_expr e1;
         if is_static m then NOP
-        else SEQ[ DUP; LOAD 4];
+        else SEQ[ DUP 0; LOADW];
         gen_addr m;
-        LOAD 4;
-        CALLW (List.length args)
+        LOADW;
+        PCALLW (List.length args)
       ]
-  | Property (e1, n) -> SEQ [gen_expr e1; gen_addr n; LOAD 4]
-  | New n ->  SEQ [CONST (get_size n); GLOBAL (n.x_name ^ ".%desc"); GLOBAL "NEW"; CALLW 2]
+  | Property (e1, n) -> SEQ [gen_expr e1; gen_addr n; LOADW]
+  | New n ->  SEQ [CONST (get_size n); GLOBAL (n.x_name ^ ".%desc"); GLOBAL "lib.new"; PCALLW 2]
 
 and gen_assigment e1 e2 =
   let v = gen_expr e2 in
   match e1.e_guts with
-  | Name n -> SEQ [v; gen_addr n; STORE 4]
-  | Property (e, n) -> SEQ[v; gen_expr e; gen_addr n; STORE 4]
+  | Name n -> SEQ [v; gen_addr n; STOREW]
+  | Property (e, n) -> SEQ[v; gen_expr e; gen_addr n; STOREW]
   | _ -> raise InvalidAssigment
 
 and gen_stmt s = 
   match s with
   | Assign (e1, e2) -> gen_assigment e1 e2
-  | Delc (n, _, e) -> SEQ [gen_expr e; gen_addr n; STORE 4]
+  | Delc (n, _, e) -> SEQ [gen_expr e; gen_addr n; STOREW]
   | Call e  -> gen_expr e
   | Return r -> 
     begin
@@ -101,7 +103,12 @@ and gen_class c =
 
 and gen_program (Program(cs)) =
   SEQ [
+    out_code;
     integer_code;
     SEQ (List.map gen_methods cs);
-    SEQ (List.map gen_class cs)
+    SEQ (List.map gen_class cs);
+    PROC ("MAIN", 0, 0, 0);
+    GLOBAL !mainMethod;
+    PCALLW 0;
+    END;
   ]
