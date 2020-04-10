@@ -11,9 +11,9 @@
 %token K_OF
 
 %token K_CLASSMETHOD
-%token K_K_MAIN
+%token K_MAIN
 %token K_METHOD
-%token K_K_PROPERTIES
+%token K_PROPERTIES
 
 %token K_ME
 %token K_NIL
@@ -25,6 +25,7 @@
 %token O_ASSIGN 
 %token O_RIGHTARROW 
 %token O_LEFTARROW 
+%token O_UPARROW
 
 %token P_DOT 
 %token P_COLON 
@@ -36,8 +37,11 @@
 %token P_LCURL 
 %token P_RCURL 
 %token P_DOUBLEARROW 
-%token P_P_START 
+%token P_START 
 %token P_END
+
+%token BADTOKEN
+%token EOF
 
 %type <Tree.program> program
 
@@ -56,7 +60,7 @@ classes :
       { $1 :: $2 } ;
 
 oclass :
-  | K_DEFINE name LEFTARROW IDENT P_START properties methods P_END       
+  | K_DEFINE name O_LEFTARROW IDENT P_START properties methods P_END       
       { createClass($2, $4, false, $6, $7) } 
   | K_DEFINE name P_START properties methods P_END                       
       { createClass($2, "Object", false, $4, $5) }
@@ -84,11 +88,11 @@ omethod :
       { createMethod($2, true, $4, TempType($7), $9, false) }
   | K_CLASSMETHOD name P_LCURL pairs P_RCURL P_DOUBLEARROW P_LCURL P_RCURL P_START stmts P_END
       { createMethod($2, true, $4, VoidType, $10, false) }
-  | K_CLASSMETHOD K_MAIN P_LCURL P_RCURL P_DOUBLEARROW P_LCURL P_RCURL P_P_START stmts P_END
+  | K_CLASSMETHOD K_MAIN P_LCURL P_RCURL P_DOUBLEARROW P_LCURL P_RCURL P_START stmts P_END
       { createMethod(createName "Main", true, [], VoidType, $9, true) }
 
 pair:
-  | name P__COLON IDENT  
+  | name P_COLON IDENT  
       { Prop ($1, TempType($3)) }
 
 pairs:
@@ -112,7 +116,7 @@ stmt_list :
 stmt :
   |  expr O_ASSIGN expr                 
       { Assign($1, $3) }
-  | name P_COLON IDENT ASSIGN expr     
+  | name P_COLON IDENT O_ASSIGN expr     
       { Delc($1, TempType($3), $5) }
   | K_RETURN expr                      
       { Return (Some $2) }
