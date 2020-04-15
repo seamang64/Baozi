@@ -1,0 +1,21 @@
+Define Program
+$>
+	ClassMethod Main {} => {}
+	$>
+		b : B = New B.
+		Output->Int<-{b->DoSomething<-{}}.
+		Return.
+	<$
+<$
+
+Define A
+$>
+	Method DoSomething {} => Int
+	$>
+		Return 6.
+	<$
+<$
+
+Define B <- A
+$>
+<$

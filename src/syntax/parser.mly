@@ -14,10 +14,10 @@
 %token K_MAIN
 %token K_METHOD
 %token K_PROPERTIES
+%token K_REPLACE
 
 %token K_ME
 %token K_NIL
-        
 %token K_NEW 
 %token K_RETURN
 
@@ -61,11 +61,11 @@ classes :
 
 oclass :
   | K_DEFINE name O_LEFTARROW IDENT P_START properties methods P_END       
-      { createClass($2, $4, false, $6, $7) } 
+      { createClass($2, (TempType $4), false, $6, $7) } 
   | K_DEFINE name P_START properties methods P_END                       
-      { createClass($2, "Object", false, $4, $5) }
+      { createClass($2, (TempType "Object"), false, $4, $5) }
   | K_DEFINE name K_AS K_ARRAY K_OF IDENT P_START properties methods P_END     
-      { createClass($2, $6, true, $8, $9) } ;
+      { createClass($2, (TempType $6), true, $8, $9) } ;
 
 properties :
   | /* empty */                    
@@ -81,15 +81,19 @@ methods :
 
 omethod :
   | K_METHOD name P_LCURL pairs P_RCURL P_DOUBLEARROW IDENT P_START stmts P_END      
-      { createMethod($2, false, $4, TempType($7), $9, false) }
+      { createMethod($2, false, $4, TempType($7), $9, false, false) }
   | K_METHOD name P_LCURL pairs P_RCURL P_DOUBLEARROW P_LCURL P_RCURL P_START stmts P_END
-      { createMethod($2, false, $4, VoidType, $10, false) }
+      { createMethod($2, false, $4, VoidType, $10, false, false) }
   | K_CLASSMETHOD name P_LCURL pairs P_RCURL P_DOUBLEARROW IDENT P_START stmts P_END 
-      { createMethod($2, true, $4, TempType($7), $9, false) }
+      { createMethod($2, true, $4, TempType($7), $9, false, false) }
   | K_CLASSMETHOD name P_LCURL pairs P_RCURL P_DOUBLEARROW P_LCURL P_RCURL P_START stmts P_END
-      { createMethod($2, true, $4, VoidType, $10, false) }
+      { createMethod($2, true, $4, VoidType, $10, false, false) }
+  | K_REPLACE name P_LCURL pairs P_RCURL P_DOUBLEARROW IDENT P_START stmts P_END      
+      { createMethod($2, false, $4, TempType($7), $9, false, true) }
+  | K_REPLACE name P_LCURL pairs P_RCURL P_DOUBLEARROW P_LCURL P_RCURL P_START stmts P_END
+      { createMethod($2, false, $4, VoidType, $10, false, true) }
   | K_CLASSMETHOD K_MAIN P_LCURL P_RCURL P_DOUBLEARROW P_LCURL P_RCURL P_START stmts P_END
-      { createMethod(createName "Main", true, [], VoidType, $9, true) }
+      { createMethod(createName "Main", true, [], VoidType, $9, true, false) }
 
 pair:
   | name P_COLON IDENT  

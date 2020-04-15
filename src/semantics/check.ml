@@ -8,9 +8,9 @@ let print_type t =
   | VoidType -> "Void"
   | TempType n -> n 
 
-let check_compatible t1 t2 =
+let rec check_compatible t1 t2 =
   match (t1, t2) with
-  | (ClassType c1, ClassType c2) -> c1.c_name.x_name = c2.c_name.x_name
+  | (ClassType c1, ClassType c2) -> c1.c_name.x_name = c2.c_name.x_name || (check_compatible t1 c2.c_pname)
   | _ -> false
 
 let find_method meth cls =
@@ -66,7 +66,7 @@ let rec check_stmt s ret =
   | Delc (x, _, e) -> 
       let t = check_expr e in
         if check_compatible x.x_def.d_type t then ()
-        else raise (TypeError (x.x_name, (print_type t)))
+        else raise (TypeError (print_type x.x_def.d_type, print_type t))
   | Call e ->
       begin
         match e.e_guts with

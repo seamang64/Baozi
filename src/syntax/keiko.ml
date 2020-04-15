@@ -30,6 +30,7 @@ type code =
   | STOREW                      (* Store (size) *)
   | FIXCOPY                     (* Copy multiple values (size) *)
   | PCALLW of int               (* Call procedure (nparams, rsize) *)
+  | CALLW of int
   | RETURN of int               (* Procedure return (rsize) *)
   | MONOP of op                 (* Perform unary operation (op) *)
   | BINOP of op                 (* Perform binary operation (op) *)
@@ -96,6 +97,7 @@ let rec print_keiko prog =
    | LOADW -> printf "LOADW\n"
    | STOREW -> printf "STOREW\n"
    | PCALLW n -> printf "PCALLW %d\n" n
+   | CALLW n -> printf "CALLW %d\n" n
    | RETURN n -> printf "RETURN%s\n" (fType n) 
    | BINOP op -> printf "%s\n" (print_op op)
    | OFFSET -> printf "OFFSET\n"

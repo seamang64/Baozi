@@ -1,0 +1,22 @@
+Define Program
+$>
+	ClassMethod Main {} => {}
+	$>
+		b : B = New B.
+		b->x = 7.
+		Output->Int<-{b->x}.
+		Return.
+	<$
+<$
+
+Define A
+$>
+	Properties
+	$>
+		x : Int,
+	<$
+<$
+
+Define B <- A
+$>
+<$

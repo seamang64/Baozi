@@ -34,13 +34,14 @@ and m_method =
     m_type: def_type;
     m_static: bool;
     m_main: bool;
+    m_replace: bool;
     mutable m_size: int;
     mutable m_arguments: property list;
     mutable m_body: stmt }
 
 and c_class =
   { c_name: name;
-    c_pname: ident;
+    mutable c_pname: def_type;
     c_array: bool;
     c_size: int;
     mutable c_properties: property list;
@@ -94,8 +95,8 @@ let empty_def = {d_kind=NoneKind; d_type=VoidType}
 let createClass (n, p, arr, props, meths) = 
   { c_name=n; c_pname=p; c_array=arr; c_size=(List.length props) * 4; c_properties=props; c_methods=meths }
 
-let createMethod (n, static, args, t, stmt, main) =
-  { m_name=n; m_type=t; m_static=static; m_size=0; m_arguments=args; m_body=stmt; m_main=main }
+let createMethod (n, static, args, t, stmt, main, replace) =
+  { m_name=n; m_type=t; m_static=static; m_size=0; m_arguments=args; m_body=stmt; m_main=main; m_replace=replace }
 
 let createExpr guts =
   { e_guts=guts; e_type="voidtype" }

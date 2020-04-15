@@ -40,29 +40,52 @@ let rec gen_expr e =
     end
   | Constant x ->
       SEQ [
-        CONST 4;
+        CONST 8;
         GLOBAL "Integer.%desc";
         GLOBAL "lib.new";
-        PCALLW 2;
+        CALLW 2;
         DUP 0;
         CONST x;
         SWAP;
         CONST 4;
         OFFSET;
         STOREW;
+        DUP 0;
+        GLOBAL "Integer.%desc";
+        SWAP;
+        STOREW;
       ]
   | MethodCall (e1, m, args) ->
       SEQ [ 
         SEQ (List.map gen_expr (List.rev args));
         gen_expr e1;
-        if is_static m then NOP
-        else SEQ[ DUP 0; LOADW];
-        gen_addr m;
-        LOADW;
-        PCALLW (List.length args)
+        if is_static m then
+          SEQ [ 
+            gen_addr m;
+            LOADW;
+            CALLW (List.length args)
+          ]
+        else 
+          SEQ [ 
+            DUP 0; 
+            LOADW;
+            gen_addr m;
+            LOADW;
+            CALLW (List.length args + 1)
+          ]
       ]
   | Property (e1, n) -> SEQ [gen_expr e1; gen_addr n; LOADW]
-  | New n ->  SEQ [CONST (get_size n); GLOBAL (n.x_name ^ ".%desc"); GLOBAL "lib.new"; PCALLW 2]
+  | New n ->  
+      SEQ [
+        CONST (4 + (get_size n));
+        GLOBAL (n.x_name ^ ".%desc"); 
+        GLOBAL "lib.new"; 
+        CALLW 2;
+        DUP 0;
+        GLOBAL (n.x_name ^ ".%desc");
+        SWAP;
+        STOREW;
+      ]
 
 and gen_assigment e1 e2 =
   let v = gen_expr e2 in
@@ -109,6 +132,7 @@ and gen_program (Program(cs)) =
     SEQ (List.map gen_class cs);
     PROC ("MAIN", 0, 0, 0);
     GLOBAL !mainMethod;
-    PCALLW 0;
+    CALLW 0;
+    RETURN 0;
     END;
   ]

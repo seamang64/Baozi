@@ -6,25 +6,26 @@
     List.iter (fun (k, v) -> Hashtbl.add t k v) ps; t
 
   let kwtable = make_hash 64
-      [ 
-        "Define", K_DEFINE;
-        "As", K_AS; 
-        "Array", K_ARRAY;
-        "Of", K_OF; 
+  [ 
+    "Define", K_DEFINE;
+    "As", K_AS; 
+    "Array", K_ARRAY;
+    "Of", K_OF; 
 
-        "ClassMethod", K_CLASSMETHOD;
-        "Main", K_MAIN; 
-        "Method", K_METHOD;
-        "Properties", K_PROPERTIES; 
+    "ClassMethod", K_CLASSMETHOD;
+    "Main", K_MAIN; 
+    "Method", K_METHOD;
+    "Properties", K_PROPERTIES; 
+    "ReplaceMethod", K_REPLACE;
 
-        "Me", K_ME;
-        "My", K_ME; 
-        "Myself", K_ME;
-        "Nil", K_NIL; 
-        
-        "New", K_NEW; 
-        "Return", K_RETURN
-      ]
+    "Me", K_ME;
+    "My", K_ME; 
+    "Myself", K_ME;
+    "Nil", K_NIL; 
+    
+    "New", K_NEW; 
+    "Return", K_RETURN
+  ]
 
   let idtable = Hashtbl.create 64
 

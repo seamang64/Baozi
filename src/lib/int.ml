@@ -2,7 +2,7 @@ open Syntax.Tree
 open Syntax.Keiko
 
 let rec integer_class =
-  { c_name=integer_name; c_pname="Object"; c_array=false; c_size=4; c_properties=[]; c_methods=[method_add]}
+  { c_name=integer_name; c_pname=VoidType; c_array=false; c_size=4; c_properties=[]; c_methods=[method_add]}
 
 and integer_name =
   { x_name="Integer"; x_def=integer_def}
@@ -11,10 +11,10 @@ and integer_def =
   {d_kind=ClassDef; d_type=(ClassType integer_class)}
 
 and method_add =
-  { m_name=add_name; m_type=(ClassType integer_class); m_static=false; m_size=4; m_arguments=[Prop(arg_x, VoidType); Prop(arg_y, VoidType)]; m_body=Nop; m_main=false}
+  { m_name=add_name; m_type=(ClassType integer_class); m_static=false; m_size=4; m_arguments=[Prop(arg_x, VoidType); Prop(arg_y, VoidType)]; m_body=Nop; m_main=false; m_replace=false}
 
 and add_name =
-  {x_name="add"; x_def={d_kind=MethodDef (12, false); d_type=(ClassType integer_class)}}
+  {x_name="add"; x_def={d_kind=MethodDef (8, false); d_type=(ClassType integer_class)}}
 
 and arg_x =  
   {x_name="x"; x_def=arg_def}
@@ -33,15 +33,15 @@ let method_code =
     CONST 4;
     GLOBAL "Integer.%desc";
     GLOBAL "lib.new";
-    PCALLW 2;
+    CALLW 2;
     LOCAL (-4);
     STOREW;
-    LOCAL 16;
+    LOCAL 12;
     LOADW;
     CONST 4;
     OFFSET;
     LOADW;
-    LOCAL 20;
+    LOCAL 16;
     LOADW;
     CONST 4;
     OFFSET;
@@ -53,6 +53,7 @@ let method_code =
     OFFSET;
     STOREW;
     LOCAL (-4);
+    LOADW;
     RETURN 1;
     END
   ]

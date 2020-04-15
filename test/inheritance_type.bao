@@ -2,7 +2,15 @@ Define Program
 $>
 	ClassMethod Main {} => {}
 	$>
-		Output->Int<-{5 + 4}.
+		a : A = New B.
 		Return.
 	<$
+<$
+
+Define A
+$>
+<$
+
+Define B <- A
+$>
 <$
