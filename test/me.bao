@@ -1,0 +1,24 @@
+Define Program
+$>
+	ClassMethod Main {} => {}
+	$>
+		a : A = New A.
+		a->x = 7.
+		a->Printx<-{}.
+		Return.
+	<$
+<$
+
+Define A
+$>
+	Properties
+	$>
+		x : Int,
+	<$	
+
+	Method Printx {} => {}
+	$>
+		Output->Int<-{My->x}.
+		Return.
+	<$
+<$

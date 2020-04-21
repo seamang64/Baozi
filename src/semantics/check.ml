@@ -2,6 +2,8 @@ open Syntax.Tree
 open Errors
 open Lib.Int
 
+let p_type = ref VoidType
+
 let print_type t =
   match t with
   | ClassType c -> c.c_name.x_name
@@ -10,8 +12,13 @@ let print_type t =
 
 let rec check_compatible t1 t2 =
   match (t1, t2) with
-  | (ClassType c1, ClassType c2) -> c1.c_name.x_name = c2.c_name.x_name || (check_compatible t1 c2.c_pname)
-  | _ -> false
+  | (ClassType c1, ClassType c2) ->
+      if c1.c_name.x_name == c2.c_name.x_name then ()
+      else check_compatible t1 c2.c_pname
+  | (ArrayClassType (c1, _), ArrayClassType (c2, _)) ->
+      if c1.c_name.x_name != c2.c_name.x_name then raise (TypeError((print_type t1), (print_type t2)))
+      else ()
+  | _ -> raise (TypeError((print_type t1), (print_type t2)))
 
 let find_method meth cls =
   match cls with
@@ -26,9 +33,8 @@ let find_method meth cls =
 let rec check_args args margs =
   match (args, margs) with
   | (t::ts, Prop(x, _)::ms) -> 
-      if check_compatible t x.x_def.d_type then
-        check_args ts ms
-      else raise (TypeError ((print_type t), (print_type x.x_def.d_type)))
+      check_compatible t x.x_def.d_type;
+      check_args ts ms
   | ([], []) -> ()
   | _ -> raise IncorrectArgumentCount
 
@@ -45,15 +51,26 @@ and check_expr e =
   | Property (e1, n) -> 
       ignore(check_expr e1);
       n.x_def.d_type
+  | Sub (e1, e2) ->
+      begin
+        match check_expr e1 with
+        | ArrayClassType (_, d1) ->
+            let d2 = check_expr e2 in
+              check_compatible d2 integer_def.d_type; d1
+        | _ -> raise InvalidSub
+      end
   | New n -> n.x_def.d_type
+  | NewArray (n, e) ->
+      let t = check_expr e in
+        check_compatible t integer_def.d_type;
+        n.x_def.d_type;
+  | Parent -> !p_type
   | _ -> raise UnknownExpression
 
 let check_return r ret =
   match (r, ret) with
   | (Some e, ClassType _) -> 
-    let t = check_expr e in
-      if check_compatible t ret then ()
-      else raise (TypeError ((print_type t), (print_type ret)))
+      let t = check_expr e in check_compatible t ret
   | (None, VoidType) -> ()
   | _ -> raise InvalidReturn
 
@@ -61,12 +78,10 @@ let rec check_stmt s ret =
   match s with
   | Assign (e1, e2) -> (** Check e1 is property of variable, check e2 is not a class **)
       let (t1, t2) = ((check_expr e1), (check_expr e2)) in
-        if check_compatible t1 t2 then ()
-        else raise (TypeError ((print_type t1), (print_type t2)))
+        check_compatible t1 t2
   | Delc (x, _, e) -> 
       let t = check_expr e in
-        if check_compatible x.x_def.d_type t then ()
-        else raise (TypeError (print_type x.x_def.d_type, print_type t))
+        check_compatible x.x_def.d_type t
   | Call e ->
       begin
         match e.e_guts with
@@ -80,6 +95,7 @@ let check_method meth =
   check_stmt meth.m_body ( meth.m_name.x_def.d_type)
 
 let check_class c =
+  p_type := ClassType c;
   List.iter check_method c.c_methods
 
 let check_program (Program(cs)) = 

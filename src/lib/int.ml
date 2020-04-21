@@ -2,7 +2,7 @@ open Syntax.Tree
 open Syntax.Keiko
 
 let rec integer_class =
-  { c_name=integer_name; c_pname=VoidType; c_array=false; c_size=4; c_properties=[]; c_methods=[method_add]}
+  { c_name=integer_name; c_pname=VoidType; c_array=false; c_size=4; c_properties=[]; c_methods=[method_add]; c_ancestors=[] }
 
 and integer_name =
   { x_name="Integer"; x_def=integer_def}

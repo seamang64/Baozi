@@ -3,7 +3,7 @@ open Syntax.Keiko
 open Int
 
 let rec out_class =
-  { c_name=out_name; c_pname=VoidType; c_array=false; c_size=4; c_properties=[]; c_methods=[method_int]}
+  { c_name=out_name; c_pname=VoidType; c_array=false; c_size=4; c_properties=[]; c_methods=[method_int]; c_ancestors=[] }
 
 and out_name =
   { x_name="Output"; x_def=out_def}

@@ -21,7 +21,8 @@
     "Me", K_ME;
     "My", K_ME; 
     "Myself", K_ME;
-    "Nil", K_NIL; 
+    "Nil", K_NIL;
+    "Parent", K_PARENT;
     
     "New", K_NEW; 
     "Return", K_RETURN

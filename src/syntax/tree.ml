@@ -6,14 +6,14 @@ and otype = string
 
 and expr_guts =
     Name of name
-  | Parent of expr
   | Sub of expr * expr 
   | Nil
   | MethodCall of expr * name * expr list
   | Property of expr * name
   | Constant of int
   | New of name
-  | Me
+  | NewArray of name * expr
+  | Parent
 
 and expr = 
   { mutable e_guts: expr_guts; 
@@ -45,7 +45,8 @@ and c_class =
     c_array: bool;
     c_size: int;
     mutable c_properties: property list;
-    mutable c_methods: m_method list }
+    mutable c_methods: m_method list;
+    mutable c_ancestors: c_class list }
 
 and def_kind = 
   | ClassDef
@@ -60,6 +61,7 @@ and def =
 
 and def_type =
   | ClassType of c_class
+  | ArrayClassType of c_class * def_type
   | TempType of otype
   | VoidType
 
@@ -93,7 +95,7 @@ let empty = Env(IdMap.empty)
 let empty_def = {d_kind=NoneKind; d_type=VoidType}
 
 let createClass (n, p, arr, props, meths) = 
-  { c_name=n; c_pname=p; c_array=arr; c_size=(List.length props) * 4; c_properties=props; c_methods=meths }
+  { c_name=n; c_pname=p; c_array=arr; c_size=(List.length props) * 4; c_properties=props; c_methods=meths; c_ancestors=[] }
 
 let createMethod (n, static, args, t, stmt, main, replace) =
   { m_name=n; m_type=t; m_static=static; m_size=0; m_arguments=args; m_body=stmt; m_main=main; m_replace=replace }

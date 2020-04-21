@@ -66,15 +66,45 @@ let rec gen_expr e =
             CALLW (List.length args)
           ]
         else 
-          SEQ [ 
-            DUP 0; 
-            LOADW;
-            gen_addr m;
-            LOADW;
-            CALLW (List.length args + 1)
-          ]
+          begin
+            match e1.e_guts with
+            | Parent -> 
+                SEQ [
+                  DUP 0;
+                  LOADW;
+                  CONST 4;
+                  OFFSET;
+                  LOADW;
+                  LOADW;
+                  gen_addr m;
+                  LOADW;
+                  CALLW (List.length args + 1)
+                ]
+            | _ -> 
+                SEQ [ 
+                  DUP 0; 
+                  LOADW;
+                  gen_addr m;
+                  LOADW;
+                  CALLW (List.length args + 1)
+                ]
+          end
       ]
   | Property (e1, n) -> SEQ [gen_expr e1; gen_addr n; LOADW]
+  | Sub (e1, e2) -> 
+      SEQ [
+        gen_expr e1;
+        gen_expr e2;
+        CONST 4;
+        OFFSET;
+        LOADW;
+        CONST 1;
+        BINOP Plus;
+        CONST 4;
+        BINOP Times;
+        OFFSET;
+        LOADW;
+      ]
   | New n ->  
       SEQ [
         CONST (4 + (get_size n));
@@ -86,12 +116,46 @@ let rec gen_expr e =
         SWAP;
         STOREW;
       ]
+    | NewArray (n, e) ->
+        SEQ [
+          gen_expr e;
+          CONST 4;
+          OFFSET;
+          LOADW;
+          CONST 1;
+          BINOP Plus;
+          CONST 4;
+          BINOP Times;
+          GLOBAL (n.x_name ^ ".%desc");
+          GLOBAL "lib.new";
+          CALLW 2;
+          DUP 0;
+          GLOBAL (n.x_name ^ ".%desc");
+          SWAP;
+          STOREW;
+        ]
+    | Parent -> SEQ [LOCAL 12; LOADW]
 
 and gen_assigment e1 e2 =
   let v = gen_expr e2 in
   match e1.e_guts with
   | Name n -> SEQ [v; gen_addr n; STOREW]
   | Property (e, n) -> SEQ[v; gen_expr e; gen_addr n; STOREW]
+  | Sub (e3, e4) ->
+    SEQ [
+      v;
+      gen_expr e3;
+      gen_expr e4;
+      CONST 4;
+      OFFSET;
+      LOADW;
+      CONST 1;
+      BINOP Plus;
+      CONST 4;
+      BINOP Times;
+      OFFSET;
+      STOREW;
+    ]
   | _ -> raise InvalidAssigment
 
 and gen_stmt s = 
@@ -120,8 +184,11 @@ and gen_class c =
   SEQ [
     DEFINE (c.c_name.x_name ^ ".%desc");
     WORD (DEC 0);
+    WORD (SYMBOL (c.c_name.x_name ^ ".%anc"));
     WORD (DEC (List.length c.c_methods));
-    SEQ (List.map (fun m -> WORD (SYMBOL (c.c_name.x_name ^ "." ^ m.m_name.x_name))) c.c_methods)
+    SEQ (List.map (fun m -> WORD (SYMBOL (c.c_name.x_name ^ "." ^ m.m_name.x_name))) c.c_methods);
+    DEFINE (c.c_name.x_name ^ ".%anc");
+    SEQ (List.map (fun c -> WORD (SYMBOL (c.c_name.x_name ^ ".%desc"))) c.c_ancestors)
   ]
 
 and gen_program (Program(cs)) =

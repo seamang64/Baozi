@@ -3,12 +3,14 @@ open Kgen.Codegen
 open Errors
 open Lib.Int
 open Lib.Out
+open Printf
 
 let propertyOffset = 4
 let argumentOffset = 12
 let variableOffset = -4
-let vtableOffset = 8
+let vtableOffset = 12
 let variableIndex = ref 0
+let p_type = ref VoidType
 
 let create_def kind t = { d_kind=kind; d_type = t }
 
@@ -20,7 +22,7 @@ let rec copy inherited =
   | [] -> []
 
 let create_me cls =
-  Prop({x_name="me"; x_def=(create_def NoneKind VoidType)}, TempType cls.c_name.x_name)
+  Prop({x_name="Me"; x_def=(create_def NoneKind VoidType)}, TempType cls.c_name.x_name)
 
 let get_class t env = 
   match t with
@@ -72,26 +74,39 @@ let rec annotate_properties properties index env =
 
 let rec annotate_expr expr env =
   match expr.e_guts with
-  | Name n -> let d = lookup n.x_name env in n.x_def <- d; n.x_def
-  | Constant _ -> integer_def
+  | Name n -> let d = lookup n.x_name env in n.x_def <- d; n.x_def.d_type
+  | Constant _ -> integer_def.d_type
   | MethodCall (e, m, args) -> 
-      let t = annotate_expr e env in
-      let c =  t.d_type in
+      let c = annotate_expr e env in
       m.x_def <- (find_method m.x_name c).x_def;
       List.iter (fun x -> ignore(annotate_expr x env)) args;
-      m.x_def  
+      m.x_def.d_type  
   | Property (e, n) -> 
-      let t = annotate_expr e env in
-      let c =  t.d_type in
+      let c = annotate_expr e env in
       n.x_def <- (find_properties n c).x_def;
-      n.x_def
-  | New n -> 
-    let d = lookup n.x_name env in 
+      n.x_def.d_type
+  | Sub (e1, e2) ->
+      ignore (annotate_expr e2 env);
       begin
-        match d.d_kind with
-        | ClassDef -> n.x_def <- d; n.x_def
-        | _ -> raise (InvalidNew n.x_name)
+        match annotate_expr e1 env with
+        | ArrayClassType (_, d) -> d
+        | _ -> raise InvalidSub
       end
+  | New n -> 
+      let d = lookup n.x_name env in 
+        begin
+          match d.d_kind with
+          | ClassDef -> n.x_def <- d; n.x_def.d_type
+          | _ -> raise (InvalidNew n.x_name)
+        end
+  | NewArray (n, e) ->
+      let d = lookup n.x_name env in 
+        begin
+          match d.d_type with
+          | ArrayClassType(_, _) -> n.x_def <- d; ignore(annotate_expr e env); n.x_def.d_type
+          | _ -> raise (InvalidNew n.x_name)
+        end
+  | Parent -> !p_type
 
 let rec annotate_stmt stmt env =
   match stmt with
@@ -127,6 +142,7 @@ let annotate_body meth cls env =
   if meth.m_main then mainMethod := cls.c_name.x_name ^ "." ^ meth.m_name.x_name;
   let newEnv = annotate_arguments meth.m_arguments 0 env in
   variableIndex := 0;
+  p_type := ClassType cls;
   ignore(annotate_stmt meth.m_body newEnv);
   meth.m_size <- !variableIndex
 
@@ -161,6 +177,7 @@ let rec annotate_members cls env =
       let (r, n) = split cls.c_methods in
         cls.c_methods <- (replace_methods p.c_methods r) @ n;
         cls.c_properties <- p.c_properties @ cls.c_properties;
+        cls.c_ancestors <- p :: p.c_ancestors;
         annotate_methods cls.c_methods 0 env;
         annotate_properties cls.c_properties 0 env
   | _ ->
@@ -171,11 +188,26 @@ let annotate_parent cls env =
   try cls.c_pname <- get_class cls.c_pname env with
     UnknownName _  -> ()
 
+let rec annotate_arrays clss env =
+   match clss with
+   | c::cs ->
+      if c.c_array then
+        begin
+          c.c_name.x_def <- create_def ClassDef (ArrayClassType(c, (get_class c.c_pname env)));
+          c.c_pname <- VoidType;
+          let env' = define c.c_name.x_name c.c_name.x_def env in
+            annotate_classes cs env'
+        end
+      else annotate_arrays cs env
+   | [] -> env
+
+
 let start_env = define "Output" out_def (define "Int" integer_def empty)
 
 let annotate_program (Program(cs)) =
   let env = annotate_classes cs start_env in
-  List.iter (fun c -> annotate_parent c env) cs;
-  List.iter (fun c -> annotate_members c env) cs;
-  List.iter (fun c -> annotate_bodies c env) cs;
-  env
+    let env' = annotate_arrays cs env in
+      List.iter (fun c -> annotate_parent c env') cs;
+      List.iter (fun c -> annotate_members c env') cs;
+      List.iter (fun c -> annotate_bodies c env') cs;
+    env'

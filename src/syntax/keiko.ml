@@ -80,6 +80,7 @@ let flatten_instructions x =
 let print_op op =
   match op with
   | Plus -> "PLUS"
+  | Times -> "TIMES"
   | _ -> printf "Unrecongised Keiko"; exit 1
 
 let fType = 

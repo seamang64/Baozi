@@ -20,6 +20,7 @@
 %token K_NIL
 %token K_NEW 
 %token K_RETURN
+%token K_PARENT
 
 %token O_PLUS 
 %token O_ASSIGN 
@@ -64,8 +65,8 @@ oclass :
       { createClass($2, (TempType $4), false, $6, $7) } 
   | K_DEFINE name P_START properties methods P_END                       
       { createClass($2, (TempType "Object"), false, $4, $5) }
-  | K_DEFINE name K_AS K_ARRAY K_OF IDENT P_START properties methods P_END     
-      { createClass($2, (TempType $6), true, $8, $9) } ;
+  | K_DEFINE name K_AS K_ARRAY K_OF IDENT
+      { createClass($2, (TempType $6), true, [], []) } ;
 
 properties :
   | /* empty */                    
@@ -136,8 +137,6 @@ expr:
       { createExpr (Constant $1)}
   | expr O_PLUS expr                 
       { createExpr (MethodCall($1, createName "add", [$3])) }
-  | expr O_UPARROW                   
-      { createExpr (Parent $1) }
   | expr P_LSQUARE expr P_RSQUARE      
       { createExpr (Sub($1, $3)) }
   | K_NIL                            
@@ -146,10 +145,16 @@ expr:
       { createExpr (MethodCall($1, $3, $6)) }
   | expr O_RIGHTARROW name           
       { createExpr (Property($1, $3)) }
+  | expr O_RIGHTARROW P_LSQUARE expr P_RSQUARE
+      { createExpr (Sub($1, $4)) }
   | K_NEW name
       { createExpr (New $2) }
+  | K_NEW name O_LEFTARROW P_LSQUARE expr P_RSQUARE
+      { createExpr (NewArray($2, $5)) }
   | K_ME                             
-      { createExpr(Me) } ;
+      { createExpr (Name (createName "Me")) }
+  | K_PARENT
+      { createExpr Parent };
 
 arguments :
   | /* empty */           

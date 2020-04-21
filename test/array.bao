@@ -1,0 +1,32 @@
+Define Program
+$>
+	ClassMethod Main {} => {}
+	$>
+		xs : AVec = New AVec<-[2].
+		a1 : A = New A.
+		a2 : A = New A.
+		a1->x = 5.
+		a2->x = 7.
+		xs->[0] = a1.
+		xs->[1] = a2.
+		xs->[0]->PrintX<-{}.
+		xs->[1]->PrintX<-{}.
+		Return.
+	<$
+<$
+
+Define A
+$>
+	Properties
+	$>
+		x: Int,
+	<$
+
+	Method PrintX {} => {}
+	$>
+		Output->Int<-{My->x}.
+		Return.
+	<$
+<$
+
+Define AVec As Array Of A
