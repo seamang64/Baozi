@@ -1,6 +1,8 @@
 open Syntax.Tree
 open Errors
 open Lib.Int
+open Lib.Bool
+open Printf
 
 let p_type = ref VoidType
 
@@ -41,7 +43,13 @@ let rec check_args args margs =
 and check_expr e =
   match e.e_guts with 
   | Name n ->  n.x_def.d_type
-  | Constant _ -> integer_def.d_type
+  | Constant (_, d) ->
+    begin
+      match d with
+      | TempType "Int" -> integer_def.d_type
+      | TempType "Bool" -> bool_def.d_type
+      | _ -> raise UnknownConstant
+    end
   | MethodCall (e1, m, args) -> 
       let t = check_expr e1 in
         let meth = find_method m t in
@@ -89,10 +97,16 @@ let rec check_stmt s ret =
         | _ -> raise IncompleteStatement
       end
   | Return r -> check_return r ret;
+  | IfStmt (e, ts, fs) ->
+      let t = check_expr e in
+        check_compatible t bool_def.d_type;
+        check_stmt ts ret;
+        check_stmt fs ret
   | Seq(ss) -> List.iter (fun st -> check_stmt st ret) ss
+  | Nop -> ()
 
 let check_method meth = 
-  check_stmt meth.m_body ( meth.m_name.x_def.d_type)
+  check_stmt meth.m_body meth.m_name.x_def.d_type
 
 let check_class c =
   p_type := ClassType c;

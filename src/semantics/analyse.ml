@@ -1,8 +1,8 @@
 open Syntax.Tree
 open Kgen.Codegen
 open Errors
+open Lib.Lib_all
 open Lib.Int
-open Lib.Out
 open Printf
 
 let propertyOffset = 4
@@ -29,10 +29,16 @@ let get_class t env =
   | TempType n -> let d = lookup n env in d.d_type
   | VoidType -> VoidType
   | ClassType c -> raise (DuplicateName c.c_name.x_name)
+  | ArrayClassType (c, _) -> raise (DuplicateName c.c_name.x_name)
 
 let find_method meth cls = 
   match cls with
   | ClassType c ->
+      begin
+        try (List.find (fun m -> meth = m.m_name.x_name) c.c_methods).m_name with
+          Not_found -> raise (UnknownName meth)
+      end
+  | ArrayClassType (c, d) ->
       begin
         try (List.find (fun m -> meth = m.m_name.x_name) c.c_methods).m_name with
           Not_found -> raise (UnknownName meth)
@@ -75,7 +81,7 @@ let rec annotate_properties properties index env =
 let rec annotate_expr expr env =
   match expr.e_guts with
   | Name n -> let d = lookup n.x_name env in n.x_def <- d; n.x_def.d_type
-  | Constant _ -> integer_def.d_type
+  | Constant (_, d) -> get_class d env
   | MethodCall (e, m, args) -> 
       let c = annotate_expr e env in
       m.x_def <- (find_method m.x_name c).x_def;
@@ -118,17 +124,18 @@ let rec annotate_stmt stmt env =
       define n.x_name n.x_def env
   | Call e -> ignore(annotate_expr e env); env
   | Return r ->
-    begin
-      match r with
-      | Some e -> ignore(annotate_expr e env); env
-      | None -> env
-    end
-  | Seq stmts -> 
-    begin
-      match stmts with
-      | s::ss -> let env' = annotate_stmt s env in annotate_stmt (Seq(ss)) env'
-      | [] -> env
-    end
+      begin
+        match r with
+        | Some e -> ignore(annotate_expr e env); env
+        | None -> env
+      end
+  | IfStmt (e, ts, fs) -> 
+      ignore(annotate_expr e env);
+      ignore(annotate_stmt ts env);
+      ignore(annotate_stmt fs env);
+      env
+  | Seq stmts -> List.fold_left (fun env' s -> annotate_stmt s env') env stmts
+  | Nop -> env
 
 let rec annotate_methods methods index env =
   match methods with
@@ -201,8 +208,7 @@ let rec annotate_arrays clss env =
       else annotate_arrays cs env
    | [] -> env
 
-
-let start_env = define "Output" out_def (define "Int" integer_def empty)
+let start_env = List.fold_right (fun (n, d) env -> define n d env) lib_classes empty
 
 let annotate_program (Program(cs)) =
   let env = annotate_classes cs start_env in
@@ -210,4 +216,4 @@ let annotate_program (Program(cs)) =
       List.iter (fun c -> annotate_parent c env') cs;
       List.iter (fun c -> annotate_members c env') cs;
       List.iter (fun c -> annotate_bodies c env') cs;
-    env'
+      env'

@@ -3,7 +3,7 @@ open Syntax.Keiko
 open Errors
 open Printf
 open Lib.Int
-open Lib.Out
+open Lib.Lib_all
 
 let me_pointer = 4
 let mainMethod = ref ""
@@ -23,6 +23,24 @@ let is_static m =
   | MethodDef(_, s) -> s
   | _ -> raise (UnknownName m.x_name)
 
+let gen_primitive x desc =
+  SEQ [
+    CONST 8;
+    GLOBAL desc;
+    GLOBAL "lib.new";
+    CALLW 2;
+    DUP 0;
+    CONST x;
+    SWAP;
+    CONST 4;
+    OFFSET;
+    STOREW;
+    DUP 0;
+    GLOBAL desc;
+    SWAP;
+    STOREW;
+  ]
+
 let gen_addr n =
   match n.x_def.d_kind with
   | ClassDef -> SEQ [GLOBAL (n.x_name ^ ".%desc")]
@@ -38,23 +56,13 @@ let rec gen_expr e =
       | ClassDef -> SEQ [GLOBAL (n.x_name ^ ".%desc")]
       | _ -> SEQ [gen_addr n; LOADW]
     end
-  | Constant x ->
-      SEQ [
-        CONST 8;
-        GLOBAL "Integer.%desc";
-        GLOBAL "lib.new";
-        CALLW 2;
-        DUP 0;
-        CONST x;
-        SWAP;
-        CONST 4;
-        OFFSET;
-        STOREW;
-        DUP 0;
-        GLOBAL "Integer.%desc";
-        SWAP;
-        STOREW;
-      ]
+  | Constant (x, d) ->
+    begin
+      match d with
+      | TempType "Int" -> gen_primitive x "Integer.%desc"
+      | TempType "Bool" -> gen_primitive x "Bool.%desc"
+      | _ -> raise UnknownConstant
+    end
   | MethodCall (e1, m, args) ->
       SEQ [ 
         SEQ (List.map gen_expr (List.rev args));
@@ -136,6 +144,17 @@ let rec gen_expr e =
         ]
     | Parent -> SEQ [LOCAL 12; LOADW]
 
+and gen_cond tlab flab test = 
+  SEQ [
+    gen_expr test;
+    CONST 4;
+    OFFSET;
+    LOADW;
+    CONST 0;
+    JUMPC (Eq, tlab);
+    JUMP flab
+  ]
+
 and gen_assigment e1 e2 =
   let v = gen_expr e2 in
   match e1.e_guts with
@@ -170,6 +189,18 @@ and gen_stmt s =
       | None -> SEQ [RETURN 0]
     end
   | Seq ss -> SEQ (List.map gen_stmt ss)
+  | IfStmt (e, ts, fs) ->
+      let lab1 = label () and lab2 = label () and lab3 = label () in
+      SEQ [
+        gen_cond lab2 lab1 e;
+        LABEL lab1;
+        gen_stmt ts;
+        JUMP lab3;
+        LABEL lab2;
+        gen_stmt fs;
+        LABEL lab3;
+      ]
+  | Nop -> NOP
 
 and gen_method classname m = 
   SEQ [
@@ -193,8 +224,7 @@ and gen_class c =
 
 and gen_program (Program(cs)) =
   SEQ [
-    out_code;
-    integer_code;
+    SEQ lib_code;
     SEQ (List.map gen_methods cs);
     SEQ (List.map gen_class cs);
     PROC ("MAIN", 0, 0, 0);

@@ -81,6 +81,12 @@ let print_op op =
   match op with
   | Plus -> "PLUS"
   | Times -> "TIMES"
+  | Eq -> "EQ"
+  | Lt -> "LT"
+  | And -> "AND"
+  | Or -> "OR"
+  | Not -> "NOT"
+  | Neq -> "NEQ"
   | _ -> printf "Unrecongised Keiko"; exit 1
 
 let fType = 
@@ -101,7 +107,11 @@ let rec print_keiko prog =
    | CALLW n -> printf "CALLW %d\n" n
    | RETURN n -> printf "RETURN%s\n" (fType n) 
    | BINOP op -> printf "%s\n" (print_op op)
+   | MONOP op -> printf "%s\n" (print_op op)
    | OFFSET -> printf "OFFSET\n"
+   | LABEL l -> printf "LABEL %d\n" l
+   | JUMP l -> printf "JUMP %d\n" l
+   | JUMPC (op, l) -> printf "J%s %d\n" (print_op op) l  
    | SEQ ss -> List.iter print_keiko ss
    | SWAP -> printf "SWAP\n"
    | DUP n -> printf "DUP %d\n" n

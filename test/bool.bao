@@ -1,0 +1,12 @@
+Define Program
+$>
+	ClassMethod Main {} => {}
+	$>
+		a : Bool = True.
+		a = not a.
+		a = a or a.
+		a = False and True.
+		a = 5 == 7.
+		a = 5 < 7.
+	<$
+<$

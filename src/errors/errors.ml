@@ -24,6 +24,8 @@ exception IncorrectArgumentCount
 
 exception InvalidSub
 
+exception UnknownConstant
+
 let print_exception e =
   match e with
   | UnknownName n -> printf "Error: The name '%s' does not exist in the current context\n" n
@@ -38,3 +40,4 @@ let print_exception e =
   | IncompleteStatement -> printf "Error: Incomplete statement\n"
   | IncorrectArgumentCount -> printf "Error: Wrong number of arguments\n"
   | InvalidSub -> printf "Must use the [] notation with an array type\n"
+  | UnknownConstant -> printf "Constant of unknown type\n"

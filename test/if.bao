@@ -1,0 +1,31 @@
+Define Program
+$>
+	ClassMethod Main {} => {}
+	$>
+		If 5 == 5 Then
+		$>
+			Output->Int<-{10}.
+		<$
+		If False Then
+		$>
+			Output->Int<-{34}.
+		<$
+		If 5 < 7 Then
+		$>
+			Output->Int<-{25}.
+		<$
+		Else
+		$>
+			Output->Int<-{67}.
+		<$
+		If False and True Then
+		$>
+			Output->Int<-{45}.
+		<$
+		Else
+		$>
+			Output->Int<-{92}.
+		<$
+		Return.
+	<$
+<$

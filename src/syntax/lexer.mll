@@ -23,6 +23,17 @@
     "Myself", K_ME;
     "Nil", K_NIL;
     "Parent", K_PARENT;
+
+    "True", C_TRUE;
+    "False", C_FALSE;
+    "and", O_AND;
+    "or", O_OR;
+    "not", O_NOT;
+
+    "If", K_IF;
+    "Then", K_THEN;
+    "Else", K_ELSE;
+    "While", K_WHILE; 
     
     "New", K_NEW; 
     "Return", K_RETURN
@@ -56,7 +67,8 @@ rule token = parse
   | "="                 { O_ASSIGN }
   | "->"                { O_RIGHTARROW }
   | "<-"                { O_LEFTARROW }
-  | "^"                 { O_UPARROW }
+  | "=="                { O_EQUALS }
+  | "<"                 { O_LESSTHAN }
 
   | "."                 { P_DOT }
   | ":"                 { P_COLON }

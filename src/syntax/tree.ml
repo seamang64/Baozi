@@ -10,7 +10,7 @@ and expr_guts =
   | Nil
   | MethodCall of expr * name * expr list
   | Property of expr * name
-  | Constant of int
+  | Constant of int * def_type
   | New of name
   | NewArray of name * expr
   | Parent
@@ -25,6 +25,8 @@ and stmt =
   | Call of expr
   | Return of expr option
   | Seq of stmt list
+  | IfStmt of expr * stmt * stmt
+  | WhileStmt of expr * stmt
   | Nop
 
 and property = Prop of name * def_type
