@@ -1,0 +1,19 @@
+Define Program
+$>
+	ClassMethod Main {} => {}
+	$>
+		x : Int = 5 + 4 + 3.
+		Output->Int<-{x}.
+		y : Int = (7 + 2) - 6.
+		Output->Int<-{y}.
+		x = x * y.
+		Output->Int<-{x}.
+		z : Int = 20 / 4.
+		Output->Int<-{z}.
+		z = 99 % 10.
+		Output->Int<-{z}.
+		z = ((x - y) * z) + 4. 
+		Output->Int<-{z}.
+		Return.
+	<$
+<$

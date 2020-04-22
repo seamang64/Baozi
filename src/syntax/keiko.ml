@@ -81,12 +81,19 @@ let print_op op =
   match op with
   | Plus -> "PLUS"
   | Times -> "TIMES"
+  | Minus -> "MINUS"
+  | Div -> "DIV"
+  | Mod -> "MOD"
+  | Uminus -> "UMINUS"
   | Eq -> "EQ"
+  | Neq -> "NEQ"
   | Lt -> "LT"
+  | Gt -> "GT"
+  | Leq -> "LEQ"
+  | Geq -> "GEQ"
   | And -> "AND"
   | Or -> "OR"
   | Not -> "NOT"
-  | Neq -> "NEQ"
   | _ -> printf "Unrecongised Keiko"; exit 1
 
 let fType = 
