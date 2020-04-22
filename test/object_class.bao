@@ -1,0 +1,12 @@
+Define Program
+$>
+	ClassMethod Main {} => {}
+	$>
+		x : Object = New A.
+		Return.
+	<$
+<$
+
+Define A
+$>
+<$

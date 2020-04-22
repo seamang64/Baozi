@@ -13,7 +13,7 @@ let get_size x =
   | ClassType c -> c.c_size
   | _ -> raise (InvalidNew x.x_name)
 
-let is_int x = 
+let is_int x =
   match x.x_def.d_type with
   | ClassType c -> c.c_name.x_name = "Integer"
   | _ -> false
@@ -48,7 +48,7 @@ let gen_addr n =
   | PropertyDef off -> SEQ [CONST off; OFFSET]
   | MethodDef (off, _) -> SEQ [CONST off; OFFSET]
 
-let rec gen_expr e = 
+let rec gen_expr e =
   match e.e_guts with
   | Name n ->
     begin
@@ -64,19 +64,19 @@ let rec gen_expr e =
       | _ -> raise UnknownConstant
     end
   | MethodCall (e1, m, args) ->
-      SEQ [ 
+      SEQ [
         SEQ (List.map gen_expr (List.rev args));
         gen_expr e1;
         if is_static m then
-          SEQ [ 
+          SEQ [
             gen_addr m;
             LOADW;
             CALLW (List.length args)
           ]
-        else 
+        else
           begin
             match e1.e_guts with
-            | Parent -> 
+            | Parent ->
                 SEQ [
                   DUP 0;
                   LOADW;
@@ -88,9 +88,9 @@ let rec gen_expr e =
                   LOADW;
                   CALLW (List.length args + 1)
                 ]
-            | _ -> 
-                SEQ [ 
-                  DUP 0; 
+            | _ ->
+                SEQ [
+                  DUP 0;
                   LOADW;
                   gen_addr m;
                   LOADW;
@@ -99,25 +99,26 @@ let rec gen_expr e =
           end
       ]
   | Property (e1, n) -> SEQ [gen_expr e1; gen_addr n; LOADW]
-  | Sub (e1, e2) -> 
+  | Sub (e1, e2) ->
       SEQ [
         gen_expr e1;
+        CONST 8;
+        OFFSET;
+        LOADW;
         gen_expr e2;
         CONST 4;
         OFFSET;
         LOADW;
-        CONST 1;
-        BINOP Plus;
         CONST 4;
         BINOP Times;
         OFFSET;
         LOADW;
       ]
-  | New n ->  
+  | New n ->
       SEQ [
         CONST (4 + (get_size n));
-        GLOBAL (n.x_name ^ ".%desc"); 
-        GLOBAL "lib.new"; 
+        GLOBAL (n.x_name ^ ".%desc");
+        GLOBAL "lib.new";
         CALLW 2;
         DUP 0;
         GLOBAL (n.x_name ^ ".%desc");
@@ -126,17 +127,24 @@ let rec gen_expr e =
       ]
     | NewArray (n, e) ->
         SEQ [
+          CONST 12;
+          GLOBAL (n.x_name ^ ".%desc");
+          GLOBAL "lib.new";
+          CALLW 2;
+          DUP 0;
           gen_expr e;
           CONST 4;
           OFFSET;
           LOADW;
-          CONST 1;
-          BINOP Plus;
           CONST 4;
           BINOP Times;
-          GLOBAL (n.x_name ^ ".%desc");
+          GLOBAL ("Object.%desc");
           GLOBAL "lib.new";
           CALLW 2;
+          SWAP;
+          CONST 8;
+          OFFSET;
+          STOREW;
           DUP 0;
           GLOBAL (n.x_name ^ ".%desc");
           SWAP;
@@ -144,7 +152,7 @@ let rec gen_expr e =
         ]
     | Parent -> SEQ [LOCAL 12; LOADW]
 
-and gen_cond tlab flab test = 
+and gen_cond tlab flab test =
   SEQ [
     gen_expr test;
     CONST 4;
@@ -164,12 +172,13 @@ and gen_assigment e1 e2 =
     SEQ [
       v;
       gen_expr e3;
+      CONST 8;
+      OFFSET;
+      LOADW;
       gen_expr e4;
       CONST 4;
       OFFSET;
       LOADW;
-      CONST 1;
-      BINOP Plus;
       CONST 4;
       BINOP Times;
       OFFSET;
@@ -177,12 +186,12 @@ and gen_assigment e1 e2 =
     ]
   | _ -> raise InvalidAssigment
 
-and gen_stmt s = 
+and gen_stmt s =
   match s with
   | Assign (e1, e2) -> gen_assigment e1 e2
   | Delc (n, _, e) -> SEQ [gen_expr e; gen_addr n; STOREW]
   | Call e  -> gen_expr e
-  | Return r -> 
+  | Return r ->
     begin
       match r with
       | Some e -> SEQ [gen_expr e; RETURN 1]
@@ -224,12 +233,15 @@ and gen_stmt s =
   | Seq ss -> SEQ (List.map gen_stmt ss)
   | Nop -> NOP
 
-and gen_method classname m = 
-  SEQ [
-    PROC (classname ^ "." ^ m.m_name.x_name, m.m_size, 0, 0);
-    gen_stmt m.m_body;
-    END
-  ]
+and gen_method classname m =
+  match m.m_prim_code with
+  | NOP ->
+      SEQ [
+        PROC (classname ^ "." ^ m.m_name.x_name, m.m_size, 0, 0);
+        gen_stmt m.m_body;
+        END
+      ]
+  | code -> SEQ[PROC (classname ^ "." ^ m.m_name.x_name, m.m_size, 0, 0); code]
 
 and gen_methods c = SEQ (List.map (gen_method c.c_name.x_name) c.c_methods)
 
@@ -241,6 +253,7 @@ and gen_class c =
     WORD (DEC (List.length c.c_methods));
     SEQ (List.map (fun m -> WORD (SYMBOL (c.c_name.x_name ^ "." ^ m.m_name.x_name))) c.c_methods);
     DEFINE (c.c_name.x_name ^ ".%anc");
+    WORD (SYMBOL (c.c_name.x_name ^ ".%desc"));
     SEQ (List.map (fun c -> WORD (SYMBOL (c.c_name.x_name ^ ".%desc"))) c.c_ancestors)
   ]
 

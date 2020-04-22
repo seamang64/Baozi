@@ -1,0 +1,11 @@
+Define Program
+$>
+	ClassMethod Main {} => {}
+	$>
+		x : Int = 5.
+		y : Int = x.
+		x = 7.
+		Output->Int<-{y}.
+		Return.
+	<$
+<$

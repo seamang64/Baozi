@@ -1,12 +1,13 @@
 open Printf
 open Errors
+open Keiko
 
 type ident = string
 and otype = string
 
 and expr_guts =
     Name of name
-  | Sub of expr * expr 
+  | Sub of expr * expr
   | Nil
   | MethodCall of expr * name * expr list
   | Property of expr * name
@@ -15,8 +16,8 @@ and expr_guts =
   | NewArray of name * expr
   | Parent
 
-and expr = 
-  { mutable e_guts: expr_guts; 
+and expr =
+  { mutable e_guts: expr_guts;
     mutable e_type: otype }
 
 and stmt =
@@ -40,7 +41,8 @@ and m_method =
     m_replace: bool;
     mutable m_size: int;
     mutable m_arguments: property list;
-    mutable m_body: stmt }
+    mutable m_body: stmt;
+    m_prim_code: code }
 
 and c_class =
   { c_name: name;
@@ -51,14 +53,14 @@ and c_class =
     mutable c_methods: m_method list;
     mutable c_ancestors: c_class list }
 
-and def_kind = 
+and def_kind =
   | ClassDef
   | VariableDef of int
   | PropertyDef of int
   | MethodDef of int * bool
   | NoneKind
 
-and def = 
+and def =
   { d_kind: def_kind;
     d_type: def_type}
 
@@ -68,22 +70,22 @@ and def_type =
   | TempType of otype
   | VoidType
 
-and name = 
-  { x_name: ident;      
+and name =
+  { x_name: ident;
     mutable x_def: def}
 
 and program =
   Program of c_class list
 
-module IdMap = 
-  Map.Make(struct 
-    type t = ident  
-    let compare = compare 
+module IdMap =
+  Map.Make(struct
+    type t = ident
+    let compare = compare
   end)
 
 type environment = Env of def IdMap.t
 
-let lookup id (Env(ids)) = 
+let lookup id (Env(ids)) =
   try IdMap.find id ids with
     Not_found -> raise (UnknownName id)
 
@@ -97,11 +99,11 @@ let empty = Env(IdMap.empty)
 
 let empty_def = {d_kind=NoneKind; d_type=VoidType}
 
-let createClass (n, p, arr, props, meths) = 
+let createClass (n, p, arr, props, meths) =
   { c_name=n; c_pname=p; c_array=arr; c_size=(List.length props) * 4; c_properties=props; c_methods=meths; c_ancestors=[] }
 
 let createMethod (n, static, args, t, stmt, main, replace) =
-  { m_name=n; m_type=t; m_static=static; m_size=0; m_arguments=args; m_body=stmt; m_main=main; m_replace=replace }
+  { m_name=n; m_type=t; m_static=static; m_size=0; m_arguments=args; m_body=stmt; m_main=main; m_replace=replace; m_prim_code=NOP }
 
 let createExpr guts =
   { e_guts=guts; e_type="voidtype" }
