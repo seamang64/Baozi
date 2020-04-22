@@ -25,6 +25,10 @@
 %token K_IF
 %token K_THEN
 %token K_ELSE
+%token K_WHILE
+%token K_FOR
+%token K_STEP
+%token K_TEST
 
 %token C_TRUE
 %token C_FALSE
@@ -140,15 +144,23 @@ stmt :
       { Return None }
   | expr P_DOT                             
       { Call($1) }
-  | K_IF expr K_THEN P_START stmt P_END elses
-    { IfStmt($2, $5, $7) }
-  | K_WHILE expr P_START stmt P_END
-    { WhileStmt($2, $4) };
+  | K_IF expr K_THEN P_START stmts P_END elses
+      { IfStmt($2, $5, $7) }
+  | K_WHILE expr P_START stmts P_END
+      { WhileStmt($2, $4) }
+  | K_FOR for_stmt K_STEP for_stmt K_TEST expr P_START stmts P_END
+      { ForStmt($2, $4, $6, $8) } ;
+
+for_stmt :
+  | /* empty */
+      { Nop } 
+  | stmt
+      { $1 } ;
 
 elses :
   | /* empty */
       { Nop }
-  | K_ELSE P_START stmt P_END
+  | K_ELSE P_START stmts P_END
       { $3 };
 
 expr:

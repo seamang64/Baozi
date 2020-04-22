@@ -41,10 +41,14 @@ and empty_def = {d_kind=NoneKind; d_type=VoidType}
 
 let create_bool = 
   SEQ [
-    CONST 4;
+    CONST 8;
     GLOBAL "Bool.%desc";
     GLOBAL "lib.new";
     CALLW 2;
+    DUP 0;
+    GLOBAL "Bool.%desc";
+    SWAP;
+    STOREW;
     LOCAL (-4);
     STOREW;
   ]

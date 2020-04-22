@@ -42,10 +42,14 @@ and empty_def = {d_kind=NoneKind; d_type=VoidType}
 
 let create_new x = 
   SEQ [
-    CONST 4;
+    CONST 8;
     GLOBAL x;
     GLOBAL "lib.new";
     CALLW 2;
+    DUP 0;
+    GLOBAL x;
+    SWAP;
+    STOREW;
     LOCAL (-4);
     STOREW;
   ]

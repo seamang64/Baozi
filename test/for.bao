@@ -1,0 +1,11 @@
+Define Program
+$>
+	ClassMethod Main {} => {}
+	$>
+		For x : Int = 0. Step x = x + 1. Test x < 5
+		$>
+			Output->Int<-{x}.
+		<$
+		Return.
+	<$
+<$

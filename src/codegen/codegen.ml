@@ -151,7 +151,7 @@ and gen_cond tlab flab test =
     OFFSET;
     LOADW;
     CONST 0;
-    JUMPC (Eq, tlab);
+    JUMPC (Neq, tlab);
     JUMP flab
   ]
 
@@ -188,11 +188,10 @@ and gen_stmt s =
       | Some e -> SEQ [gen_expr e; RETURN 1]
       | None -> SEQ [RETURN 0]
     end
-  | Seq ss -> SEQ (List.map gen_stmt ss)
   | IfStmt (e, ts, fs) ->
       let lab1 = label () and lab2 = label () and lab3 = label () in
       SEQ [
-        gen_cond lab2 lab1 e;
+        gen_cond lab1 lab2 e;
         LABEL lab1;
         gen_stmt ts;
         JUMP lab3;
@@ -200,6 +199,29 @@ and gen_stmt s =
         gen_stmt fs;
         LABEL lab3;
       ]
+  | WhileStmt (test, stmt) ->
+      let lab1 = label () and lab2 = label () and lab3 = label () in
+      SEQ [
+        JUMP lab2;
+        LABEL lab1;
+        gen_stmt stmt;
+        LABEL lab2;
+        gen_cond lab1 lab3 test;
+        LABEL lab3
+      ]
+  | ForStmt (init, step, test, body) ->
+      let lab1 = label () and lab2 = label () and lab3 = label () in
+        SEQ [
+          gen_stmt init;
+          JUMP lab2;
+          LABEL lab1;
+          gen_stmt body;
+          gen_stmt step;
+          LABEL lab2;
+          gen_cond lab1 lab3 test;
+          LABEL lab3
+        ]
+  | Seq ss -> SEQ (List.map gen_stmt ss)
   | Nop -> NOP
 
 and gen_method classname m = 

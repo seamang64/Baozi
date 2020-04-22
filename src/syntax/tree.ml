@@ -27,6 +27,7 @@ and stmt =
   | Seq of stmt list
   | IfStmt of expr * stmt * stmt
   | WhileStmt of expr * stmt
+  | ForStmt of stmt * stmt * expr * stmt
   | Nop
 
 and property = Prop of name * def_type

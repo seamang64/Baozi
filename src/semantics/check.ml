@@ -97,11 +97,21 @@ let rec check_stmt s ret =
         | _ -> raise IncompleteStatement
       end
   | Return r -> check_return r ret;
-  | IfStmt (e, ts, fs) ->
-      let t = check_expr e in
+  | IfStmt (test, ts, fs) ->
+      let t = check_expr test in
         check_compatible t bool_def.d_type;
         check_stmt ts ret;
         check_stmt fs ret
+  | WhileStmt (test, stmt) ->
+      let t = check_expr test in
+        check_compatible t bool_def.d_type;
+        check_stmt stmt ret
+  | ForStmt (init, step, test, body) ->
+      let t = check_expr test in
+        check_stmt init ret;
+        check_stmt step ret;
+        check_compatible t bool_def.d_type;
+        check_stmt body ret
   | Seq(ss) -> List.iter (fun st -> check_stmt st ret) ss
   | Nop -> ()
 

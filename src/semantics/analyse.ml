@@ -134,6 +134,16 @@ let rec annotate_stmt stmt env =
       ignore(annotate_stmt ts env);
       ignore(annotate_stmt fs env);
       env
+  | WhileStmt (e, s) ->
+      ignore(annotate_expr e env);
+      ignore(annotate_stmt s env);
+      env
+  | ForStmt (init, step, test, body) ->
+      let env' = annotate_stmt init env in
+        ignore(annotate_stmt step env');
+        ignore(annotate_expr test env');
+        ignore(annotate_stmt body env');
+      env
   | Seq stmts -> List.fold_left (fun env' s -> annotate_stmt s env') env stmts
   | Nop -> env
 

@@ -34,6 +34,9 @@
     "Then", K_THEN;
     "Else", K_ELSE;
     "While", K_WHILE; 
+    "For", K_FOR;
+    "Step", K_STEP;
+    "Test", K_TEST;
     
     "New", K_NEW; 
     "Return", K_RETURN
