@@ -67,11 +67,19 @@ rule token = parse
   | digit+ as s         { NUMBER (int_of_string s)}
 
   | "+"                 { O_PLUS }
+  | "*"                 { O_TIMES }
+  | "-"                 { O_MINUS}
+  | "/"                 { O_DIV }
+  | "%"                 { O_MOD }
   | "="                 { O_ASSIGN }
   | "->"                { O_RIGHTARROW }
   | "<-"                { O_LEFTARROW }
   | "=="                { O_EQUALS }
+  | "/="                { O_NOTEQUALS }
   | "<"                 { O_LESSTHAN }
+  | ">"                 { O_GREATERTHAN }
+  | "<="                { O_LESSTHANEQ }
+  | ">="                { O_GREATERTHANEQ }            
 
   | "."                 { P_DOT }
   | ":"                 { P_COLON }

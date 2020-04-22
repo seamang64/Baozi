@@ -76,28 +76,21 @@ let return_result =
     STOREW;
     LOCAL (-4);
     LOADW;
-    RETURN 1;
+    RETURN 1
   ]
 
-let and_code =
+let simple_operation name op =
   SEQ [
-    PROC ("Bool.and", 4, 0, 0);
+    PROC ("Bool." ^ name, 4, 0, 0);
     create_bool;
     get_args;
-    BINOP And;
+    BINOP op;
     return_result;
     END
-  ]
+  ] 
 
-let or_code =
-  SEQ [
-    PROC ("Bool.or", 4, 0, 0);
-    create_bool;
-    get_args;
-    BINOP Or;
-    return_result;
-    END
-  ]
+let and_code = simple_operation "and" And
+let or_code = simple_operation "or" Or
 
 let not_code =
   SEQ [

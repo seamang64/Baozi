@@ -33,12 +33,20 @@
 %token C_TRUE
 %token C_FALSE
 
-%token O_PLUS 
+%token O_PLUS
+%token O_TIMES 
+%token O_MINUS
+%token O_DIV
+%token O_MOD 
 %token O_ASSIGN 
 %token O_RIGHTARROW 
 %token O_LEFTARROW 
 %token O_EQUALS
+%token O_NOTEQUALS
 %token O_LESSTHAN
+%token O_GREATERTHAN
+%token O_LESSTHANEQ
+%token O_GREATERTHANEQ
 %token O_AND
 %token O_OR
 %token O_NOT
@@ -58,6 +66,25 @@
 
 %token BADTOKEN
 %token EOF
+
+%left O_PLUS
+%left O_TIMES 
+%left O_MINUS
+%left O_DIV
+%left O_MOD 
+%left O_ASSIGN 
+%left O_RIGHTARROW 
+%left O_LEFTARROW 
+%left O_EQUALS
+%left O_NOTEQUALS
+%left O_LESSTHAN
+%left O_GREATERTHAN
+%left O_LESSTHANEQ
+%left O_GREATERTHANEQ
+%left O_AND
+%left O_OR
+%nonassoc O_NOT
+%nonassoc O_UMINUS
 
 %type <Tree.program> program
 
@@ -168,18 +195,36 @@ expr:
       { createExpr (Name $1) }
   | NUMBER                         
       { createExpr (Constant ($1, TempType("Int"))) }
+  | O_MINUS expr %prec O_UMINUS                 
+      { createExpr (MethodCall($2, createName "uminus", [])) }
+  | O_NOT expr                 
+      { createExpr (MethodCall($2, createName "not", [])) }
   | expr O_PLUS expr                 
       { createExpr (MethodCall($1, createName "add", [$3])) }
+  | expr O_TIMES expr                 
+      { createExpr (MethodCall($1, createName "times", [$3])) }
+  | expr O_MINUS expr                 
+      { createExpr (MethodCall($1, createName "sub", [$3])) }
+  | expr O_DIV expr                 
+      { createExpr (MethodCall($1, createName "div", [$3])) }
+  | expr O_MOD expr                 
+      { createExpr (MethodCall($1, createName "mod", [$3])) }
   | expr O_EQUALS expr                 
       { createExpr (MethodCall($1, createName "equals", [$3])) }
+  | expr O_NOTEQUALS expr                 
+      { createExpr (MethodCall($1, createName "notEquals", [$3])) }
   | expr O_LESSTHAN expr                 
       { createExpr (MethodCall($1, createName "lessThan", [$3])) }
+  | expr O_GREATERTHAN expr                 
+      { createExpr (MethodCall($1, createName "greaterThan", [$3])) }
+  | expr O_LESSTHANEQ expr                 
+      { createExpr (MethodCall($1, createName "lessThanEq", [$3])) }
+  | expr O_GREATERTHANEQ expr                 
+      { createExpr (MethodCall($1, createName "greaterThanEq", [$3])) }
   | expr O_AND expr                 
       { createExpr (MethodCall($1, createName "and", [$3])) }
   | expr O_OR expr                 
       { createExpr (MethodCall($1, createName "or", [$3])) }
-  | O_NOT expr                 
-      { createExpr (MethodCall($2, createName "not", [])) }
   | expr P_LSQUARE expr P_RSQUARE      
       { createExpr (Sub($1, $3)) }
   | K_NIL                            
@@ -202,6 +247,8 @@ expr:
       { createExpr (Constant (1, TempType("Bool"))) }
   | C_FALSE
       { createExpr (Constant (0, TempType("Bool"))) }
+  | P_LPAR expr P_RPAR
+      { $2 }
 
 arguments :
   | /* empty */           
