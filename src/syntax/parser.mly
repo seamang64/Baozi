@@ -126,16 +126,16 @@ methods :
       { $1 :: $2 } ;
 
 meth :
-  | K_METHOD name P_LCURL pairs P_RCURL P_DOUBLEARROW type P_START stmts P_END
+  | K_METHOD name P_LCURL pairs P_RCURL P_DOUBLEARROW ctype P_START stmts P_END
       { createMethod($2, false, $4, $7, $9, false, false) }
-  | K_CLASSMETHOD name P_LCURL pairs P_RCURL P_DOUBLEARROW type P_START stmts P_END
+  | K_CLASSMETHOD name P_LCURL pairs P_RCURL P_DOUBLEARROW ctype P_START stmts P_END
       { createMethod($2, true, $4, $7, $9, false, false) }
-  | K_REPLACE name P_LCURL pairs P_RCURL P_DOUBLEARROW IDENT P_START stmts P_END
+  | K_REPLACE name P_LCURL pairs P_RCURL P_DOUBLEARROW ctype P_START stmts P_END
       { createMethod($2, false, $4, $7, $9, false, true) }
   | K_CLASSMETHOD K_MAIN P_LCURL P_RCURL P_DOUBLEARROW P_LCURL P_RCURL P_START stmts P_END
       { createMethod(createName "Main", true, [], VoidType, $9, true, false) }
 
-type :
+ctype :
   | IDENT
       { TempType $1 }
   | P_LCURL P_RCURL
@@ -175,7 +175,7 @@ stmt :
   | expr P_DOT
       { Call($1) }
   | K_IF expr K_THEN body elses
-      { IfStmt($2, $5, $7) }
+      { IfStmt($2, $5, $4) }
   | K_WHILE expr P_DOT body
       { WhileStmt($2, $4) }
   | K_FOR for_stmt K_STEP for_stmt K_TEST expr P_DOT body
