@@ -23,6 +23,8 @@ let is_static m =
   | MethodDef(_, s) -> s
   | _ -> raise (UnknownName m.x_name)
 
+let unbox = SEQ [CONST 4; OFFSET; LOADW]
+
 let gen_primitive x desc =
   SEQ [
     CONST 8;
@@ -50,12 +52,7 @@ let gen_addr n =
 
 let rec gen_expr e =
   match e.e_guts with
-  | Name n ->
-    begin
-      match n.x_def.d_kind with
-      | ClassDef -> SEQ [GLOBAL (n.x_name ^ ".%desc")]
-      | _ -> SEQ [gen_addr n; LOADW]
-    end
+  | Name n -> SEQ [gen_addr n; LOADW]
   | Constant (x, d) ->
     begin
       match d with
@@ -64,40 +61,8 @@ let rec gen_expr e =
       | _ -> raise UnknownConstant
     end
   | MethodCall (e1, m, args) ->
-      SEQ [
-        SEQ (List.map gen_expr (List.rev args));
-        gen_expr e1;
-        if is_static m then
-          SEQ [
-            gen_addr m;
-            LOADW;
-            CALLW (List.length args)
-          ]
-        else
-          begin
-            match e1.e_guts with
-            | Parent ->
-                SEQ [
-                  DUP 0;
-                  LOADW;
-                  CONST 4;
-                  OFFSET;
-                  LOADW;
-                  LOADW;
-                  gen_addr m;
-                  LOADW;
-                  CALLW (List.length args + 1)
-                ]
-            | _ ->
-                SEQ [
-                  DUP 0;
-                  LOADW;
-                  gen_addr m;
-                  LOADW;
-                  CALLW (List.length args + 1)
-                ]
-          end
-      ]
+      if is_static m then gen_static_call e1.e_guts m args
+      else gen_call e1 m args
   | Property (e1, n) -> SEQ [gen_expr e1; gen_addr n; LOADW]
   | Sub (e1, e2) ->
       SEQ [
@@ -106,9 +71,7 @@ let rec gen_expr e =
         OFFSET;
         LOADW;
         gen_expr e2;
-        CONST 4;
-        OFFSET;
-        LOADW;
+        unbox;
         CONST 4;
         BINOP Times;
         OFFSET;
@@ -138,9 +101,7 @@ let rec gen_expr e =
           CONST 4;
           OFFSET;
           STOREW;
-          CONST 4;
-          OFFSET;
-          LOADW;
+          unbox;
           CONST 4;
           BINOP Times;
           GLOBAL ("Object.%desc");
@@ -157,12 +118,42 @@ let rec gen_expr e =
         ]
     | Parent -> SEQ [LOCAL 12; LOADW]
 
+and gen_static_call (Name n) meth args =
+  SEQ [
+    SEQ (List.map gen_expr (List.rev args));
+    GLOBAL (n.x_name ^"." ^ meth.x_name);
+    CALLW (List.length args)
+  ]
+
+and gen_call expr meth args =
+  match expr.e_guts with
+  | Parent ->
+      SEQ [
+        SEQ (List.map gen_expr (List.rev args));
+        gen_expr expr;
+        DUP 0;
+        LOADW;
+        unbox;
+        LOADW;
+        gen_addr meth;
+        LOADW;
+        CALLW (List.length args + 1)
+      ]
+  | _ ->
+      SEQ [
+        SEQ (List.map gen_expr (List.rev args));
+        gen_expr expr;
+        DUP 0;
+        LOADW;
+        gen_addr meth;
+        LOADW;
+        CALLW (List.length args + 1)
+      ]
+
 and gen_cond tlab flab test =
   SEQ [
     gen_expr test;
-    CONST 4;
-    OFFSET;
-    LOADW;
+    unbox;
     CONST 0;
     JUMPC (Neq, tlab);
     JUMP flab
@@ -181,9 +172,7 @@ and gen_assigment e1 e2 =
       OFFSET;
       LOADW;
       gen_expr e4;
-      CONST 4;
-      OFFSET;
-      LOADW;
+      unbox;
       CONST 4;
       BINOP Times;
       OFFSET;

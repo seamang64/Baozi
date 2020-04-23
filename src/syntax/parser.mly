@@ -96,12 +96,12 @@ program :
       { Program($1) } ;
 
 classes :
-  | oclass
+  | cls
       { [$1] }
-  | oclass classes
+  | cls classes
       { $1 :: $2 } ;
 
-oclass :
+cls :
   | K_DEFINE name parent P_START properties methods P_END
       { createClass($2, $3, false, $5, $6) }
   | K_DEFINE name K_AS K_ARRAY K_OF IDENT
@@ -126,16 +126,16 @@ methods :
       { $1 :: $2 } ;
 
 meth :
-  | K_METHOD name P_LCURL pairs P_RCURL P_DOUBLEARROW ctype P_START stmts P_END
+  | K_METHOD name P_LCURL pairs P_RCURL P_DOUBLEARROW mtype P_START stmts P_END
       { createMethod($2, false, $4, $7, $9, false, false) }
-  | K_CLASSMETHOD name P_LCURL pairs P_RCURL P_DOUBLEARROW ctype P_START stmts P_END
+  | K_CLASSMETHOD name P_LCURL pairs P_RCURL P_DOUBLEARROW mtype P_START stmts P_END
       { createMethod($2, true, $4, $7, $9, false, false) }
-  | K_REPLACE name P_LCURL pairs P_RCURL P_DOUBLEARROW ctype P_START stmts P_END
+  | K_REPLACE name P_LCURL pairs P_RCURL P_DOUBLEARROW mtype P_START stmts P_END
       { createMethod($2, false, $4, $7, $9, false, true) }
   | K_CLASSMETHOD K_MAIN P_LCURL P_RCURL P_DOUBLEARROW P_LCURL P_RCURL P_START stmts P_END
       { createMethod(createName "Main", true, [], VoidType, $9, true, false) }
 
-ctype :
+mtype :
   | IDENT
       { TempType $1 }
   | P_LCURL P_RCURL
