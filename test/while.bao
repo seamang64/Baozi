@@ -3,7 +3,7 @@ $>
 	ClassMethod Main {} => {}
 	$>
 		x : Int = 0.
-		While x < 5
+		While x < 5.
 		$>
 			Output->Int<-{x}.
 			x = x + 1.

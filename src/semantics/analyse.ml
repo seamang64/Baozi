@@ -38,7 +38,7 @@ let find_method meth cls =
         try (List.find (fun m -> meth = m.m_name.x_name) c.c_methods).m_name with
           Not_found -> raise (UnknownName meth)
       end
-  | ArrayClassType (c, d) ->
+  | ArrayClassType (c, _) ->
       begin
         try (List.find (fun m -> meth = m.m_name.x_name) c.c_methods).m_name with
           Not_found -> raise (UnknownName meth)
@@ -49,10 +49,15 @@ let find_method meth cls =
 let find_properties prop cls =
   match cls with
   | ClassType c ->
-    begin
+      begin
         try List.find (fun n -> prop.x_name = n.x_name) (List.map (fun (Prop(n, _)) -> n) c.c_properties) with
           Not_found -> raise (UnknownName prop.x_name)
-    end
+      end
+  | ArrayClassType (c, _) ->
+      begin
+        try List.find (fun n -> prop.x_name = n.x_name) (List.map (fun (Prop(n, _)) -> n) c.c_properties) with
+          Not_found -> raise (UnknownName prop.x_name)
+      end
   | VoidType -> raise VoidOperation
   | TempType n -> raise (UnannotatedName n)
 

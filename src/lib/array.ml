@@ -5,7 +5,7 @@ open Bool
 open Object
 
 let rec array_class =
-  { c_name=array_name; c_pname=ClassType object_class; c_array=false; c_size=8; c_properties=[Prop(length, VoidType)]; c_methods=[method_equals]; c_ancestors=[] }
+  { c_name=array_name; c_pname=ClassType object_class; c_array=false; c_size=8; c_properties=[Prop(length, TempType "Int")]; c_methods=[method_equals]; c_ancestors=[] }
 
 and array_name =
   { x_name="Array"; x_def=array_def}
@@ -17,7 +17,7 @@ and equals_name =
   {x_name="equals"; x_def={d_kind=MethodDef (8, false); d_type=ClassType bool_class}}
 
 and length =
-  {x_name="x"; x_def={d_kind=VariableDef 4; d_type=(ClassType integer_class)}}
+  {x_name="Length"; x_def={d_kind=VariableDef 4; d_type=(ClassType integer_class)}}
 
 and arg_x =
   {x_name="x"; x_def=arg_def}

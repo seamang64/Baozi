@@ -18,7 +18,7 @@
 
 %token K_ME
 %token K_NIL
-%token K_NEW 
+%token K_NEW
 %token K_RETURN
 %token K_PARENT
 
@@ -34,13 +34,13 @@
 %token C_FALSE
 
 %token O_PLUS
-%token O_TIMES 
+%token O_TIMES
 %token O_MINUS
 %token O_DIV
-%token O_MOD 
-%token O_ASSIGN 
-%token O_RIGHTARROW 
-%token O_LEFTARROW 
+%token O_MOD
+%token O_ASSIGN
+%token O_RIGHTARROW
+%token O_LEFTARROW
 %token O_EQUALS
 %token O_NOTEQUALS
 %token O_LESSTHAN
@@ -51,30 +51,29 @@
 %token O_OR
 %token O_NOT
 
-%token P_DOT 
-%token P_COLON 
-%token P_COMMA 
-%token P_LPAR 
-%token P_RPAR 
-%token P_LSQUARE 
-%token P_RSQUARE 
-%token P_LCURL 
-%token P_RCURL 
-%token P_DOUBLEARROW 
-%token P_START 
+%token P_DOT
+%token P_COLON
+%token P_COMMA
+%token P_LPAR
+%token P_RPAR
+%token P_LSQUARE
+%token P_RSQUARE
+%token P_LCURL
+%token P_RCURL
+%token P_DOUBLEARROW
+%token P_START
 %token P_END
 
 %token BADTOKEN
 %token EOF
 
 %left O_PLUS
-%left O_TIMES 
+%left O_TIMES
 %left O_MINUS
 %left O_DIV
-%left O_MOD 
-%left O_ASSIGN 
-%left O_RIGHTARROW 
-%left O_LEFTARROW 
+%left O_MOD
+%left O_ASSIGN
+%left O_LEFTARROW
 %left O_EQUALS
 %left O_NOTEQUALS
 %left O_LESSTHAN
@@ -93,94 +92,104 @@
 %%
 
 program :
-  |  classes 
+  |  classes
       { Program($1) } ;
 
 classes :
-  | oclass         
+  | oclass
       { [$1] }
-  | oclass classes 
+  | oclass classes
       { $1 :: $2 } ;
 
 oclass :
-  | K_DEFINE name O_LEFTARROW IDENT P_START properties methods P_END       
-      { createClass($2, (TempType $4), false, $6, $7) } 
-  | K_DEFINE name P_START properties methods P_END                       
-      { createClass($2, (TempType "Object"), false, $4, $5) }
+  | K_DEFINE name parent P_START properties methods P_END
+      { createClass($2, $3, false, $5, $6) }
   | K_DEFINE name K_AS K_ARRAY K_OF IDENT
       { createClass($2, (TempType $6), true, [], []) } ;
 
+parent :
+  | /* empty */
+      { TempType "Object" }
+  | O_LEFTARROW IDENT
+      { TempType $2 };
+
 properties :
-  | /* empty */                    
+  | /* empty */
       { [] }
-  | K_PROPERTIES P_START pairs P_END     
+  | K_PROPERTIES P_START pairs P_END
       { $3 } ;
 
 methods :
-  | /* empty */       
+  | /* empty */
       { [] }
-  | omethod methods    
+  | meth methods
       { $1 :: $2 } ;
 
-omethod :
-  | K_METHOD name P_LCURL pairs P_RCURL P_DOUBLEARROW IDENT P_START stmts P_END      
-      { createMethod($2, false, $4, TempType($7), $9, false, false) }
-  | K_METHOD name P_LCURL pairs P_RCURL P_DOUBLEARROW P_LCURL P_RCURL P_START stmts P_END
-      { createMethod($2, false, $4, VoidType, $10, false, false) }
-  | K_CLASSMETHOD name P_LCURL pairs P_RCURL P_DOUBLEARROW IDENT P_START stmts P_END 
-      { createMethod($2, true, $4, TempType($7), $9, false, false) }
-  | K_CLASSMETHOD name P_LCURL pairs P_RCURL P_DOUBLEARROW P_LCURL P_RCURL P_START stmts P_END
-      { createMethod($2, true, $4, VoidType, $10, false, false) }
-  | K_REPLACE name P_LCURL pairs P_RCURL P_DOUBLEARROW IDENT P_START stmts P_END      
-      { createMethod($2, false, $4, TempType($7), $9, false, true) }
-  | K_REPLACE name P_LCURL pairs P_RCURL P_DOUBLEARROW P_LCURL P_RCURL P_START stmts P_END
-      { createMethod($2, false, $4, VoidType, $10, false, true) }
+meth :
+  | K_METHOD name P_LCURL pairs P_RCURL P_DOUBLEARROW type P_START stmts P_END
+      { createMethod($2, false, $4, $7, $9, false, false) }
+  | K_CLASSMETHOD name P_LCURL pairs P_RCURL P_DOUBLEARROW type P_START stmts P_END
+      { createMethod($2, true, $4, $7, $9, false, false) }
+  | K_REPLACE name P_LCURL pairs P_RCURL P_DOUBLEARROW IDENT P_START stmts P_END
+      { createMethod($2, false, $4, $7, $9, false, true) }
   | K_CLASSMETHOD K_MAIN P_LCURL P_RCURL P_DOUBLEARROW P_LCURL P_RCURL P_START stmts P_END
       { createMethod(createName "Main", true, [], VoidType, $9, true, false) }
 
+type :
+  | IDENT
+      { TempType $1 }
+  | P_LCURL P_RCURL
+      { VoidType }
+
 pair:
-  | name P_COLON IDENT  
+  | name P_COLON IDENT
       { Prop ($1, TempType($3)) }
 
 pairs:
-  | /* empty */     
+  | /* empty */
       { [] }
-  | pair            
+  | pair
       { [$1] }
-  | pair P_COMMA pairs 
+  | pair P_COMMA pairs
       { $1 :: $3 } ;
 
 stmts :
-  | stmt_list        
+  | stmt_list
       { Seq $1 } ;
 
 stmt_list :
-  |  stmt           
+  |  stmt
       { [$1] }
-  | stmt stmt_list 
+  | stmt stmt_list
       { $1 :: $2} ;
 
 stmt :
-  |  expr O_ASSIGN expr P_DOT                
+  |  expr O_ASSIGN expr P_DOT
       { Assign($1, $3) }
-  | name P_COLON IDENT O_ASSIGN expr P_DOT    
+  | name P_COLON IDENT O_ASSIGN expr P_DOT
       { Delc($1, TempType($3), $5) }
-  | K_RETURN expr P_DOT                     
+  | K_RETURN expr P_DOT
       { Return (Some $2) }
-  | K_RETURN P_DOT                          
+  | K_RETURN P_DOT
       { Return None }
-  | expr P_DOT                             
+  | expr P_DOT
       { Call($1) }
-  | K_IF expr K_THEN P_START stmts P_END elses
+  | K_IF expr K_THEN body elses
       { IfStmt($2, $5, $7) }
-  | K_WHILE expr P_START stmts P_END
+  | K_WHILE expr P_DOT body
       { WhileStmt($2, $4) }
-  | K_FOR for_stmt K_STEP for_stmt K_TEST expr P_START stmts P_END
+  | K_FOR for_stmt K_STEP for_stmt K_TEST expr P_DOT body
       { ForStmt($2, $4, $6, $8) } ;
+
+body :
+  | stmt
+    { $1 }
+  | P_START stmts P_END
+    { $2 }
 
 for_stmt :
   | /* empty */
-      { Nop } 
+      { Nop }
   | stmt
       { $1 } ;
 
@@ -191,47 +200,47 @@ elses :
       { $3 };
 
 expr:
-  | name                           
+  | name
       { createExpr (Name $1) }
-  | NUMBER                         
+  | NUMBER
       { createExpr (Constant ($1, TempType("Int"))) }
-  | O_MINUS expr %prec O_UMINUS                 
+  | O_MINUS expr %prec O_UMINUS
       { createExpr (MethodCall($2, createName "uminus", [])) }
-  | O_NOT expr                 
+  | O_NOT expr
       { createExpr (MethodCall($2, createName "not", [])) }
-  | expr O_PLUS expr                 
+  | expr O_PLUS expr
       { createExpr (MethodCall($1, createName "add", [$3])) }
-  | expr O_TIMES expr                 
+  | expr O_TIMES expr
       { createExpr (MethodCall($1, createName "times", [$3])) }
-  | expr O_MINUS expr                 
+  | expr O_MINUS expr
       { createExpr (MethodCall($1, createName "sub", [$3])) }
-  | expr O_DIV expr                 
+  | expr O_DIV expr
       { createExpr (MethodCall($1, createName "div", [$3])) }
-  | expr O_MOD expr                 
+  | expr O_MOD expr
       { createExpr (MethodCall($1, createName "mod", [$3])) }
-  | expr O_EQUALS expr                 
+  | expr O_EQUALS expr
       { createExpr (MethodCall($1, createName "equals", [$3])) }
-  | expr O_NOTEQUALS expr                 
+  | expr O_NOTEQUALS expr
       { createExpr (MethodCall($1, createName "notEquals", [$3])) }
-  | expr O_LESSTHAN expr                 
+  | expr O_LESSTHAN expr
       { createExpr (MethodCall($1, createName "lessThan", [$3])) }
-  | expr O_GREATERTHAN expr                 
+  | expr O_GREATERTHAN expr
       { createExpr (MethodCall($1, createName "greaterThan", [$3])) }
-  | expr O_LESSTHANEQ expr                 
+  | expr O_LESSTHANEQ expr
       { createExpr (MethodCall($1, createName "lessThanEq", [$3])) }
-  | expr O_GREATERTHANEQ expr                 
+  | expr O_GREATERTHANEQ expr
       { createExpr (MethodCall($1, createName "greaterThanEq", [$3])) }
-  | expr O_AND expr                 
+  | expr O_AND expr
       { createExpr (MethodCall($1, createName "and", [$3])) }
-  | expr O_OR expr                 
+  | expr O_OR expr
       { createExpr (MethodCall($1, createName "or", [$3])) }
-  | expr P_LSQUARE expr P_RSQUARE      
+  | expr P_LSQUARE expr P_RSQUARE
       { createExpr (Sub($1, $3)) }
-  | K_NIL                            
+  | K_NIL
       { createExpr Nil }
   | expr O_RIGHTARROW name O_LEFTARROW P_LCURL arguments P_RCURL
       { createExpr (MethodCall($1, $3, $6)) }
-  | expr O_RIGHTARROW name           
+  | expr O_RIGHTARROW name
       { createExpr (Property($1, $3)) }
   | expr O_RIGHTARROW P_LSQUARE expr P_RSQUARE
       { createExpr (Sub($1, $4)) }
@@ -239,7 +248,7 @@ expr:
       { createExpr (New $2) }
   | K_NEW name O_LEFTARROW P_LSQUARE expr P_RSQUARE
       { createExpr (NewArray($2, $5)) }
-  | K_ME                             
+  | K_ME
       { createExpr (Name (createName "Me")) }
   | K_PARENT
       { createExpr Parent }
@@ -251,13 +260,13 @@ expr:
       { $2 }
 
 arguments :
-  | /* empty */           
+  | /* empty */
       { [] }
-  | expr                   
-      { [$1] }  
-  | expr P_COMMA arguments   
+  | expr
+      { [$1] }
+  | expr P_COMMA arguments
       { $1 :: $3 } ;
 
-name :  
-  | IDENT     
+name :
+  | IDENT
       { createName $1 } ;

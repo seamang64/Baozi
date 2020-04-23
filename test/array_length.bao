@@ -1,0 +1,18 @@
+Define Program
+$>
+	ClassMethod Main {} => {}
+	$>
+		xs : IntVec = New IntVec<-[3].
+		xs->[0] = 1.
+		xs->[1] = 4.
+		xs->[2] = 9.
+
+		For i : Int = 0. Step i = i + 1. Test i < xs->Length
+		$>
+			Output->Int<-{xs->[i]}.
+		<$
+		Return.
+	<$
+<$
+
+Define IntVec As Array Of Int

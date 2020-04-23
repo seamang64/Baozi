@@ -133,6 +133,11 @@ let rec gen_expr e =
           CALLW 2;
           DUP 0;
           gen_expr e;
+          DUP 0;
+          DUP 2;
+          CONST 4;
+          OFFSET;
+          STOREW;
           CONST 4;
           OFFSET;
           LOADW;
