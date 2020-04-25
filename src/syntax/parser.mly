@@ -50,6 +50,8 @@
 %token O_AND
 %token O_OR
 %token O_NOT
+%token O_IS
+%token O_TYPEOF
 
 %token P_DOT
 %token P_COLON
@@ -82,8 +84,10 @@
 %left O_GREATERTHANEQ
 %left O_AND
 %left O_OR
+%left O_IS
 %nonassoc O_NOT
 %nonassoc O_UMINUS
+%nonassoc O_TYPEOF
 
 %type <Tree.program> program
 
@@ -175,7 +179,7 @@ stmt :
   | expr P_DOT
       { Call($1) }
   | K_IF expr K_THEN body elses
-      { IfStmt($2, $5, $4) }
+      { IfStmt($2, $4, $5) }
   | K_WHILE expr P_DOT body
       { WhileStmt($2, $4) }
   | K_FOR for_stmt K_STEP for_stmt K_TEST expr P_DOT body
@@ -196,14 +200,16 @@ for_stmt :
 elses :
   | /* empty */
       { Nop }
-  | K_ELSE P_START stmts P_END
-      { $3 };
+  | K_ELSE body
+      { $2 };
 
 expr:
   | name
       { createExpr (Name $1) }
   | NUMBER
       { createExpr (Constant ($1, TempType("Int"))) }
+  | O_TYPEOF expr
+      { createExpr (TypeOf $2) }
   | O_MINUS expr %prec O_UMINUS
       { createExpr (MethodCall($2, createName "uminus", [])) }
   | O_NOT expr
@@ -234,6 +240,8 @@ expr:
       { createExpr (MethodCall($1, createName "and", [$3])) }
   | expr O_OR expr
       { createExpr (MethodCall($1, createName "or", [$3])) }
+  | expr O_IS expr
+      { createExpr (MethodCall($1, createName "Is", [$3])) }
   | expr P_LSQUARE expr P_RSQUARE
       { createExpr (Sub($1, $3)) }
   | K_NIL

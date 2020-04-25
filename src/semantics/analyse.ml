@@ -3,6 +3,7 @@ open Kgen.Codegen
 open Errors
 open Lib.Lib_all
 open Lib.Int
+open Lib.Type
 open Printf
 
 let propertyOffset = 4
@@ -28,8 +29,7 @@ let get_class t env =
   match t with
   | TempType n -> let d = lookup n env in d.d_type
   | VoidType -> VoidType
-  | ClassType c -> raise (DuplicateName c.c_name.x_name)
-  | ArrayClassType (c, _) -> raise (DuplicateName c.c_name.x_name)
+  | _ -> t
 
 let find_method meth cls =
   match cls with
@@ -87,6 +87,7 @@ let rec annotate_expr expr env =
   match expr.e_guts with
   | Name n -> let d = lookup n.x_name env in n.x_def <- d; n.x_def.d_type
   | Constant (_, d) -> get_class d env
+  | TypeOf e -> ignore(annotate_expr e env); type_def.d_type
   | MethodCall (e, m, args) ->
       let c = annotate_expr e env in
       m.x_def <- (find_method m.x_name c).x_def;
@@ -163,7 +164,7 @@ let annotate_body meth cls env =
   if not meth.m_static then meth.m_arguments <- (create_me cls) :: meth.m_arguments;
   if meth.m_main then mainMethod := cls.c_name.x_name ^ "." ^ meth.m_name.x_name;
   let newEnv = annotate_arguments meth.m_arguments 0 env in
-  variableIndex := 0;
+  variableIndex := meth.m_size;
   p_type := ClassType cls;
   ignore(annotate_stmt meth.m_body newEnv);
   meth.m_size <- !variableIndex
@@ -192,20 +193,21 @@ let rec split methods =
         else (x, m::y)
   | [] -> ([], [])
 
-let rec annotate_members cls env =
-  match cls.c_pname with
-  | ClassType p ->
-      annotate_members p env;
-      let (r, n) = split cls.c_methods in
-        cls.c_methods <- (replace_methods p.c_methods r) @ n;
-        cls.c_properties <- p.c_properties @ cls.c_properties;
-        cls.c_ancestors <- p :: p.c_ancestors;
-        annotate_methods cls.c_methods 0 env;
-        annotate_properties cls.c_properties 0 env
-  | _ -> ()
+let annotate_members cls env =
+  annotate_methods cls.c_methods 0 env;
+  annotate_properties cls.c_properties 0 env
 
-let annotate_parent cls env =
-  cls.c_pname <- get_class cls.c_pname env
+let rec annotate_parent cls env =
+  match cls.c_pname with
+  | TempType n ->
+      let ClassType p = get_class cls.c_pname env in
+        annotate_parent p env;
+        cls.c_pname <- ClassType p;
+        let (r, n) = split cls.c_methods in
+          cls.c_methods <- (replace_methods p.c_methods r) @ n;
+          cls.c_properties <- p.c_properties @ cls.c_properties;
+          cls.c_ancestors <- p :: p.c_ancestors;
+  | _ -> ()
 
 let rec annotate_arrays clss env =
    match clss with

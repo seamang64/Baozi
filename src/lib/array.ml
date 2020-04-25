@@ -33,29 +33,16 @@ and array_def =
 
 and base_equals_code =
   SEQ [
-    CONST 8;
-    GLOBAL "Bool.%desc";
-    GLOBAL "lib.new";
-    CALLW 2;
-    DUP 0;
-    GLOBAL "Bool.%desc";
-    SWAP;
-    STOREW;
-    LOCAL (-4);
-    STOREW;
     LOCAL 12;
     LOADW;
     LOCAL 16;
     LOADW;
     BINOP Eq;
-    LOCAL (-4);
-    LOADW;
-    CONST 4;
-    OFFSET;
-    STOREW;
-    LOCAL (-4);
-    LOADW;
-    RETURN 1
+    GLOBAL "Bool.%desc";
+    GLOBAL "baozi.makePrim";
+    CALLW 2;
+    RETURN 1;
+    END
   ]
 
 let equals_code = SEQ [ PROC ("Array.equals", 0, 0, 0); base_equals_code]

@@ -2,6 +2,7 @@ open Syntax.Tree
 open Errors
 open Lib.Int
 open Lib.Bool
+open Lib.Type
 open Printf
 
 let p_type = ref VoidType
@@ -10,7 +11,7 @@ let print_type t =
   match t with
   | ClassType c -> c.c_name.x_name
   | VoidType -> "Void"
-  | TempType n -> n 
+  | TempType n -> n
 
 let rec check_compatible t1 t2 =
   match (t1, t2) with
@@ -34,14 +35,14 @@ let find_method meth cls =
 
 let rec check_args args margs =
   match (args, margs) with
-  | (t::ts, Prop(x, _)::ms) -> 
-      check_compatible t x.x_def.d_type;
+  | (t::ts, Prop(x, _)::ms) ->
+      check_compatible x.x_def.d_type t;
       check_args ts ms
   | ([], []) -> ()
   | _ -> raise IncorrectArgumentCount
 
 and check_expr e =
-  match e.e_guts with 
+  match e.e_guts with
   | Name n ->  n.x_def.d_type
   | Constant (_, d) ->
     begin
@@ -50,13 +51,14 @@ and check_expr e =
       | TempType "Bool" -> bool_def.d_type
       | _ -> raise UnknownConstant
     end
-  | MethodCall (e1, m, args) -> 
+  | TypeOf e -> ignore(check_expr e); type_def.d_type
+  | MethodCall (e1, m, args) ->
       let t = check_expr e1 in
         let meth = find_method m t in
           if meth.m_static then check_args (List.map check_expr args) meth.m_arguments
           else  check_args (t::(List.map check_expr args)) meth.m_arguments;
           m.x_def.d_type
-  | Property (e1, n) -> 
+  | Property (e1, n) ->
       ignore(check_expr e1);
       n.x_def.d_type
   | Sub (e1, e2) ->
@@ -77,7 +79,7 @@ and check_expr e =
 
 let check_return r ret =
   match (r, ret) with
-  | (Some e, ClassType _) -> 
+  | (Some e, ClassType _) ->
       let t = check_expr e in check_compatible t ret
   | (None, VoidType) -> ()
   | _ -> raise InvalidReturn
@@ -87,7 +89,7 @@ let rec check_stmt s ret =
   | Assign (e1, e2) -> (** Check e1 is property of variable, check e2 is not a class **)
       let (t1, t2) = ((check_expr e1), (check_expr e2)) in
         check_compatible t1 t2
-  | Delc (x, _, e) -> 
+  | Delc (x, _, e) ->
       let t = check_expr e in
         check_compatible x.x_def.d_type t
   | Call e ->
@@ -115,12 +117,12 @@ let rec check_stmt s ret =
   | Seq(ss) -> List.iter (fun st -> check_stmt st ret) ss
   | Nop -> ()
 
-let check_method meth = 
+let check_method meth =
   check_stmt meth.m_body meth.m_name.x_def.d_type
 
 let check_class c =
   p_type := ClassType c;
   List.iter check_method c.c_methods
 
-let check_program (Program(cs)) = 
+let check_program (Program(cs)) =
   List.iter check_class cs

@@ -1,0 +1,26 @@
+Define Program
+$>
+	ClassMethod Main {} => {}
+	$>
+		x : B = New B.
+		If x Is TypeOf A Then
+		$>
+			Output->Int<-{5}.
+		<$
+		x : B = New B.
+		If x Is TypeOf Object Then
+		$>
+			Output->Int<-{8}.
+		<$
+
+		Return.
+	<$
+<$
+
+Define A
+$>
+<$
+
+Define B <- A
+$>
+<$

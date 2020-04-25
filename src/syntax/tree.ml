@@ -12,6 +12,7 @@ and expr_guts =
   | MethodCall of expr * name * expr list
   | Property of expr * name
   | Constant of int * def_type
+  | TypeOf of expr
   | New of name
   | NewArray of name * expr
   | Parent

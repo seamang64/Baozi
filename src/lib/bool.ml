@@ -1,22 +1,7 @@
 open Syntax.Tree
 open Syntax.Keiko
 
-
-let create_bool =
-  SEQ [
-    CONST 8;
-    GLOBAL "Bool.%desc";
-    GLOBAL "lib.new";
-    CALLW 2;
-    DUP 0;
-    GLOBAL "Bool.%desc";
-    SWAP;
-    STOREW;
-    LOCAL (-4);
-    STOREW;
-  ]
-
-and get_args =
+let get_args =
   SEQ [
     LOCAL 12;
     LOADW;
@@ -30,24 +15,19 @@ and get_args =
     LOADW;
   ]
 
-and return_result =
+and return_result desc =
   SEQ [
-    LOCAL (-4);
-    LOADW;
-    CONST 4;
-    OFFSET;
-    STOREW;
-    LOCAL (-4);
-    LOADW;
-    RETURN 1
+    GLOBAL desc;
+    GLOBAL "baozi.makePrim";
+    CALLW 2;
+    RETURN 1;
   ]
 
 let simple_operation op =
   SEQ [
-    create_bool;
     get_args;
     BINOP op;
-    return_result;
+    return_result "Bool.%desc";
     END
   ]
 
@@ -61,14 +41,13 @@ let or_code = SEQ [PROC ("Bool.or", 4, 0, 0); base_equals_code]
 
 let base_not_code =
   SEQ [
-    create_bool;
     LOCAL 12;
     LOADW;
     CONST 4;
     OFFSET;
     LOADW;
     MONOP Not;
-    return_result;
+    return_result "Bool.%desc";
     END
   ]
 

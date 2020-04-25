@@ -27,30 +27,30 @@ let unbox = SEQ [CONST 4; OFFSET; LOADW]
 
 let gen_primitive x desc =
   SEQ [
-    CONST 8;
-    GLOBAL desc;
-    GLOBAL "lib.new";
-    CALLW 2;
-    DUP 0;
     CONST x;
-    SWAP;
-    CONST 4;
-    OFFSET;
-    STOREW;
-    DUP 0;
     GLOBAL desc;
-    SWAP;
-    STOREW;
+    GLOBAL "baozi.makePrim";
+    CALLW 2
   ]
 
-let gen_addr n =
+let rec gen_type e =
+  match e.e_guts with
+  | Name n ->
+      begin
+        match n.x_def.d_kind with
+        | ClassDef -> SEQ [GLOBAL (n.x_name ^ ".%desc")]
+        | _ -> SEQ [gen_expr e; LOADW]
+      end
+  | _ -> SEQ [gen_expr e; LOADW]
+
+and gen_addr n =
   match n.x_def.d_kind with
   | ClassDef -> SEQ [GLOBAL (n.x_name ^ ".%desc")]
   | VariableDef off -> SEQ [LOCAL off]
   | PropertyDef off -> SEQ [CONST off; OFFSET]
   | MethodDef (off, _) -> SEQ [CONST off; OFFSET]
 
-let rec gen_expr e =
+and gen_expr e =
   match e.e_guts with
   | Name n -> SEQ [gen_addr n; LOADW]
   | Constant (x, d) ->
@@ -60,6 +60,13 @@ let rec gen_expr e =
       | TempType "Bool" -> gen_primitive x "Bool.%desc"
       | _ -> raise UnknownConstant
     end
+  | TypeOf e ->
+      SEQ [
+        gen_type e;
+        GLOBAL "Type.%desc";
+        GLOBAL "baozi.makePrim";
+        CALLW 2;
+      ]
   | MethodCall (e1, m, args) ->
       if is_static m then gen_static_call e1.e_guts m args
       else gen_call e1 m args
@@ -79,44 +86,19 @@ let rec gen_expr e =
       ]
   | New n ->
       SEQ [
+        GLOBAL (n.x_name ^ ".%desc");
         CONST (4 + (get_size n));
-        GLOBAL (n.x_name ^ ".%desc");
-        GLOBAL "lib.new";
+        GLOBAL "baozi.make";
         CALLW 2;
-        DUP 0;
-        GLOBAL (n.x_name ^ ".%desc");
-        SWAP;
-        STOREW;
       ]
-    | NewArray (n, e) ->
-        SEQ [
-          CONST 12;
-          GLOBAL (n.x_name ^ ".%desc");
-          GLOBAL "lib.new";
-          CALLW 2;
-          DUP 0;
-          gen_expr e;
-          DUP 0;
-          DUP 2;
-          CONST 4;
-          OFFSET;
-          STOREW;
-          unbox;
-          CONST 4;
-          BINOP Times;
-          GLOBAL ("Object.%desc");
-          GLOBAL "lib.new";
-          CALLW 2;
-          SWAP;
-          CONST 8;
-          OFFSET;
-          STOREW;
-          DUP 0;
-          GLOBAL (n.x_name ^ ".%desc");
-          SWAP;
-          STOREW;
-        ]
-    | Parent -> SEQ [LOCAL 12; LOADW]
+  | NewArray (n, e) ->
+      SEQ [
+        GLOBAL (n.x_name ^ ".%desc");
+        gen_expr e;
+        GLOBAL "baozi.makeArray";
+        CALLW 2;
+      ]
+  | Parent -> SEQ [LOCAL 12; LOADW]
 
 and gen_static_call (Name n) meth args =
   SEQ [
@@ -247,6 +229,7 @@ and gen_class c =
     WORD (DEC (List.length c.c_methods));
     SEQ (List.map (fun m -> WORD (SYMBOL (c.c_name.x_name ^ "." ^ m.m_name.x_name))) c.c_methods);
     DEFINE (c.c_name.x_name ^ ".%anc");
+    WORD (DEC (1 + (List.length c.c_ancestors)));
     WORD (SYMBOL (c.c_name.x_name ^ ".%desc"));
     SEQ (List.map (fun c -> WORD (SYMBOL (c.c_name.x_name ^ ".%desc"))) c.c_ancestors)
   ]

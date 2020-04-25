@@ -2,17 +2,17 @@ open Printf
 
 type codelab = int
 type symbol = string
-let current_label = ref 0
+let current_label = ref 3
 let label () = incr current_label; !current_label
 let reset_labels () = current_label := 0
 
-type op = Plus | Minus | Times | Div | Mod | Eq 
+type op = Plus | Minus | Times | Div | Mod | Eq
   | Uminus | Lt | Gt | Leq | Geq | Neq | And | Or | Not
   | Lsl | Lsr | Asr | BitAnd | BitOr | BitNot
 
 type word =
     SYMBOL of symbol
-  | DEC of int 
+  | DEC of int
 
 type code =
     MODULE of symbol * int * int
@@ -22,7 +22,7 @@ type code =
   | DEFINE of symbol
   | WORD of word
   | PROC of symbol * int * int * int
-  
+
   | CONST of int                (* Constant (value) *)
   | GLOBAL of symbol            (* Constant (symbol) *)
   | LOCAL of int                (* Local address (offset) *)
@@ -96,7 +96,7 @@ let print_op op =
   | Not -> "NOT"
   | _ -> printf "Unrecongised Keiko"; exit 1
 
-let fType = 
+let fType =
   function 0 -> "" | 1 -> "W"
 
 let rec print_keiko prog =
@@ -112,13 +112,13 @@ let rec print_keiko prog =
    | STOREW -> printf "STOREW\n"
    | PCALLW n -> printf "PCALLW %d\n" n
    | CALLW n -> printf "CALLW %d\n" n
-   | RETURN n -> printf "RETURN%s\n" (fType n) 
+   | RETURN n -> printf "RETURN%s\n" (fType n)
    | BINOP op -> printf "%s\n" (print_op op)
    | MONOP op -> printf "%s\n" (print_op op)
    | OFFSET -> printf "OFFSET\n"
    | LABEL l -> printf "LABEL %d\n" l
    | JUMP l -> printf "JUMP %d\n" l
-   | JUMPC (op, l) -> printf "J%s %d\n" (print_op op) l  
+   | JUMPC (op, l) -> printf "J%s %d\n" (print_op op) l
    | SEQ ss -> List.iter print_keiko ss
    | SWAP -> printf "SWAP\n"
    | DUP n -> printf "DUP %d\n" n

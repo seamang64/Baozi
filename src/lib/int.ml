@@ -3,21 +3,7 @@ open Syntax.Keiko
 open Bool
 open Object
 
-let create_new x =
-  SEQ [
-    CONST 8;
-    GLOBAL x;
-    GLOBAL "lib.new";
-    CALLW 2;
-    DUP 0;
-    GLOBAL x;
-    SWAP;
-    STOREW;
-    LOCAL (-4);
-    STOREW;
-  ]
-
-and get_args =
+let get_args =
   SEQ [
     LOCAL 12;
     LOADW;
@@ -33,10 +19,9 @@ and get_args =
 
 let simple_operation t op =
   SEQ [
-    create_new t;
     get_args;
     BINOP op;
-    return_result;
+    return_result t;
     END;
   ]
 
@@ -54,14 +39,13 @@ let base_greater_than_equal_code = simple_operation "Bool.%desc" Geq
 
 let base_uminus_code =
   SEQ [
-    create_new "Integer.%desc";
     LOCAL 12;
     LOADW;
     CONST 4;
     OFFSET;
     LOADW;
     MONOP Uminus;
-    return_result;
+    return_result "Integer.%desc";
     END;
   ]
 

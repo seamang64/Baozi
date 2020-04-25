@@ -7,7 +7,7 @@ $>
 		xs->[1] = 4.
 		xs->[2] = 9.
 
-		For i : Int = 0. Step i = i + 1. Test i < xs->Length
+		For i : Int = 0. Step i = i + 1. Test i < xs->Length.
 		$>
 			Output->Int<-{xs->[i]}.
 		<$
