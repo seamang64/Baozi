@@ -9,7 +9,7 @@ and type_name =
   { x_name="Type"; x_def=type_def}
 
 and method_equals =
-  { m_name=equals_name; m_type=ClassType bool_class; m_static=false; m_size=4; m_arguments=[Prop(arg_x, VoidType); Prop(arg_y, VoidType)]; m_body=Nop; m_main=false; m_replace=false; m_prim_code=base_equals_code}
+  { m_name=equals_name; m_type=ClassType bool_class; m_static=false; m_size=4; m_arguments=[Prop(arg_x, VoidType); Prop(arg_y, VoidType)]; m_body=Nop; m_main=false; m_replace=false; m_origin=Mine}
 
 and equals_name =
   {x_name="equals"; x_def={d_kind=MethodDef (12, false); d_type=ClassType bool_class}}

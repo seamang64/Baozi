@@ -25,7 +25,7 @@ let is_static m =
 
 let unbox = SEQ [CONST 4; OFFSET; LOADW]
 
-let gen_primitive x desc =
+let rec gen_primitive x desc =
   SEQ [
     CONST x;
     GLOBAL desc;
@@ -33,15 +33,10 @@ let gen_primitive x desc =
     CALLW 2
   ]
 
-let rec gen_type e =
+and gen_type e =
   match e.e_guts with
-  | Name n ->
-      begin
-        match n.x_def.d_kind with
-        | ClassDef -> SEQ [GLOBAL (n.x_name ^ ".%desc")]
-        | _ -> SEQ [gen_expr e; LOADW]
-      end
-  | _ -> SEQ [gen_expr e; LOADW]
+  | Name n -> GLOBAL (n.x_name ^ ".%desc")
+  | _ -> raise UnknownExpression
 
 and gen_addr n =
   match n.x_def.d_kind with
@@ -99,6 +94,7 @@ and gen_expr e =
         CALLW 2;
       ]
   | Parent -> SEQ [LOCAL 12; LOADW]
+  | _ -> raise UnknownExpression
 
 and gen_static_call (Name n) meth args =
   SEQ [
@@ -115,7 +111,11 @@ and gen_call expr meth args =
         gen_expr expr;
         DUP 0;
         LOADW;
-        unbox;
+        CONST 4;
+        OFFSET;
+        LOADW;
+        CONST 8;
+        OFFSET;
         LOADW;
         gen_addr meth;
         LOADW;
@@ -210,16 +210,21 @@ and gen_stmt s =
   | Nop -> NOP
 
 and gen_method classname m =
-  match m.m_prim_code with
-  | NOP ->
+  match m.m_origin with
+  | Mine ->
       SEQ [
         PROC (classname ^ "." ^ m.m_name.x_name, m.m_size, 0, 0);
         gen_stmt m.m_body;
         END
       ]
-  | code -> SEQ[PROC (classname ^ "." ^ m.m_name.x_name, m.m_size, 0, 0); code]
+  | Inherited n -> NOP
 
 and gen_methods c = SEQ (List.map (gen_method c.c_name.x_name) c.c_methods)
+
+and gen_method_name meth cls =
+  match meth.m_origin with
+  | Mine -> WORD (SYMBOL (cls.c_name.x_name ^ "." ^ meth.m_name.x_name))
+  | Inherited n -> WORD (SYMBOL (n ^ "." ^ meth.m_name.x_name))
 
 and gen_class c =
   SEQ [
@@ -227,7 +232,7 @@ and gen_class c =
     WORD (DEC 0);
     WORD (SYMBOL (c.c_name.x_name ^ ".%anc"));
     WORD (DEC (List.length c.c_methods));
-    SEQ (List.map (fun m -> WORD (SYMBOL (c.c_name.x_name ^ "." ^ m.m_name.x_name))) c.c_methods);
+    SEQ (List.map (fun m -> gen_method_name m c) c.c_methods);
     DEFINE (c.c_name.x_name ^ ".%anc");
     WORD (DEC (1 + (List.length c.c_ancestors)));
     WORD (SYMBOL (c.c_name.x_name ^ ".%desc"));

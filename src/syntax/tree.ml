@@ -5,6 +5,10 @@ open Keiko
 type ident = string
 and otype = string
 
+and origin =
+    Mine
+  | Inherited of string
+
 and expr_guts =
     Name of name
   | Sub of expr * expr
@@ -43,7 +47,7 @@ and m_method =
     mutable m_size: int;
     mutable m_arguments: property list;
     mutable m_body: stmt;
-    m_prim_code: code }
+    m_origin: origin }
 
 and c_class =
   { c_name: name;
@@ -104,7 +108,7 @@ let createClass (n, p, arr, props, meths) =
   { c_name=n; c_pname=p; c_array=arr; c_size=(List.length props) * 4; c_properties=props; c_methods=meths; c_ancestors=[] }
 
 let createMethod (n, static, args, t, stmt, main, replace) =
-  { m_name=n; m_type=t; m_static=static; m_size=0; m_arguments=args; m_body=stmt; m_main=main; m_replace=replace; m_prim_code=NOP }
+  { m_name=n; m_type=t; m_static=static; m_size=0; m_arguments=args; m_body=stmt; m_main=main; m_replace=replace; m_origin=Mine }
 
 let createExpr guts =
   { e_guts=guts; e_type="voidtype" }

@@ -10,13 +10,13 @@ and object_name =
   { x_name="Object"; x_def=object_def}
 
 and method_equals =
-  { m_name=equals_name; m_type=ClassType bool_class; m_static=false; m_size=0; m_arguments=[Prop(arg_y, ClassType object_class)]; m_body=Nop; m_main=false; m_replace=false; m_prim_code=base_equals_code}
+  { m_name=equals_name; m_type=ClassType bool_class; m_static=false; m_size=0; m_arguments=[Prop(arg_y, ClassType object_class)]; m_body=Nop; m_main=false; m_replace=false; m_origin=Mine}
 
 and method_get_type =
-  { m_name=get_type_name; m_type=ClassType type_class; m_static=false; m_size=0; m_arguments=[]; m_body=Nop; m_main=false; m_replace=false; m_prim_code=base_get_type_code}
+  { m_name=get_type_name; m_type=ClassType type_class; m_static=false; m_size=0; m_arguments=[]; m_body=Nop; m_main=false; m_replace=false; m_origin=Mine}
 
 and method_is =
-  { m_name=is_name; m_type=ClassType bool_class; m_static=false; m_size=12; m_arguments=[Prop(type_arg, ClassType object_class)]; m_body=Nop; m_main=false; m_replace=false; m_prim_code=base_is_code}
+  { m_name=is_name; m_type=ClassType bool_class; m_static=false; m_size=12; m_arguments=[Prop(type_arg, ClassType object_class)]; m_body=Nop; m_main=false; m_replace=false; m_origin=Mine}
 
 and equals_name =
   {x_name="equals"; x_def={d_kind=MethodDef (8, false); d_type=ClassType bool_class}}

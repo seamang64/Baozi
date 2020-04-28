@@ -13,7 +13,7 @@ and out_def =
   {d_kind=ClassDef; d_type=(ClassType out_class)}
 
 and method_int =
-  { m_name=int_name; m_type=VoidType; m_static=true; m_size=4; m_arguments=[Prop(arg_x, VoidType)]; m_body=Nop; m_main=false; m_replace=false; m_prim_code=NOP}
+  { m_name=int_name; m_type=VoidType; m_static=true; m_size=4; m_arguments=[Prop(arg_x, VoidType)]; m_body=Nop; m_main=false; m_replace=false; m_origin=Mine}
 
 and int_name =
   {x_name="Int"; x_def={d_kind=MethodDef (8, true); d_type=VoidType}}

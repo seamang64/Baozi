@@ -15,11 +15,16 @@ let p_type = ref VoidType
 
 let create_def kind t = { d_kind=kind; d_type = t }
 
-let create_method i r = {m_name=i.m_name; m_type=i.m_type; m_static=i.m_static; m_size=i.m_size; m_arguments=i.m_arguments; m_body=r.m_body; m_main=false; m_replace=false; m_prim_code=r.m_prim_code}
+let create_method i r = {m_name=i.m_name; m_type=i.m_type; m_static=i.m_static; m_size=i.m_size; m_arguments=i.m_arguments; m_body=r.m_body; m_main=false; m_replace=false; m_origin=Mine}
 
-let rec copy inherited =
+let create_origin i c =
+  match i.m_origin with
+  | Mine -> Inherited c.c_name.x_name
+  | o -> o
+
+let rec copy inherited cls=
   match inherited with
-  | i::is -> {m_name=i.m_name; m_type=i.m_type; m_static=i.m_static; m_size=i.m_size; m_arguments=i.m_arguments; m_body=i.m_body; m_main=false; m_replace=false; m_prim_code=i.m_prim_code} :: (copy is)
+  | i::is -> {m_name=i.m_name; m_type=i.m_type; m_static=i.m_static; m_size=i.m_size; m_arguments=i.m_arguments; m_body=i.m_body; m_main=false; m_replace=false; m_origin = create_origin i cls} :: (copy is cls)
   | [] -> []
 
 let create_me cls =
@@ -180,10 +185,10 @@ let rec replace_method r inherited =
         else i :: (replace_method r is)
   | [] -> []
 
-let rec replace_methods inherited replacing =
+let rec replace_methods inherited replacing cls =
   match replacing with
-  | r::rs -> replace_method r (replace_methods inherited rs)
-  | [] -> copy inherited
+  | r::rs -> replace_method r (replace_methods inherited rs cls)
+  | [] -> copy inherited cls
 
 let rec split methods =
   match methods with
@@ -204,7 +209,7 @@ let rec annotate_parent cls env =
         annotate_parent p env;
         cls.c_pname <- ClassType p;
         let (r, n) = split cls.c_methods in
-          cls.c_methods <- (replace_methods p.c_methods r) @ n;
+          cls.c_methods <- (replace_methods p.c_methods r p) @ n;
           cls.c_properties <- p.c_properties @ cls.c_properties;
           cls.c_ancestors <- p :: p.c_ancestors;
   | _ -> ()
