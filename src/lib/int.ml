@@ -1,7 +1,7 @@
 open Syntax.Tree
 open Syntax.Keiko
 open Bool
-open Object
+open Type
 
 let get_args =
   SEQ [
@@ -49,23 +49,38 @@ let base_uminus_code =
     END;
   ]
 
-let equals_code = SEQ [PROC ("Integer.equals", 4, 0, 0); base_equals_code]
-let add_code = SEQ [PROC ("Integer.add", 4, 0, 0); base_add_code]
-let times_code = SEQ [PROC ("Integer.times", 4, 0, 0); base_times_code]
-let sub_code = SEQ [PROC ("Integer.sub", 4, 0, 0); base_sub_code]
-let div_code = SEQ [PROC ("Integer.div", 4, 0, 0); base_div_code]
-let mod_code = SEQ [PROC ("Integer.mod", 4, 0, 0); base_mod_code]
-let not_equals_code = SEQ [PROC ("Integer.notEquals", 4, 0, 0); base_not_equals_code]
-let less_than_code = SEQ [PROC ("Integer.lessThan", 4, 0, 0); base_less_than_code]
-let greater_than_code = SEQ [PROC ("Integer.greaterThan", 4, 0, 0); base_greater_than_code]
-let less_than_equal_code = SEQ [PROC ("Integer.lessThanEq", 4, 0, 0); base_less_than_equal_code]
-let greater_than_equal_code = SEQ [PROC ("Integer.greaterThanEq", 4, 0, 0); base_greater_than_equal_code]
-let uminus_code = SEQ [PROC ("Integer.uminus", 4, 0, 0); base_uminus_code]
+let print_code =
+  SEQ [
+    PROC ("Integer.Print", 0, 0, 0);
+    LOCAL 12;
+    LOADW;
+    CONST 4;
+    OFFSET;
+    LOADW;
+    CONST 0;
+    GLOBAL "lib.print_num";
+    PCALLW 1;
+    RETURN 0;
+    END;
+  ]
+
+let equals_code = SEQ [PROC ("Integer.equals", 0, 0, 0); base_equals_code]
+let add_code = SEQ [PROC ("Integer.add", 0, 0, 0); base_add_code]
+let times_code = SEQ [PROC ("Integer.times", 0, 0, 0); base_times_code]
+let sub_code = SEQ [PROC ("Integer.sub", 0, 0, 0); base_sub_code]
+let div_code = SEQ [PROC ("Integer.div", 0, 0, 0); base_div_code]
+let mod_code = SEQ [PROC ("Integer.mod", 0, 0, 0); base_mod_code]
+let not_equals_code = SEQ [PROC ("Integer.notEquals", 0, 0, 0); base_not_equals_code]
+let less_than_code = SEQ [PROC ("Integer.lessThan", 0, 0, 0); base_less_than_code]
+let greater_than_code = SEQ [PROC ("Integer.greaterThan", 0, 0, 0); base_greater_than_code]
+let less_than_equal_code = SEQ [PROC ("Integer.lessThanEq", 0, 0, 0); base_less_than_equal_code]
+let greater_than_equal_code = SEQ [PROC ("Integer.greaterThanEq", 0, 0, 0); base_greater_than_equal_code]
+let uminus_code = SEQ [PROC ("Integer.uminus", 0, 0, 0); base_uminus_code]
 
 let rec integer_class =
-  { c_name=integer_name; c_pname=ClassType object_class; c_array=false; c_size=4; c_properties=[]; c_methods=integer_methods; c_ancestors=[] }
+  { c_name=integer_name; c_pname=VoidType; c_array=false; c_size=4; c_properties=[]; c_methods=integer_methods; c_ancestors=[] }
 
-and integer_methods = [method_equals; method_add; method_times; method_sub; method_div; method_mod; method_not_equals; method_less_than; method_greater_than; method_less_than_equal; method_greater_than_equal]
+and integer_methods = [method_equals; method_get_type; method_is; method_print; method_add; method_times; method_sub; method_div; method_mod; method_not_equals; method_less_than; method_greater_than; method_less_than_equal; method_greater_than_equal]
 
 and integer_name =
   { x_name="Integer"; x_def=integer_def}
@@ -76,8 +91,17 @@ and integer_def =
 and method_equals =
   { m_name=equals_name; m_type=(ClassType bool_class); m_static=false; m_size=4; m_arguments=[Prop(arg_x, VoidType); Prop(arg_y, VoidType)]; m_body=Nop; m_main=false; m_replace=true; m_origin=Mine}
 
+and method_get_type =
+  { m_name=get_type_name; m_type=ClassType type_class; m_static=false; m_size=0; m_arguments=[Prop(arg_x, ClassType integer_class)]; m_body=Nop; m_main=false; m_replace=false; m_origin=Inherited "Object"}
+
+and method_is =
+  { m_name=is_name; m_type=ClassType bool_class; m_static=false; m_size=12; m_arguments=[Prop(arg_x, ClassType integer_class); Prop(type_arg, ClassType integer_class)]; m_body=Nop; m_main=false; m_replace=false; m_origin=Inherited "Object"}
+
+and method_print =
+  { m_name=print_name; m_type=VoidType; m_static=false; m_size=0; m_arguments=[Prop(arg_x, ClassType integer_class)]; m_body=Nop; m_main=false; m_replace=false; m_origin=Mine}
+
 and method_add =
-  { m_name=add_name; m_type=(ClassType integer_class); m_static=false; m_size=4; m_arguments=[Prop(arg_x, VoidType); Prop(arg_y, VoidType)]; m_body=Nop; m_main=false; m_replace=false; m_origin=Mine}
+  { m_name=add_name; m_type=ClassType integer_class; m_static=false; m_size=4; m_arguments=[Prop(arg_x, VoidType); Prop(arg_y, VoidType)]; m_body=Nop; m_main=false; m_replace=false; m_origin=Mine}
 
 and method_times =
   { m_name=times_name; m_type=(ClassType integer_class); m_static=false; m_size=4; m_arguments=[Prop(arg_x, VoidType); Prop(arg_y, VoidType)]; m_body=Nop; m_main=false; m_replace=false; m_origin=Mine}
@@ -112,38 +136,47 @@ and method_greater_than_equal =
 and equals_name =
   {x_name="equals"; x_def={d_kind=MethodDef (12, false); d_type=(ClassType bool_class)}}
 
+and get_type_name =
+  {x_name="GetType"; x_def={d_kind=MethodDef (16, false); d_type=ClassType type_class}}
+
+and is_name =
+  {x_name="Is"; x_def={d_kind=MethodDef (20, false); d_type=ClassType bool_class}}
+
+and print_name =
+  {x_name="Print"; x_def={d_kind=MethodDef (24, false); d_type=VoidType}}
+
 and add_name =
-  {x_name="add"; x_def={d_kind=MethodDef (16, false); d_type=(ClassType integer_class)}}
+  {x_name="add"; x_def={d_kind=MethodDef (28, false); d_type=(ClassType integer_class)}}
 
 and times_name =
-  {x_name="times"; x_def={d_kind=MethodDef (20, false); d_type=(ClassType integer_class)}}
+  {x_name="times"; x_def={d_kind=MethodDef (32, false); d_type=(ClassType integer_class)}}
 
 and sub_name =
-  {x_name="sub"; x_def={d_kind=MethodDef (24, false); d_type=(ClassType integer_class)}}
+  {x_name="sub"; x_def={d_kind=MethodDef (36, false); d_type=(ClassType integer_class)}}
 
 and div_name =
-  {x_name="div"; x_def={d_kind=MethodDef (28, false); d_type=(ClassType integer_class)}}
+  {x_name="div"; x_def={d_kind=MethodDef (40, false); d_type=(ClassType integer_class)}}
 
 and mod_name =
-  {x_name="mod"; x_def={d_kind=MethodDef (32, false); d_type=(ClassType integer_class)}}
+  {x_name="mod"; x_def={d_kind=MethodDef (44, false); d_type=(ClassType integer_class)}}
 
 and uminus_name =
-  {x_name="uminus"; x_def={d_kind=MethodDef (36, false); d_type=(ClassType integer_class)}}
+  {x_name="uminus"; x_def={d_kind=MethodDef (48, false); d_type=(ClassType integer_class)}}
 
 and not_equals_name =
-  {x_name="notEquals"; x_def={d_kind=MethodDef (40, false); d_type=(ClassType bool_class)}}
+  {x_name="notEquals"; x_def={d_kind=MethodDef (52, false); d_type=(ClassType bool_class)}}
 
 and less_than_name =
-  {x_name="lessThan"; x_def={d_kind=MethodDef (44, false); d_type=(ClassType bool_class)}}
+  {x_name="lessThan"; x_def={d_kind=MethodDef (56, false); d_type=(ClassType bool_class)}}
 
 and greater_than_name =
-  {x_name="greaterThan"; x_def={d_kind=MethodDef (48, false); d_type=(ClassType bool_class)}}
+  {x_name="greaterThan"; x_def={d_kind=MethodDef (60, false); d_type=(ClassType bool_class)}}
 
 and less_than_equal_name =
-  {x_name="lessThanEq"; x_def={d_kind=MethodDef (52, false); d_type=(ClassType bool_class)}}
+  {x_name="lessThanEq"; x_def={d_kind=MethodDef (64, false); d_type=(ClassType bool_class)}}
 
 and greater_than_equal_name =
-  {x_name="greaterThanEq"; x_def={d_kind=MethodDef (56, false); d_type=(ClassType bool_class)}}
+  {x_name="greaterThanEq"; x_def={d_kind=MethodDef (68, false); d_type=(ClassType bool_class)}}
 
 and arg_x =
   {x_name="x"; x_def=arg_def}
@@ -156,15 +189,18 @@ and arg_def =
 
 and empty_def = {d_kind=NoneKind; d_type=VoidType}
 
-let method_code = SEQ [add_code; times_code; sub_code; div_code; mod_code; uminus_code; equals_code; not_equals_code; less_than_code; greater_than_code; less_than_equal_code; greater_than_equal_code]
+let method_code = SEQ [equals_code; print_code; add_code; times_code; sub_code; div_code; mod_code; uminus_code; not_equals_code; less_than_code; greater_than_code; less_than_equal_code; greater_than_equal_code]
 
 let define_code =
   SEQ [
     DEFINE "Integer.%desc";
     WORD (DEC 0);
     WORD (SYMBOL "Integer.%anc");
-    WORD (DEC 12);
+    WORD (SYMBOL "Integer.%string");
     WORD (SYMBOL "Integer.equals");
+    WORD (SYMBOL "Object.GetType");
+    WORD (SYMBOL "Object.Is");
+    WORD (SYMBOL "Integer.Print");
     WORD (SYMBOL "Integer.add");
     WORD (SYMBOL "Integer.times");
     WORD (SYMBOL "Integer.sub");
@@ -179,7 +215,9 @@ let define_code =
     DEFINE "Integer.%anc";
     WORD (DEC 2);
     WORD (SYMBOL "Integer.%desc");
-    WORD (SYMBOL "Object.%desc")
+    WORD (SYMBOL "Object.%desc");
+    DEFINE "Integer.%string";
+    STRING "496E7400"
   ]
 
 let integer_code =

@@ -1,5 +1,6 @@
 open Syntax.Tree
 open Syntax.Keiko
+open Syntax.Lexer
 open Errors
 open Printf
 open Lib.Int
@@ -55,6 +56,13 @@ and gen_expr e =
       | TempType "Bool" -> gen_primitive x "Bool.%desc"
       | _ -> raise UnknownConstant
     end
+  | String (lab, s) ->
+       SEQ [
+        GLOBAL lab;
+        gen_primitive (String.length s) "Integer.%desc";
+        GLOBAL "baozi.makeString";
+        CALLW 2
+      ]
   | TypeOf e ->
       SEQ [
         gen_type e;
@@ -94,6 +102,7 @@ and gen_expr e =
         CALLW 2;
       ]
   | Parent -> SEQ [LOCAL 12; LOADW]
+  | Nil -> GLOBAL "Nil"
   | _ -> raise UnknownExpression
 
 and gen_static_call (Name n) meth args =
@@ -226,17 +235,39 @@ and gen_method_name meth cls =
   | Mine -> WORD (SYMBOL (cls.c_name.x_name ^ "." ^ meth.m_name.x_name))
   | Inherited n -> WORD (SYMBOL (n ^ "." ^ meth.m_name.x_name))
 
+and gen_hex_string c =
+  let chr = Char.code c and hex = "0123456789ABCDEF" in
+    (Char.escaped (hex.[chr / 16])) ^ (Char.escaped (hex.[chr mod 16]))
+
+and fold_string s =
+  match s with
+  | "" -> ""
+  | _ -> (gen_hex_string (s.[0])) ^ (fold_string (String.sub s 1 ((String.length s) - 1)))
+
+and gen_string (lab, s) =
+  let strings = split_string s in
+    let string_code = List.map (fun s -> STRING (fold_string s)) strings in
+      SEQ [DEFINE lab; SEQ string_code]
+
+and split_string s =
+  let n = String.length s in
+    if n > 31 then
+      (String.sub s 0 32) :: (split_string (String.sub s 32 (n-32)))
+    else [s ^ "\000"]
+
 and gen_class c =
+  let name = c.c_name.x_name in
   SEQ [
-    DEFINE (c.c_name.x_name ^ ".%desc");
+    DEFINE (name ^ ".%desc");
     WORD (DEC 0);
-    WORD (SYMBOL (c.c_name.x_name ^ ".%anc"));
-    WORD (DEC (List.length c.c_methods));
+    WORD (SYMBOL (name ^ ".%anc"));
+    WORD (SYMBOL (name ^ ".%string"));
     SEQ (List.map (fun m -> gen_method_name m c) c.c_methods);
-    DEFINE (c.c_name.x_name ^ ".%anc");
+    DEFINE (name ^ ".%anc");
     WORD (DEC (1 + (List.length c.c_ancestors)));
-    WORD (SYMBOL (c.c_name.x_name ^ ".%desc"));
-    SEQ (List.map (fun c -> WORD (SYMBOL (c.c_name.x_name ^ ".%desc"))) c.c_ancestors)
+    WORD (SYMBOL (name ^ ".%desc"));
+    SEQ (List.map (fun c -> WORD (SYMBOL (c.c_name.x_name ^ ".%desc"))) c.c_ancestors);
+    gen_string (name ^ ".%string", name);
   ]
 
 and gen_program (Program(cs)) =
@@ -244,6 +275,7 @@ and gen_program (Program(cs)) =
     SEQ lib_code;
     SEQ (List.map gen_methods cs);
     SEQ (List.map gen_class cs);
+    SEQ (List.map gen_string !strtable);
     PROC ("MAIN", 0, 0, 0);
     GLOBAL !mainMethod;
     CALLW 0;

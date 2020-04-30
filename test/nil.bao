@@ -1,0 +1,18 @@
+Define Program
+$>
+	ClassMethod Main {} => {}
+	$>
+		x : A = New A.
+		y : B = Nil.
+		If x == y Then Output->StringLn<-{"Hello, World!"}.
+		Return.
+	<$
+<$
+
+Define A
+$>
+<$
+
+Define B
+$>
+<$

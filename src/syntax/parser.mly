@@ -4,6 +4,7 @@
 
 %token <Tree.ident> IDENT
 %token <int> NUMBER
+%token <Keiko.symbol * string> STR
 
 %token K_DEFINE
 %token K_AS
@@ -207,7 +208,9 @@ expr:
   | name
       { createExpr (Name $1) }
   | NUMBER
-      { createExpr (Constant ($1, TempType("Int"))) }
+      { createExpr (Constant ($1, TempType "Int")) }
+  | STR
+      { let (lab, s) = $1 in createExpr (String (lab, s)) }
   | O_TYPEOF expr
       { createExpr (TypeOf $2) }
   | O_MINUS expr %prec O_UMINUS

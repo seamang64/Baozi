@@ -7,7 +7,7 @@ $>
 		$>
 			Output->Int<-{5}.
 		<$
-		x : B = New B.
+
 		If x Is TypeOf Object Then
 		$>
 			Output->Int<-{8}.

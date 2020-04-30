@@ -4,28 +4,34 @@ open Bool
 open Type
 
 let rec object_class =
-  { c_name=object_name; c_pname=VoidType; c_array=false; c_size=0; c_properties=[]; c_methods=[method_equals; method_get_type; method_is]; c_ancestors=[] }
+  { c_name=object_name; c_pname=VoidType; c_array=false; c_size=0; c_properties=[]; c_methods=[method_equals; method_get_type; method_is; method_print]; c_ancestors=[] }
 
 and object_name =
   { x_name="Object"; x_def=object_def}
 
 and method_equals =
-  { m_name=equals_name; m_type=ClassType bool_class; m_static=false; m_size=0; m_arguments=[Prop(arg_y, ClassType object_class)]; m_body=Nop; m_main=false; m_replace=false; m_origin=Mine}
+  { m_name=equals_name; m_type=ClassType bool_class; m_static=false; m_size=0; m_arguments=[Prop(arg_x, ClassType object_class); Prop(arg_y, ClassType object_class)]; m_body=Nop; m_main=false; m_replace=false; m_origin=Mine}
 
 and method_get_type =
-  { m_name=get_type_name; m_type=ClassType type_class; m_static=false; m_size=0; m_arguments=[]; m_body=Nop; m_main=false; m_replace=false; m_origin=Mine}
+  { m_name=get_type_name; m_type=ClassType type_class; m_static=false; m_size=0; m_arguments=[Prop(arg_x, ClassType object_class)]; m_body=Nop; m_main=false; m_replace=false; m_origin=Mine}
 
 and method_is =
-  { m_name=is_name; m_type=ClassType bool_class; m_static=false; m_size=12; m_arguments=[Prop(type_arg, ClassType object_class)]; m_body=Nop; m_main=false; m_replace=false; m_origin=Mine}
+  { m_name=is_name; m_type=ClassType bool_class; m_static=false; m_size=12; m_arguments=[Prop(arg_x, ClassType object_class); Prop(type_arg, ClassType object_class)]; m_body=Nop; m_main=false; m_replace=false; m_origin=Mine}
+
+and method_print =
+  { m_name=print_name; m_type=VoidType; m_static=false; m_size=0; m_arguments=[Prop(arg_x, ClassType object_class)]; m_body=Nop; m_main=false; m_replace=false; m_origin=Mine}
 
 and equals_name =
-  {x_name="equals"; x_def={d_kind=MethodDef (8, false); d_type=ClassType bool_class}}
+  {x_name="equals"; x_def={d_kind=MethodDef (12, false); d_type=ClassType bool_class}}
 
 and get_type_name =
-  {x_name="GetType"; x_def={d_kind=MethodDef (12, false); d_type=ClassType type_class}}
+  {x_name="GetType"; x_def={d_kind=MethodDef (16, false); d_type=ClassType type_class}}
 
 and is_name =
-  {x_name="Is"; x_def={d_kind=MethodDef (16, false); d_type=ClassType bool_class}}
+  {x_name="Is"; x_def={d_kind=MethodDef (20, false); d_type=ClassType bool_class}}
+
+and print_name =
+  {x_name="Print"; x_def={d_kind=MethodDef (24, false); d_type=VoidType}}
 
 and arg_x =
   {x_name="x"; x_def=arg_def}
@@ -42,8 +48,9 @@ and arg_def =
 and object_def =
   {d_kind=ClassDef; d_type=(ClassType object_class)}
 
-and base_equals_code =
+and equals_code =
   SEQ [
+    PROC ("Object.equals", 0, 0, 0);
     LOCAL 12;
     LOADW;
     LOCAL 16;
@@ -56,8 +63,9 @@ and base_equals_code =
     END
   ]
 
-and base_get_type_code =
+and get_type_code =
   SEQ [
+    PROC ("Object.GetType", 0, 0, 0);
     LOCAL 12;
     LOADW;
     LOADW;
@@ -68,9 +76,10 @@ and base_get_type_code =
     END;
   ]
 
-and base_is_code =
+and is_code =
   let lab1 = label () and lab2 = label () and lab3 = label () in
     SEQ [
+      PROC ("Object.Is", 12, 0, 0);
       LOCAL 16;
       LOADW;
       CONST 4;
@@ -119,24 +128,39 @@ and base_is_code =
       END
     ]
 
-let equals_code = SEQ [PROC ("Object.equals", 0, 0, 0); base_equals_code]
-let get_type_code = SEQ [PROC ("Object.GetType", 0, 0, 0); base_get_type_code]
-let is_code = SEQ [PROC ("Object.Is", 12, 0, 0); base_is_code]
+and print_code =
+  SEQ [
+    PROC ("Object.Print", 0, 0, 0);
+    LOCAL 12;
+    LOADW;
+    LOADW;
+    CONST 8;
+    OFFSET;
+    LOADW;
+    CONST 0;
+    GLOBAL "lib.print_string";
+    PCALLW 1;
+    RETURN 1;
+    END;
+  ]
 
-let method_code = SEQ [equals_code; get_type_code; is_code]
+let method_code = SEQ [equals_code; get_type_code; is_code; print_code]
 
 let define_code =
   SEQ [
     DEFINE "Object.%desc";
     WORD (DEC 0);
-    WORD (SYMBOL ("Object.%anc"));
-    WORD (DEC 3);
+    WORD (SYMBOL "Object.%anc");
+    WORD (SYMBOL "Object.%string");
     WORD (SYMBOL "Object.equals");
     WORD (SYMBOL "Object.GetType");
     WORD (SYMBOL "Object.Is");
+    WORD (SYMBOL "Object.Print");
     DEFINE "Object.%anc";
     WORD (DEC 1);
-    WORD (SYMBOL ("Object.%desc"))
+    WORD (SYMBOL "Object.%desc");
+    DEFINE "Object.%string";
+    STRING "4F626A65637400"
   ]
 
 let object_code =

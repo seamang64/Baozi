@@ -1,5 +1,6 @@
 {
   open Parser
+  open Keiko
 
   let make_hash n ps =
     let t = Hashtbl.create n in
@@ -54,6 +55,13 @@
 
   let get_vars () =
     Hashtbl.fold (fun k () ks -> k::ks) idtable []
+
+  let strtable = ref []
+
+  let get_string s =
+    let lab = gen_sym () in
+      strtable := (lab, s)::!strtable;
+      STR (lab, s)
 }
 
 let letter = ['A'-'Z''a'-'z']
@@ -66,7 +74,8 @@ let notqq = [^'"''\n']
 
 rule token = parse
     letter (letter | digit)* as s { lookup s }
-  | digit+ as s         { NUMBER (int_of_string s)}
+  | digit+ as s         { NUMBER (int_of_string s) }
+  | qq (notqq* as s) qq { get_string s }
 
   | "+"                 { O_PLUS }
   | "*"                 { O_TIMES }

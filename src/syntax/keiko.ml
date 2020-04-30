@@ -5,6 +5,7 @@ type symbol = string
 let current_label = ref 3
 let label () = incr current_label; !current_label
 let reset_labels () = current_label := 0
+let gen_sym () = "g" ^ (string_of_int (label ()))
 
 type op = Plus | Minus | Times | Div | Mod | Eq
   | Uminus | Lt | Gt | Leq | Geq | Neq | And | Or | Not
@@ -21,6 +22,7 @@ type code =
   | GLOVAR of symbol * int
   | DEFINE of symbol
   | WORD of word
+  | STRING of symbol
   | PROC of symbol * int * int * int
 
   | CONST of int                (* Constant (value) *)
@@ -104,6 +106,7 @@ let rec print_keiko prog =
    | DEFINE s -> printf "\nDEFINE %s\n" s
    | WORD (SYMBOL s) -> printf "WORD %s\n" s
    | WORD (DEC n ) -> printf "WORD %d\n" n
+   | STRING s -> printf "STRING %s\n" s
    | PROC (d, n, i, f) -> printf "\nPROC %s %d %d %d\n" d n i f
    | CONST n -> printf "CONST %d\n" n
    | GLOBAL s -> printf "GLOBAL %s\n" s

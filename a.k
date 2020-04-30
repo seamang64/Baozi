@@ -5,14 +5,18 @@ ENDHDR
 DEFINE Object.%desc
 WORD 0
 WORD Object.%anc
-WORD 3
+WORD Object.%string
 WORD Object.equals
 WORD Object.GetType
 WORD Object.Is
+WORD Object.Print
 
 DEFINE Object.%anc
 WORD 1
 WORD Object.%desc
+
+DEFINE Object.%string
+STRING 4F626A65637400
 
 PROC Object.equals 0 0 0
 LOCAL 12
@@ -55,12 +59,12 @@ DUP 0
 LOADW
 LOCAL -8
 STOREW
-LABEL 4
+LABEL 5
 SWAP
 DUP 0
 LOCAL -8
 LOADW
-JEQ 6
+JEQ 7
 CONST 4
 PLUS
 SWAP
@@ -70,124 +74,34 @@ DUP 0
 LOADW
 LOCAL -4
 LOADW
-JEQ 5
-JUMP 4
-LABEL 5
+JEQ 6
+JUMP 5
+LABEL 6
 CONST 1
 GLOBAL baozi.makePrim
 CALLW 1
 RETURNW
-LABEL 6
+LABEL 7
 CONST 0
 GLOBAL baozi.makePrim
 CALLW 1
 RETURNW
 END
 
-PROC Integer.add 4 0 0
+PROC Object.Print 0 0 0
 LOCAL 12
 LOADW
-CONST 4
+LOADW
+CONST 8
 OFFSET
 LOADW
-LOCAL 16
-LOADW
-CONST 4
-OFFSET
-LOADW
-PLUS
-GLOBAL Integer.%desc
-GLOBAL baozi.makePrim
-CALLW 2
+CONST 0
+GLOBAL lib.print_string
+PCALLW 1
 RETURNW
 END
 
-PROC Integer.times 4 0 0
-LOCAL 12
-LOADW
-CONST 4
-OFFSET
-LOADW
-LOCAL 16
-LOADW
-CONST 4
-OFFSET
-LOADW
-TIMES
-GLOBAL Integer.%desc
-GLOBAL baozi.makePrim
-CALLW 2
-RETURNW
-END
-
-PROC Integer.sub 4 0 0
-LOCAL 12
-LOADW
-CONST 4
-OFFSET
-LOADW
-LOCAL 16
-LOADW
-CONST 4
-OFFSET
-LOADW
-MINUS
-GLOBAL Integer.%desc
-GLOBAL baozi.makePrim
-CALLW 2
-RETURNW
-END
-
-PROC Integer.div 4 0 0
-LOCAL 12
-LOADW
-CONST 4
-OFFSET
-LOADW
-LOCAL 16
-LOADW
-CONST 4
-OFFSET
-LOADW
-DIV
-GLOBAL Integer.%desc
-GLOBAL baozi.makePrim
-CALLW 2
-RETURNW
-END
-
-PROC Integer.mod 4 0 0
-LOCAL 12
-LOADW
-CONST 4
-OFFSET
-LOADW
-LOCAL 16
-LOADW
-CONST 4
-OFFSET
-LOADW
-MOD
-GLOBAL Integer.%desc
-GLOBAL baozi.makePrim
-CALLW 2
-RETURNW
-END
-
-PROC Integer.uminus 4 0 0
-LOCAL 12
-LOADW
-CONST 4
-OFFSET
-LOADW
-UMINUS
-GLOBAL Integer.%desc
-GLOBAL baozi.makePrim
-CALLW 2
-RETURNW
-END
-
-PROC Integer.equals 4 0 0
+PROC Integer.equals 0 0 0
 LOCAL 12
 LOADW
 CONST 4
@@ -205,7 +119,122 @@ CALLW 2
 RETURNW
 END
 
-PROC Integer.notEquals 4 0 0
+PROC Integer.Print 0 0 0
+LOCAL 12
+LOADW
+CONST 4
+OFFSET
+LOADW
+CONST 0
+GLOBAL lib.print_num
+PCALLW 1
+RETURN
+END
+
+PROC Integer.add 0 0 0
+LOCAL 12
+LOADW
+CONST 4
+OFFSET
+LOADW
+LOCAL 16
+LOADW
+CONST 4
+OFFSET
+LOADW
+PLUS
+GLOBAL Integer.%desc
+GLOBAL baozi.makePrim
+CALLW 2
+RETURNW
+END
+
+PROC Integer.times 0 0 0
+LOCAL 12
+LOADW
+CONST 4
+OFFSET
+LOADW
+LOCAL 16
+LOADW
+CONST 4
+OFFSET
+LOADW
+TIMES
+GLOBAL Integer.%desc
+GLOBAL baozi.makePrim
+CALLW 2
+RETURNW
+END
+
+PROC Integer.sub 0 0 0
+LOCAL 12
+LOADW
+CONST 4
+OFFSET
+LOADW
+LOCAL 16
+LOADW
+CONST 4
+OFFSET
+LOADW
+MINUS
+GLOBAL Integer.%desc
+GLOBAL baozi.makePrim
+CALLW 2
+RETURNW
+END
+
+PROC Integer.div 0 0 0
+LOCAL 12
+LOADW
+CONST 4
+OFFSET
+LOADW
+LOCAL 16
+LOADW
+CONST 4
+OFFSET
+LOADW
+DIV
+GLOBAL Integer.%desc
+GLOBAL baozi.makePrim
+CALLW 2
+RETURNW
+END
+
+PROC Integer.mod 0 0 0
+LOCAL 12
+LOADW
+CONST 4
+OFFSET
+LOADW
+LOCAL 16
+LOADW
+CONST 4
+OFFSET
+LOADW
+MOD
+GLOBAL Integer.%desc
+GLOBAL baozi.makePrim
+CALLW 2
+RETURNW
+END
+
+PROC Integer.uminus 0 0 0
+LOCAL 12
+LOADW
+CONST 4
+OFFSET
+LOADW
+UMINUS
+GLOBAL Integer.%desc
+GLOBAL baozi.makePrim
+CALLW 2
+RETURNW
+END
+
+PROC Integer.notEquals 0 0 0
 LOCAL 12
 LOADW
 CONST 4
@@ -223,7 +252,7 @@ CALLW 2
 RETURNW
 END
 
-PROC Integer.lessThan 4 0 0
+PROC Integer.lessThan 0 0 0
 LOCAL 12
 LOADW
 CONST 4
@@ -241,7 +270,7 @@ CALLW 2
 RETURNW
 END
 
-PROC Integer.greaterThan 4 0 0
+PROC Integer.greaterThan 0 0 0
 LOCAL 12
 LOADW
 CONST 4
@@ -259,7 +288,7 @@ CALLW 2
 RETURNW
 END
 
-PROC Integer.lessThanEq 4 0 0
+PROC Integer.lessThanEq 0 0 0
 LOCAL 12
 LOADW
 CONST 4
@@ -277,7 +306,7 @@ CALLW 2
 RETURNW
 END
 
-PROC Integer.greaterThanEq 4 0 0
+PROC Integer.greaterThanEq 0 0 0
 LOCAL 12
 LOADW
 CONST 4
@@ -298,8 +327,11 @@ END
 DEFINE Integer.%desc
 WORD 0
 WORD Integer.%anc
-WORD 12
+WORD Integer.%string
 WORD Integer.equals
+WORD Object.GetType
+WORD Object.Is
+WORD Integer.Print
 WORD Integer.add
 WORD Integer.times
 WORD Integer.sub
@@ -317,7 +349,31 @@ WORD 2
 WORD Integer.%desc
 WORD Object.%desc
 
+DEFINE Integer.%string
+STRING 496E7400
+
+DEFINE Output.%desc
+WORD 0
+WORD 1
+WORD Output.Int
+WORD Output.IntLn
+WORD Output.String
+WORD Output.StringLn
+WORD Output.Ln
+
 PROC Output.Int 0 0 0
+LOCAL 12
+LOADW
+CONST 4
+OFFSET
+LOADW
+CONST 0
+GLOBAL lib.print_num
+PCALLW 1
+RETURN
+END
+
+PROC Output.IntLn 0 0 0
 LOCAL 12
 LOADW
 CONST 4
@@ -331,10 +387,37 @@ PCALLW 0
 RETURN
 END
 
-DEFINE Output.%desc
-WORD 0
-WORD 1
-WORD Output.Int
+PROC Output.String 0 0 0
+LOCAL 12
+LOADW
+CONST 8
+OFFSET
+LOADW
+CONST 0
+GLOBAL lib.print_string
+PCALLW 1
+RETURN
+END
+
+PROC Output.StringLn 0 0 0
+LOCAL 12
+LOADW
+CONST 8
+OFFSET
+LOADW
+CONST 0
+GLOBAL lib.print_string
+PCALLW 1
+GLOBAL lib.newline
+PCALLW 0
+RETURN
+END
+
+PROC Output.Ln 0 0 0
+GLOBAL lib.newline
+PCALLW 0
+RETURN
+END
 
 PROC Bool.equals 4 0 0
 LOCAL 12
@@ -352,6 +435,27 @@ GLOBAL Bool.%desc
 GLOBAL baozi.makePrim
 CALLW 2
 RETURNW
+END
+
+PROC Bool.Print 4 0 0
+LOCAL 12
+LOADW
+CONST 4
+OFFSET
+LOADW
+CONST 0
+JEQ 4
+GLOBAL Bool.TrueString
+CONST 0
+GLOBAL lib.print_string
+PCALLW 1
+RETURN
+LABEL 4
+GLOBAL Bool.FalseString
+CONST 0
+GLOBAL lib.print_string
+PCALLW 1
+RETURN
 END
 
 PROC Bool.and 4 0 0
@@ -406,8 +510,11 @@ END
 DEFINE Bool.%desc
 WORD 0
 WORD Bool.%anc
-WORD 4
+WORD Bool.%string
 WORD Bool.equals
+WORD Object.GetType
+WORD Object.Is
+WORD Bool.Print
 WORD Bool.and
 WORD Bool.or
 WORD Bool.not
@@ -416,116 +523,121 @@ DEFINE Bool.%anc
 WORD Bool.%desc
 WORD Object.%desc
 
+DEFINE Bool.%string
+STRING 426F6F6C00
+
+DEFINE Bool.TrueString
+STRING 5472756500
+
+DEFINE Bool.FalseString
+STRING 46616C736500
+
 DEFINE Array.%desc
 WORD 0
 WORD Array.%anc
-WORD 1
-WORD Array.equals
+WORD Array.%string
+WORD Object.equals
+WORD Object.GetType
+WORD Object.Is
+WORD Object.Print
 
 DEFINE Array.%anc
+WORD 2
 WORD Array.%desc
 WORD Object.%desc
 
-PROC Array.equals 0 0 0
-LOCAL 12
-LOADW
-LOCAL 16
-LOADW
-EQ
-GLOBAL Bool.%desc
-GLOBAL baozi.makePrim
-CALLW 2
-RETURNW
-END
+DEFINE Array.%string
+STRING 417272617900
 
 DEFINE Type.%desc
 WORD 0
-WORD 1
 WORD Type.%anc
-WORD Type.equals
+WORD Type.%string
+WORD Object.equals
+WORD Object.GetType
+WORD Object.Is
+WORD Object.Print
 
 DEFINE Type.%anc
 WORD 2
 WORD Type.%desc
 WORD Object.%desc
 
-PROC Type.equals 0 0 0
+DEFINE Type.%string
+STRING 5479706500
+
+PROC String.Print 0 0 0
 LOCAL 12
 LOADW
-CONST 4
-OFFSET
-LOADW
-LOCAL 16
-LOADW
-CONST 4
-OFFSET
-LOADW
-EQ
-GLOBAL Bool.%desc
-GLOBAL baozi.makePrim
-CALLW 2
-RETURNW
+GLOBAL Output.String
+CALLW 1
+RETURN
 END
 
-PROC Program.Main 4 0 0
-GLOBAL B.%desc
-CONST 4
-GLOBAL baozi.make
-CALLW 2
+DEFINE String.%desc
+WORD 0
+WORD String.%anc
+WORD String.%string
+WORD Object.equals
+WORD Object.GetType
+WORD Object.Is
+WORD String.Print
+
+DEFINE String.%anc
+WORD 2
+WORD String.%desc
+WORD Object.%desc
+
+DEFINE String.%string
+STRING 537472696E6700
+
+PROC Program.Main 8 0 0
+GLOBAL Nil
 LOCAL -4
 STOREW
+GLOBAL Nil
+LOCAL -8
+STOREW
+LOCAL -8
+LOADW
 LOCAL -4
 LOADW
 DUP 0
 LOADW
-CONST 24
+CONST 12
 OFFSET
 LOADW
-CALLW 1
-RETURN
-END
-
-PROC A.DoSomething 0 0 0
-CONST 57
-GLOBAL Integer.%desc
-GLOBAL baozi.makePrim
 CALLW 2
-GLOBAL Output.Int
-CALLW 1
-RETURN
-END
-
-PROC B.DoSomething 0 0 0
-CONST 6
-GLOBAL Integer.%desc
-GLOBAL baozi.makePrim
-CALLW 2
-GLOBAL Output.Int
-CALLW 1
-LOCAL 12
-LOADW
-DUP 0
-LOADW
 CONST 4
 OFFSET
 LOADW
-CONST 8
-OFFSET
-LOADW
-CONST 24
-OFFSET
-LOADW
+CONST 0
+JNEQ 9
+JUMP 10
+LABEL 9
+GLOBAL g8
+CONST 13
+GLOBAL Integer.%desc
+GLOBAL baozi.makePrim
+CALLW 2
+GLOBAL baozi.makeString
+CALLW 2
+GLOBAL Output.StringLn
 CALLW 1
+JUMP 11
+LABEL 10
+LABEL 11
 RETURN
 END
 
 DEFINE Program.%desc
 WORD 0
 WORD Program.%anc
-WORD 4
+WORD Program.%string
 WORD Object.equals
 WORD Object.GetType
 WORD Object.Is
+WORD Object.Print
 WORD Program.Main
 
 DEFINE Program.%anc
@@ -533,34 +645,45 @@ WORD 2
 WORD Program.%desc
 WORD Object.%desc
 
+DEFINE Program.%string
+STRING 50726F6772616D00
+
 DEFINE A.%desc
 WORD 0
 WORD A.%anc
-WORD 4
+WORD A.%string
 WORD Object.equals
 WORD Object.GetType
 WORD Object.Is
-WORD A.DoSomething
+WORD Object.Print
 
 DEFINE A.%anc
 WORD 2
 WORD A.%desc
 WORD Object.%desc
 
+DEFINE A.%string
+STRING 4100
+
 DEFINE B.%desc
 WORD 0
 WORD B.%anc
-WORD 4
+WORD B.%string
 WORD Object.equals
 WORD Object.GetType
 WORD Object.Is
-WORD B.DoSomething
+WORD Object.Print
 
 DEFINE B.%anc
-WORD 3
+WORD 2
 WORD B.%desc
-WORD A.%desc
 WORD Object.%desc
+
+DEFINE B.%string
+STRING 4200
+
+DEFINE g8
+STRING 48656C6C6F2C20576F726C642100
 
 PROC MAIN 0 0 0
 GLOBAL Program.Main

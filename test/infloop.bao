@@ -1,0 +1,12 @@
+Define Program
+$>
+	ClassMethod Main {} => {}
+	$>
+		x : String = "I love Baozi!".
+		While True.
+		$>
+			Output->StringLn<-{x}.
+		<$
+		Return.
+	<$
+<$

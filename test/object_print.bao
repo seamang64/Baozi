@@ -1,0 +1,9 @@
+Define Program
+$>
+	ClassMethod Main {} => {}
+	$>
+		x : Object = New Object.
+		x->Print<-{}.
+		Return.
+	<$
+<$

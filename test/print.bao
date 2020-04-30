@@ -1,0 +1,14 @@
+Define Program
+$>
+	ClassMethod Main {} => {}
+	$>
+		x : A = New A.
+		x->Print<-{}.
+		Output->Ln<-{}.
+		Return.
+	<$
+<$
+
+Define A
+$>
+<$

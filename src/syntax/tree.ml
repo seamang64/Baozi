@@ -16,6 +16,7 @@ and expr_guts =
   | MethodCall of expr * name * expr list
   | Property of expr * name
   | Constant of int * def_type
+  | String of symbol * string
   | TypeOf of expr
   | New of name
   | NewArray of name * expr
@@ -40,7 +41,7 @@ and property = Prop of name * def_type
 
 and m_method =
   { m_name: name;
-    m_type: def_type;
+    mutable m_type: def_type;
     m_static: bool;
     m_main: bool;
     m_replace: bool;
@@ -67,13 +68,14 @@ and def_kind =
 
 and def =
   { d_kind: def_kind;
-    d_type: def_type}
+    mutable d_type: def_type}
 
 and def_type =
   | ClassType of c_class
   | ArrayClassType of c_class * def_type
   | TempType of otype
   | VoidType
+  | NilType
 
 and name =
   { x_name: ident;

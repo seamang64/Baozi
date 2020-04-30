@@ -1,0 +1,29 @@
+Define Program
+$>
+	ClassMethod Main {} => {}
+	$>
+		a1 : A = New A.
+		a1->y = 5.
+		a2 : A = New A.
+		a2->y = 11.
+		a3 : A = a1 + a2.
+		Output->IntLn<-{a3->y}.
+		Return.
+	<$
+<$
+
+Define A <- Int
+$>
+	Properties
+	$>
+		x : Int,
+		y : Int,
+	<$
+
+	ReplaceMethod add {a : A} => A
+	$>
+		n : A = New A.
+		n->y = (Me->y) + (a->y).
+		Return n.
+	<$
+<$

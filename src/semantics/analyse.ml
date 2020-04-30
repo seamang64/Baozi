@@ -4,6 +4,8 @@ open Errors
 open Lib.Lib_all
 open Lib.Int
 open Lib.Type
+open Lib.String
+open Lib.Object
 open Printf
 
 let propertyOffset = 4
@@ -15,7 +17,7 @@ let p_type = ref VoidType
 
 let create_def kind t = { d_kind=kind; d_type = t }
 
-let create_method i r = {m_name=i.m_name; m_type=i.m_type; m_static=i.m_static; m_size=i.m_size; m_arguments=i.m_arguments; m_body=r.m_body; m_main=false; m_replace=false; m_origin=Mine}
+let create_method i r = {m_name=i.m_name; m_type=r.m_type; m_static=i.m_static; m_size=i.m_size; m_arguments=r.m_arguments; m_body=r.m_body; m_main=false; m_replace=false; m_origin=Mine}
 
 let create_origin i c =
   match i.m_origin with
@@ -92,6 +94,7 @@ let rec annotate_expr expr env =
   match expr.e_guts with
   | Name n -> let d = lookup n.x_name env in n.x_def <- d; n.x_def.d_type
   | Constant (_, d) -> get_class d env
+  | String _ -> string_def.d_type;
   | TypeOf e -> ignore(annotate_expr e env); type_def.d_type
   | MethodCall (e, m, args) ->
       let c = annotate_expr e env in
@@ -124,6 +127,7 @@ let rec annotate_expr expr env =
           | _ -> raise (InvalidNew n.x_name)
         end
   | Parent -> !p_type
+  | Nil -> object_def.d_type
 
 let rec annotate_stmt stmt env =
   match stmt with
@@ -166,13 +170,15 @@ let rec annotate_methods methods index env =
   | _ -> ()
 
 let annotate_body meth cls env =
-  if not meth.m_static then meth.m_arguments <- (create_me cls) :: meth.m_arguments;
-  if meth.m_main then mainMethod := cls.c_name.x_name ^ "." ^ meth.m_name.x_name;
-  let newEnv = annotate_arguments meth.m_arguments 0 env in
-  variableIndex := meth.m_size;
-  p_type := ClassType cls;
-  ignore(annotate_stmt meth.m_body newEnv);
-  meth.m_size <- !variableIndex
+  match meth.m_origin with
+  | Mine ->
+      if meth.m_main then mainMethod := cls.c_name.x_name ^ "." ^ meth.m_name.x_name;
+      let newEnv = annotate_arguments meth.m_arguments 0 env in
+      variableIndex := 0;
+      p_type := ClassType cls;
+      ignore(annotate_stmt meth.m_body newEnv);
+      meth.m_size <- !variableIndex
+  | _ -> ()
 
 let annotate_bodies cls env =
   List.iter (fun m -> ignore(annotate_body m cls env)) cls.c_methods
@@ -214,6 +220,12 @@ let rec annotate_parent cls env =
           cls.c_ancestors <- p :: p.c_ancestors;
   | _ -> ()
 
+let modify_non_static c =
+  let modify m =
+    if not m.m_static then m.m_arguments <- (create_me c) :: m.m_arguments
+    else ()
+  in List.iter modify c.c_methods
+
 let rec annotate_arrays clss env =
    match clss with
    | c::cs ->
@@ -230,6 +242,7 @@ let rec annotate_arrays clss env =
 let annotate_program (Program(cs)) =
   let env = annotate_classes cs start_env in
     let env' = annotate_arrays cs env in
+      List.iter modify_non_static cs;
       List.iter (fun c -> annotate_parent c env') cs;
       List.iter (fun c -> annotate_members c env') cs;
       List.iter (fun c -> annotate_bodies c env') cs;

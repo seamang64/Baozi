@@ -1,0 +1,10 @@
+Define Program
+$>
+	ClassMethod Main {} => {}
+	$>
+		x : String = "I love Baozi!".
+		Output->StringLn<-{x}.
+		Output->StringLn<-{"This String has more than thirty-two characters and so must be split up"}.
+		Return.
+	<$
+<$

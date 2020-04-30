@@ -3,6 +3,7 @@ open Errors
 open Lib.Int
 open Lib.Bool
 open Lib.Type
+open Lib.String
 open Printf
 
 let p_type = ref VoidType
@@ -12,6 +13,7 @@ let print_type t =
   | ClassType c -> c.c_name.x_name
   | VoidType -> "Void"
   | TempType n -> n
+  | NilType -> "Nil"
 
 let rec check_compatible t1 t2 =
   match (t1, t2) with
@@ -21,6 +23,7 @@ let rec check_compatible t1 t2 =
   | (ArrayClassType (c1, _), ArrayClassType (c2, _)) ->
       if c1.c_name.x_name != c2.c_name.x_name then raise (TypeError((print_type t1), (print_type t2)))
       else ()
+  | (_, NilType) -> ()
   | _ -> raise (TypeError((print_type t1), (print_type t2)))
 
 let find_method meth cls =
@@ -51,6 +54,7 @@ and check_expr e =
       | TempType "Bool" -> bool_def.d_type
       | _ -> raise UnknownConstant
     end
+  | String _ -> string_def.d_type
   | TypeOf e -> ignore(check_expr e); type_def.d_type
   | MethodCall (e1, m, args) ->
       let t = check_expr e1 in
@@ -75,6 +79,7 @@ and check_expr e =
         check_compatible t integer_def.d_type;
         n.x_def.d_type;
   | Parent -> !p_type
+  | Nil -> NilType
   | _ -> raise UnknownExpression
 
 let check_return r ret =
