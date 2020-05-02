@@ -3,7 +3,6 @@ open Syntax.Keiko
 open Int
 open Object
 open String
-open Type
 
 let rec out_class =
   { c_name=out_name; c_pname=ClassType object_class; c_array=false; c_size=4; c_properties=[]; c_methods=[method_int; method_intln; method_string; method_stringln; method_ln]; c_ancestors=[] }

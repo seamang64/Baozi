@@ -3,7 +3,6 @@ open Syntax.Keiko
 open Syntax.Lexer
 open Errors
 open Printf
-open Lib.Int
 open Lib.Lib_all
 
 let me_pointer = 4
@@ -34,20 +33,16 @@ let rec gen_primitive x desc =
     CALLW 2
   ]
 
-and gen_type e =
-  match e.e_guts with
-  | Name n -> GLOBAL (n.x_name ^ ".%desc")
-  | _ -> raise UnknownExpression
-
 and gen_addr n =
   match n.x_def.d_kind with
   | ClassDef -> SEQ [GLOBAL (n.x_name ^ ".%desc")]
   | VariableDef off -> SEQ [LOCAL off]
   | PropertyDef off -> SEQ [CONST off; OFFSET]
   | MethodDef (off, _) -> SEQ [CONST off; OFFSET]
+  | NoneKind -> raise (NoneKindError n.x_name)
 
 and gen_expr e =
-  match e.e_guts with
+  match e with
   | Name n -> SEQ [gen_addr n; LOADW]
   | Constant (x, d) ->
     begin
@@ -63,15 +58,15 @@ and gen_expr e =
         GLOBAL "baozi.makeString";
         CALLW 2
       ]
-  | TypeOf e ->
+  | TypeOf (Name n) ->
       SEQ [
-        gen_type e;
+        GLOBAL (n.x_name ^ ".%desc");
         GLOBAL "Type.%desc";
         GLOBAL "baozi.makePrim";
         CALLW 2;
       ]
   | MethodCall (e1, m, args) ->
-      if is_static m then gen_static_call e1.e_guts m args
+      if is_static m then gen_static_call e1 m args
       else gen_call e1 m args
   | Property (e1, n) -> SEQ [gen_expr e1; gen_addr n; LOADW]
   | Sub (e1, e2) ->
@@ -112,8 +107,10 @@ and gen_static_call (Name n) meth args =
     CALLW (List.length args)
   ]
 
+and gem_static_call _ _ _ = raise IncorrectSyntaxError
+
 and gen_call expr meth args =
-  match expr.e_guts with
+  match expr with
   | Parent ->
       SEQ [
         SEQ (List.map gen_expr (List.rev args));
@@ -152,7 +149,7 @@ and gen_cond tlab flab test =
 
 and gen_assigment e1 e2 =
   let v = gen_expr e2 in
-  match e1.e_guts with
+  match e1 with
   | Name n -> SEQ [v; gen_addr n; STOREW]
   | Property (e, n) -> SEQ[v; gen_expr e; gen_addr n; STOREW]
   | Sub (e3, e4) ->
@@ -226,7 +223,7 @@ and gen_method classname m =
         gen_stmt m.m_body;
         END
       ]
-  | Inherited n -> NOP
+  | Inherited _ -> NOP
 
 and gen_methods c = SEQ (List.map (gen_method c.c_name.x_name) c.c_methods)
 

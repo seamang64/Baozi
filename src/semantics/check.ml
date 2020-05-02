@@ -11,6 +11,7 @@ let p_type = ref VoidType
 let print_type t =
   match t with
   | ClassType c -> c.c_name.x_name
+  | ArrayClassType (c, _) -> c.c_name.x_name
   | VoidType -> "Void"
   | TempType n -> n
   | NilType -> "Nil"
@@ -29,12 +30,18 @@ let rec check_compatible t1 t2 =
 let find_method meth cls =
   match cls with
   | ClassType c ->
-    begin
-      try List.find (fun m-> m.m_name.x_name = meth.x_name) c.c_methods with
-        Not_found -> raise (UnknownName meth.x_name)
-    end
+      begin
+        try List.find (fun m-> m.m_name.x_name = meth.x_name) c.c_methods with
+          Not_found -> raise (UnknownName meth.x_name)
+      end
+  | ArrayClassType (c, _) ->
+      begin
+        try List.find (fun m-> m.m_name.x_name = meth.x_name) c.c_methods with
+          Not_found -> raise (UnknownName meth.x_name)
+      end
   | VoidType -> raise VoidOperation
   | TempType n -> raise (UnannotatedName n)
+  | NilType -> raise (UnknownName meth.x_name)
 
 let rec check_args args margs =
   match (args, margs) with
@@ -45,7 +52,7 @@ let rec check_args args margs =
   | _ -> raise IncorrectArgumentCount
 
 and check_expr e =
-  match e.e_guts with
+  match e with
   | Name n ->  n.x_def.d_type
   | Constant (_, d) ->
     begin
@@ -80,7 +87,6 @@ and check_expr e =
         n.x_def.d_type;
   | Parent -> !p_type
   | Nil -> NilType
-  | _ -> raise UnknownExpression
 
 let check_return r ret =
   match (r, ret) with
@@ -91,7 +97,7 @@ let check_return r ret =
 
 let rec check_stmt s ret =
   match s with
-  | Assign (e1, e2) -> (** Check e1 is property of variable, check e2 is not a class **)
+  | Assign (e1, e2) ->
       let (t1, t2) = ((check_expr e1), (check_expr e2)) in
         check_compatible t1 t2
   | Delc (x, _, e) ->
@@ -99,7 +105,7 @@ let rec check_stmt s ret =
         check_compatible x.x_def.d_type t
   | Call e ->
       begin
-        match e.e_guts with
+        match e with
         | MethodCall(_, _, _) -> ignore (check_expr e)
         | _ -> raise IncompleteStatement
       end

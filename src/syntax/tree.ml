@@ -9,7 +9,7 @@ and origin =
     Mine
   | Inherited of string
 
-and expr_guts =
+and expr =
     Name of name
   | Sub of expr * expr
   | Nil
@@ -21,10 +21,6 @@ and expr_guts =
   | New of name
   | NewArray of name * expr
   | Parent
-
-and expr =
-  { mutable e_guts: expr_guts;
-    mutable e_type: otype }
 
 and stmt =
     Assign of expr * expr
@@ -111,9 +107,6 @@ let createClass (n, p, arr, props, meths) =
 
 let createMethod (n, static, args, t, stmt, main, replace) =
   { m_name=n; m_type=t; m_static=static; m_size=0; m_arguments=args; m_body=stmt; m_main=main; m_replace=replace; m_origin=Mine }
-
-let createExpr guts =
-  { e_guts=guts; e_type="voidtype" }
 
 let createName n =
   { x_name=n; x_def=empty_def }

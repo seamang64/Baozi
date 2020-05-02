@@ -2,7 +2,6 @@ open Syntax.Tree
 open Kgen.Codegen
 open Errors
 open Lib.Lib_all
-open Lib.Int
 open Lib.Type
 open Lib.String
 open Lib.Object
@@ -51,6 +50,7 @@ let find_method meth cls =
           Not_found -> raise (UnknownName meth)
       end
   | VoidType -> raise VoidOperation
+  | NilType -> raise (UnknownName meth)
   | TempType n -> raise (UnannotatedName n)
 
 let find_properties prop cls =
@@ -67,6 +67,7 @@ let find_properties prop cls =
       end
   | VoidType -> raise VoidOperation
   | TempType n -> raise (UnannotatedName n)
+  | NilType -> raise (UnknownName prop.x_name)
 
 let rec annotate_classes classes env =
   match classes with
@@ -91,7 +92,7 @@ let rec annotate_properties properties index env =
   | _ -> ()
 
 let rec annotate_expr expr env =
-  match expr.e_guts with
+  match expr with
   | Name n -> let d = lookup n.x_name env in n.x_def <- d; n.x_def.d_type
   | Constant (_, d) -> get_class d env
   | String _ -> string_def.d_type;
@@ -210,7 +211,7 @@ let annotate_members cls env =
 
 let rec annotate_parent cls env =
   match cls.c_pname with
-  | TempType n ->
+  | TempType _ ->
       let ClassType p = get_class cls.c_pname env in
         annotate_parent p env;
         cls.c_pname <- ClassType p;
