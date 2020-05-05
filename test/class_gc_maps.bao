@@ -1,0 +1,17 @@
+Define A
+$>
+	Properties
+	$>
+		x: Int,
+		y: Int,
+		z: Int,
+	<$
+<$
+
+Define B
+$>
+	Properties
+	$>
+		a: A,
+	<$
+<$
