@@ -1,0 +1,22 @@
+Define A
+$>
+	Method DoSomething {x :Int, y : Int} => {}
+	$>
+		x: Int = 5.
+		y: Int = 6.
+		z: Int = 7.
+		Return.
+	<$
+
+	Method DoSomethingElse {} => {}
+	$>
+		x: Int = 5.
+		y: Int = 6.
+		Return.
+	<$
+
+	Method DoSomethingMore {a : Int, b : Int, c : Int, d : Int} => {}
+	$>
+		Return.
+	<$
+<$

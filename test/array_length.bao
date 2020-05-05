@@ -10,7 +10,9 @@ $>
 		For i : Int = 0. Step i = i + 1. Test i < xs->Length.
 		$>
 			Output->Int<-{xs->[i]}.
+			Output->String<-{", "}.
 		<$
+		Output->Ln<-{}.
 		Return.
 	<$
 <$

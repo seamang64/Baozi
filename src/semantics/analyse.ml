@@ -41,12 +41,12 @@ let find_method meth cls =
   match cls with
   | ClassType c ->
       begin
-        try (List.find (fun m -> meth = m.m_name.x_name) c.c_methods).m_name with
+        try (List.find (fun m -> meth = m.m_name.x_name) c.c_methods).m_name.x_def with
           Not_found -> raise (UnknownName meth)
       end
   | ArrayClassType (c, _) ->
       begin
-        try (List.find (fun m -> meth = m.m_name.x_name) c.c_methods).m_name with
+        try (List.find (fun m -> meth = m.m_name.x_name) c.c_methods).m_name.x_def with
           Not_found -> raise (UnknownName meth)
       end
   | VoidType -> raise VoidOperation
@@ -99,7 +99,7 @@ let rec annotate_expr expr env =
   | TypeOf e -> ignore(annotate_expr e env); type_def.d_type
   | MethodCall (e, m, args) ->
       let c = annotate_expr e env in
-      m.x_def <- (find_method m.x_name c).x_def;
+      m.x_def <- find_method m.x_name c;
       List.iter (fun x -> ignore(annotate_expr x env)) args;
       m.x_def.d_type
   | Property (e, n) ->

@@ -47,3 +47,4 @@ let print_exception e =
   | UnknownConstant -> printf "Constant of unknown type\n"
   | NoneKindError n -> printf "%s has defintion kind of None\n" n
   | IncorrectSyntaxError -> printf "Incorrect syntax\n"
+  | _ -> printf "Unknown Error\n";

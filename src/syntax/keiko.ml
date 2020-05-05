@@ -107,7 +107,7 @@ let rec print_keiko prog =
    | WORD (SYMBOL s) -> printf "WORD %s\n" s
    | WORD (DEC n ) -> printf "WORD %d\n" n
    | STRING s -> printf "STRING %s\n" s
-   | PROC (d, n, i, f) -> printf "\nPROC %s %d %d %d\n" d n i f
+   | PROC (d, n, i, f) -> printf "\nPROC %s %d %d 0x%X\n" d n i f
    | CONST n -> printf "CONST %d\n" n
    | GLOBAL s -> printf "GLOBAL %s\n" s
    | LOCAL n -> printf "LOCAL %d\n" n

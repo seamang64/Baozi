@@ -23,6 +23,20 @@ let is_static m =
   | MethodDef(_, s) -> s
   | _ -> raise (UnknownName m.x_name)
 
+let rec gen_ones n =
+  match n with
+  | 0 -> 0
+  | _ -> ((gen_ones (n-4)) lsl 1) + 1
+
+let gen_class_gc_map n =
+  if n > 0 then sprintf "0x%X" (gen_ones (n+4))
+  else "0"
+
+let gen_proc_gc_map locals params =
+  let local_off = 17 - (locals/4) and param_off = 20 in
+    let gc = ((gen_ones locals) lsl local_off) lor ((gen_ones (params * 4)) lsl param_off) in
+      gc+1
+
 let unbox = SEQ [CONST 4; OFFSET; LOADW]
 
 let rec gen_primitive x desc =
@@ -84,8 +98,11 @@ and gen_expr e =
       ]
   | New n ->
       SEQ [
+        (* get the address of the class descriptor *)
         GLOBAL (n.x_name ^ ".%desc");
+        (* need space for all the properties + class descriptor *)
         CONST (4 + (get_size n));
+        (* Call the make proceduure *)
         GLOBAL "baozi.make";
         CALLW 2;
       ]
@@ -102,8 +119,11 @@ and gen_expr e =
 
 and gen_static_call (Name n) meth args =
   SEQ [
+    (* evaluate that arguments *)
     SEQ (List.map gen_expr (List.rev args));
+    (* get the address of the method *)
     GLOBAL (n.x_name ^"." ^ meth.x_name);
+    (* Call the method *)
     CALLW (List.length args)
   ]
 
@@ -129,12 +149,19 @@ and gen_call expr meth args =
       ]
   | _ ->
       SEQ [
+        (* evaluate the arugments *)
         SEQ (List.map gen_expr (List.rev args));
+        (* evaluate the calling object *)
         gen_expr expr;
+        (* duplicate, as the calling object is also and argument *)
         DUP 0;
+        (* Load the class descriptor from the object *)
         LOADW;
+        (* find the offset for the method *)
         gen_addr meth;
+        (* load the method *)
         LOADW;
+        (* call the method *)
         CALLW (List.length args + 1)
       ]
 
@@ -219,7 +246,7 @@ and gen_method classname m =
   match m.m_origin with
   | Mine ->
       SEQ [
-        PROC (classname ^ "." ^ m.m_name.x_name, m.m_size, 0, 0);
+        PROC (classname ^ "." ^ m.m_name.x_name, m.m_size, 0, gen_proc_gc_map m.m_size (List.length m.m_arguments));
         gen_stmt m.m_body;
         END
       ]
@@ -256,7 +283,7 @@ and gen_class c =
   let name = c.c_name.x_name in
   SEQ [
     DEFINE (name ^ ".%desc");
-    WORD (DEC 0);
+    WORD (SYMBOL (gen_class_gc_map c.c_size));
     WORD (SYMBOL (name ^ ".%anc"));
     WORD (SYMBOL (name ^ ".%string"));
     SEQ (List.map (fun m -> gen_method_name m c) c.c_methods);
