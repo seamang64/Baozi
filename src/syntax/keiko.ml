@@ -31,6 +31,7 @@ type code =
   | LOADW                       (* Load (size) *)
   | STOREW                      (* Store (size) *)
   | FIXCOPY                     (* Copy multiple values (size) *)
+  | STKMAP of int
   | PCALLW of int               (* Call procedure (nparams, rsize) *)
   | CALLW of int
   | RETURN of int               (* Procedure return (rsize) *)
@@ -113,6 +114,7 @@ let rec print_keiko prog =
    | LOCAL n -> printf "LOCAL %d\n" n
    | LOADW -> printf "LOADW\n"
    | STOREW -> printf "STOREW\n"
+   | STKMAP n -> printf "STKMAP 0x%X\n" n
    | PCALLW n -> printf "PCALLW %d\n" n
    | CALLW n -> printf "CALLW %d\n" n
    | RETURN n -> printf "RETURN%s\n" (fType n)

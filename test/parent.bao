@@ -1,28 +1,28 @@
 Define Program
 $>
-	ClassMethod Main {} => {}
-	$>
-		b : B = New B.
-		b->DoSomething<-{}.
-		Return.
-	<$
+    ClassMethod Main {} => {}
+    $>
+        b : B = New B.
+        b->DoSomething<-{}.
+        Return.
+    <$
 <$
 
 Define A
 $>
-	Method DoSomething {} => {}
-	$>
-		Output->Int<-{57}.
-		Return.
-	<$
+    Method DoSomething {} => {}
+    $>
+        Output->StringLn<-{"I'm using A's method!"}.
+        Return.
+    <$
 <$
 
 Define B <- A
 $>
-	ReplaceMethod DoSomething {} => {}
-	$>
-		Output->Int<-{6}.
-		Parent->DoSomething<-{}.
-		Return.
-	<$
+    ReplaceMethod DoSomething {} => {}
+    $>
+        Output->StringLn<-{"I'm using B's method!"}.
+        Parent->DoSomething<-{}.
+        Return.
+    <$
 <$

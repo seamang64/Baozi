@@ -2,6 +2,7 @@ open Syntax.Tree
 open Syntax.Keiko
 open Syntax.Lexer
 open Errors
+open Gc
 open Printf
 open Lib.Lib_all
 
@@ -22,20 +23,6 @@ let is_static m =
   match m.x_def.d_kind with
   | MethodDef(_, s) -> s
   | _ -> raise (UnknownName m.x_name)
-
-let rec gen_ones n =
-  match n with
-  | 0 -> 0
-  | _ -> ((gen_ones (n-4)) lsl 1) + 1
-
-let gen_class_gc_map n =
-  if n > 0 then sprintf "0x%X" (gen_ones (n+4))
-  else "0"
-
-let gen_proc_gc_map locals params =
-  let local_off = 17 - (locals/4) and param_off = 20 in
-    let gc = ((gen_ones locals) lsl local_off) lor ((gen_ones (params * 4)) lsl param_off) in
-      gc+1
 
 let unbox = SEQ [CONST 4; OFFSET; LOADW]
 
@@ -133,18 +120,27 @@ and gen_call expr meth args =
   match expr with
   | Parent ->
       SEQ [
+        (* evaulate arguments *)
         SEQ (List.map gen_expr (List.rev args));
+        (* evaulate calling object *)
         gen_expr expr;
+        (* duplicate, as the calling object is also an argument *)
         DUP 0;
+        (* Get the object's class descriptor *)
         LOADW;
+        (* Get the ancestor table at *)
         CONST 4;
         OFFSET;
         LOADW;
+        (* Get the parent class descriptor *)
         CONST 8;
         OFFSET;
         LOADW;
+        (* get the offset for the method *)
         gen_addr meth;
+        (* load the method *)
         LOADW;
+        (* call the method *)
         CALLW (List.length args + 1)
       ]
   | _ ->
@@ -167,7 +163,7 @@ and gen_call expr meth args =
 
 and gen_cond tlab flab test =
   SEQ [
-    gen_expr test;
+    gen_stack_maps (gen_expr test);
     unbox;
     CONST 0;
     JUMPC (Neq, tlab);
@@ -176,34 +172,35 @@ and gen_cond tlab flab test =
 
 and gen_assigment e1 e2 =
   let v = gen_expr e2 in
+  let v' = gen_stack_maps v in
   match e1 with
-  | Name n -> SEQ [v; gen_addr n; STOREW]
-  | Property (e, n) -> SEQ[v; gen_expr e; gen_addr n; STOREW]
+  | Name n -> SEQ [v'; gen_addr n; STOREW]
+  | Property (e, n) -> SEQ[v'; gen_expr e; gen_addr n; STOREW]
   | Sub (e3, e4) ->
-    SEQ [
-      v;
-      gen_expr e3;
-      CONST 8;
-      OFFSET;
-      LOADW;
-      gen_expr e4;
-      unbox;
-      CONST 4;
-      BINOP Times;
-      OFFSET;
-      STOREW;
-    ]
+      SEQ [
+        v';
+        gen_expr e3;
+        CONST 8;
+        OFFSET;
+        LOADW;
+        gen_expr e4;
+        unbox;
+        CONST 4;
+        BINOP Times;
+        OFFSET;
+        STOREW;
+      ]
   | _ -> raise InvalidAssigment
 
 and gen_stmt s =
   match s with
   | Assign (e1, e2) -> gen_assigment e1 e2
-  | Delc (n, _, e) -> SEQ [gen_expr e; gen_addr n; STOREW]
-  | Call e  -> gen_expr e
+  | Delc (n, _, e) -> SEQ [gen_stack_maps (gen_expr e); gen_addr n; STOREW]
+  | Call e  -> gen_stack_maps (gen_expr e)
   | Return r ->
     begin
       match r with
-      | Some e -> SEQ [gen_expr e; RETURN 1]
+      | Some e -> SEQ [gen_stack_maps (gen_expr e); RETURN 1]
       | None -> SEQ [RETURN 0]
     end
   | IfStmt (e, ts, fs) ->

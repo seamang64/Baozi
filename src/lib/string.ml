@@ -72,7 +72,7 @@ and method_code = SEQ [print_code]
 let define_code =
   SEQ [
     DEFINE "String.%desc";
-    WORD (DEC 0);
+    WORD (DEC 3);
     WORD (SYMBOL "String.%anc");
     WORD (SYMBOL "String.%string");
     WORD (SYMBOL "Object.equals");

@@ -1,0 +1,15 @@
+Define Program
+$>
+    ClassMethod Main {} => {}
+    $>
+        Program->AddNums<-{5+4, 3+7}.
+        Return.
+    <$
+
+    ClassMethod AddNums {x : Int, y : Int} => {}
+    $>
+        r : Int = x + y.
+        Output->IntLn<-{r}.
+        Return.
+    <$
+<$

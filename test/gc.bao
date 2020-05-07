@@ -1,0 +1,46 @@
+Define Program
+$>
+    ClassMethod Main {} => {}
+    $>
+        Output->StringLn<-{"Starting the test"}.
+        a : A = New A.
+        Output->StringLn<-{"1"}.
+        t : Int = 17 + 25.
+        Output->StringLn<-{"2"}.
+        a->p1 = 3 + 8.
+        a->p2 = 7 + 11.
+        Output->StringLn<-{"3"}.
+        a->next = New A.
+        Output->StringLn<-{"4"}.
+        a->next->Update<-{Program->AddNums<-{9, 10}, Program->AddNums<-{11, 12}}.
+        Output->Int<-{a->next->p1}.
+        Output->String<-{", "}.
+        Output->Int<-{a->next->p2}.
+        Output->Ln<-{}.
+        Return.
+    <$
+
+    ClassMethod AddNums {x : Int, y : Int} => Int
+    $>
+        r : Int = x + y.
+        Return r.
+    <$
+<$
+
+Define A
+$>
+    Properties
+    $>
+        p1 : Int,
+        p2 : Int,
+        next: A,
+    <$
+
+    Method Update {a : Int, b : Int} => A
+    $>
+        Me->p1 = a.
+        Me->p2 = b.
+        Output->StringLn<-{"I've updated!!"}.
+        Return Me.
+    <$
+<$

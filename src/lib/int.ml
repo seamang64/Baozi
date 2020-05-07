@@ -17,28 +17,30 @@ let get_args =
     LOADW
   ]
 
-let simple_operation t op =
+let simple_operation name t op =
   SEQ [
+    PROC (name, 0, 0, 3145729);
     get_args;
     BINOP op;
     return_result t;
     END;
   ]
 
-let base_equals_code = simple_operation "Bool.%desc" Eq
-let base_add_code = simple_operation "Integer.%desc" Plus
-let base_times_code = simple_operation "Integer.%desc" Times
-let base_sub_code = simple_operation "Integer.%desc" Minus
-let base_div_code = simple_operation "Integer.%desc" Div
-let base_mod_code = simple_operation "Integer.%desc" Mod
-let base_not_equals_code = simple_operation "Bool.%desc" Neq
-let base_less_than_code = simple_operation "Bool.%desc" Lt
-let base_greater_than_code = simple_operation "Bool.%desc" Gt
-let base_less_than_equal_code = simple_operation "Bool.%desc" Leq
-let base_greater_than_equal_code = simple_operation "Bool.%desc" Geq
+let equals_code = simple_operation "Integer.equals" "Bool.%desc" Eq
+let add_code = simple_operation "Integer.add" "Integer.%desc" Plus
+let times_code = simple_operation "Integer.times" "Integer.%desc" Times
+let sub_code = simple_operation "Integer.sub" "Integer.%desc" Minus
+let div_code = simple_operation "Integer.div" "Integer.%desc" Div
+let mod_code = simple_operation "Integer.mod" "Integer.%desc" Mod
+let not_equals_code = simple_operation "Integer.notEquals" "Bool.%desc" Neq
+let less_than_code = simple_operation "Integer.lessThan" "Bool.%desc" Lt
+let greater_than_code = simple_operation "Integer.greaterThan" "Bool.%desc" Gt
+let less_than_equal_code = simple_operation "Integer.lessThanEq" "Bool.%desc" Leq
+let greater_than_equal_code = simple_operation "Integer.greaterThanEq" "Bool.%desc" Geq
 
-let base_uminus_code =
+let uminus_code =
   SEQ [
+    PROC ("Integer.uminus", 0, 0, 1048577);
     LOCAL 12;
     LOADW;
     CONST 4;
@@ -51,7 +53,7 @@ let base_uminus_code =
 
 let print_code =
   SEQ [
-    PROC ("Integer.Print", 0, 0, 0);
+    PROC ("Integer.Print", 0, 0, 100001);
     LOCAL 12;
     LOADW;
     CONST 4;
@@ -63,19 +65,6 @@ let print_code =
     RETURN 0;
     END;
   ]
-
-let equals_code = SEQ [PROC ("Integer.equals", 0, 0, 0); base_equals_code]
-let add_code = SEQ [PROC ("Integer.add", 0, 0, 0); base_add_code]
-let times_code = SEQ [PROC ("Integer.times", 0, 0, 0); base_times_code]
-let sub_code = SEQ [PROC ("Integer.sub", 0, 0, 0); base_sub_code]
-let div_code = SEQ [PROC ("Integer.div", 0, 0, 0); base_div_code]
-let mod_code = SEQ [PROC ("Integer.mod", 0, 0, 0); base_mod_code]
-let not_equals_code = SEQ [PROC ("Integer.notEquals", 0, 0, 0); base_not_equals_code]
-let less_than_code = SEQ [PROC ("Integer.lessThan", 0, 0, 0); base_less_than_code]
-let greater_than_code = SEQ [PROC ("Integer.greaterThan", 0, 0, 0); base_greater_than_code]
-let less_than_equal_code = SEQ [PROC ("Integer.lessThanEq", 0, 0, 0); base_less_than_equal_code]
-let greater_than_equal_code = SEQ [PROC ("Integer.greaterThanEq", 0, 0, 0); base_greater_than_equal_code]
-let uminus_code = SEQ [PROC ("Integer.uminus", 0, 0, 0); base_uminus_code]
 
 let rec integer_class =
   { c_name=integer_name; c_pname=VoidType; c_array=false; c_size=4; c_properties=[]; c_methods=integer_methods; c_ancestors=[] }

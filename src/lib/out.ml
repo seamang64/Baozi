@@ -57,7 +57,7 @@ and string_def =
 
 let int_code =
   SEQ [
-    PROC ("Output.Int", 0, 0, 0);
+    PROC ("Output.Int", 0, 0, 1048577);
     LOCAL 12;
     LOADW;
     CONST 4;
@@ -72,7 +72,7 @@ let int_code =
 
 let intln_code =
   SEQ [
-    PROC ("Output.IntLn", 0, 0, 0);
+    PROC ("Output.IntLn", 0, 0, 1048577);
     LOCAL 12;
     LOADW;
     CONST 4;
@@ -89,7 +89,7 @@ let intln_code =
 
 let string_code =
   SEQ [
-    PROC ("Output.String", 0, 0, 0);
+    PROC ("Output.String", 0, 0, 1048577);
     LOCAL 12;
     LOADW;
     CONST 8;
@@ -104,7 +104,7 @@ let string_code =
 
 let stringln_code =
   SEQ [
-    PROC ("Output.StringLn", 0, 0, 0);
+    PROC ("Output.StringLn", 0, 0, 1048577);
     LOCAL 12;
     LOADW;
     CONST 8;
@@ -122,6 +122,7 @@ let stringln_code =
 let ln_code =
   SEQ [
     PROC ("Output.Ln", 0, 0, 0);
+    CONST 0;
     GLOBAL "lib.newline";
     PCALLW 0;
     RETURN 0;
