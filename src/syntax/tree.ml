@@ -50,7 +50,7 @@ and c_class =
   { c_name: name;
     mutable c_pname: def_type;
     c_array: bool;
-    c_size: int;
+    mutable c_size: int;
     mutable c_properties: property list;
     mutable c_methods: m_method list;
     mutable c_ancestors: c_class list }
@@ -103,7 +103,7 @@ let empty = Env(IdMap.empty)
 let empty_def = {d_kind=NoneKind; d_type=VoidType}
 
 let createClass (n, p, arr, props, meths) =
-  { c_name=n; c_pname=p; c_array=arr; c_size=(List.length props) * 4; c_properties=props; c_methods=meths; c_ancestors=[] }
+  { c_name=n; c_pname=p; c_array=arr; c_size=0; c_properties=props; c_methods=meths; c_ancestors=[] }
 
 let createMethod (n, static, args, t, stmt, main, replace) =
   { m_name=n; m_type=t; m_static=static; m_size=0; m_arguments=args; m_body=stmt; m_main=main; m_replace=replace; m_origin=Mine }

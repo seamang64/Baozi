@@ -218,6 +218,7 @@ let rec annotate_parent cls env =
         let (r, n) = split cls.c_methods in
           cls.c_methods <- (replace_methods p.c_methods r p) @ n;
           cls.c_properties <- p.c_properties @ cls.c_properties;
+          cls.c_size <- 4 * (List.length cls.c_properties);
           cls.c_ancestors <- p :: p.c_ancestors;
   | _ -> ()
 
