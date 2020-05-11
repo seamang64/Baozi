@@ -1,0 +1,30 @@
+Define Program
+$>
+    ClassMethod Main {} => {}
+    $>
+        x : Int = 12.
+        r : Int = Program->Fac<-{x}.
+        Output->Int<-{x}.
+        Output->String<-{" factorial is "}.
+        Output->IntLn<-{r}.
+        Return.
+    <$
+
+    ClassMethod Fac {x : Int} => Int
+    $>
+        res : Int = 1.
+        For i : Int = 2. Step i = i+1. Test i <= x.
+        $>
+            v : Int = res.
+            For j : Int = 1. Step j = j+1. Test j < i.
+            $>
+                For k : Int = 0. Step k = k+1. Test k < v.
+                $>
+                    res = res + 1.
+                <$
+            <$
+        <$
+
+        Return res.
+    <$
+<$

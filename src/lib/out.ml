@@ -129,7 +129,7 @@ let ln_code =
     END
   ]
 
-let method_code = SEQ [int_code; intln_code; string_code; stringln_code; ln_code]
+let method_code = [int_code; intln_code; string_code; stringln_code; ln_code]
 
 let define_code =
   SEQ [
@@ -141,10 +141,4 @@ let define_code =
     WORD (SYMBOL "Output.String");
     WORD (SYMBOL "Output.StringLn");
     WORD (SYMBOL "Output.Ln");
-  ]
-
-let out_code =
-  SEQ [
-    define_code;
-    method_code
   ]

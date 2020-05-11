@@ -1,0 +1,13 @@
+Define Program
+$>
+    ClassMethod Main {} => {}
+    $>
+        xs : IntVec = New IntVec<-[3].
+        xs->[2] = 5.
+        Output->IntLn<-{xs->[2]}.
+        Output->IntLn<-{xs->Length}.
+        Return.
+    <$
+<$
+
+Define IntVec As Array Of Int

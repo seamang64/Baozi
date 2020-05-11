@@ -1,0 +1,17 @@
+Define Program
+$>
+    ClassMethod Main {} => {}
+    $>
+        x : Int = 24.
+        r : Int = Program->twoPow<-{x}.
+        Output->String<-{"Result: "}.
+        Output->IntLn<-{r}.
+        Return.
+    <$
+
+    ClassMethod twoPow {x : Int} => Int
+    $>
+        If x == 0 Then Return 1.
+        Else Return Program->twoPow<-{x - 1} + Program->twoPow<-{x - 1}.
+    <$
+<$

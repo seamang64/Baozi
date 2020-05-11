@@ -55,7 +55,7 @@ and gen_expr e =
   | String (lab, s) ->
        SEQ [
         GLOBAL lab;
-        gen_primitive (String.length s) "Integer.%desc";
+        CONST (String.length s);
         GLOBAL "baozi.makeString";
         CALLW 2
       ]
@@ -72,15 +72,22 @@ and gen_expr e =
   | Property (e1, n) -> SEQ [gen_expr e1; gen_addr n; LOADW]
   | Sub (e1, e2) ->
       SEQ [
+        (* Get the array the we are indexing from *)
         gen_expr e1;
-        CONST 8;
+        (* Get the "Data" *)
+        CONST 4;
         OFFSET;
         LOADW;
+        CONST 4;
+        OFFSET;
+        (* Get the index *)
         gen_expr e2;
         unbox;
+        (* The element we want is at offset 4*i *)
         CONST 4;
         BINOP Times;
         OFFSET;
+        (* Load the element *)
         LOADW;
       ]
   | New n ->
@@ -101,7 +108,7 @@ and gen_expr e =
         CALLW 2;
       ]
   | Parent -> SEQ [LOCAL 12; LOADW]
-  | Nil -> GLOBAL "Nil"
+  | Nil -> LDG "Nil"
   | _ -> raise UnknownExpression
 
 and gen_static_call (Name n) meth args =
@@ -171,18 +178,19 @@ and gen_cond tlab flab test =
   ]
 
 and gen_assigment e1 e2 =
-  let v = gen_expr e2 in
-  let v' = gen_stack_maps v in
+  let v = gen_stack_maps (gen_expr e2) in
   match e1 with
-  | Name n -> SEQ [v'; gen_addr n; STOREW]
-  | Property (e, n) -> SEQ[v'; gen_expr e; gen_addr n; STOREW]
+  | Name n -> SEQ [v; gen_addr n; STOREW]
+  | Property (e, n) -> SEQ[v; gen_expr e; gen_addr n; STOREW]
   | Sub (e3, e4) ->
       SEQ [
-        v';
+        v;
         gen_expr e3;
-        CONST 8;
+        CONST 4;
         OFFSET;
         LOADW;
+        CONST 4;
+        OFFSET;
         gen_expr e4;
         unbox;
         CONST 4;
@@ -244,7 +252,7 @@ and gen_method classname m =
   | Mine ->
       SEQ [
         PROC (classname ^ "." ^ m.m_name.x_name, m.m_size, 0, gen_proc_gc_map m.m_size (List.length m.m_arguments));
-        gen_stmt m.m_body;
+        Peepopt.optimise (gen_stmt m.m_body);
         END
       ]
   | Inherited _ -> NOP
@@ -276,6 +284,15 @@ and split_string s =
       (String.sub s 0 32) :: (split_string (String.sub s 32 (n-32)))
     else [s ^ "\000"]
 
+and gen_nil =
+  SEQ [
+    GLOBAL "Object.%desc";
+    CONST 4;
+    GLOBAL "baozi.make";
+    CALLW 2;
+    STG "Nil";
+  ]
+
 and gen_class c =
   let name = c.c_name.x_name in
   SEQ [
@@ -293,13 +310,21 @@ and gen_class c =
 
 and gen_program (Program(cs)) =
   SEQ [
-    SEQ lib_code;
+    (* SEQ lib_define_code;
+    SEQ (List.map (fun k -> SEQ (List.map Peepopt.optimise k)) lib_method_code); *)
     SEQ (List.map gen_methods cs);
     SEQ (List.map gen_class cs);
     SEQ (List.map gen_string !strtable);
     PROC ("MAIN", 0, 0, 0);
+    (* CONST 0;
+    GLOBAL "lib.start_clock";
+    PCALLW 0; *)
+    gen_nil;
     GLOBAL !mainMethod;
     CALLW 0;
+    (* CONST 0;
+    GLOBAL "lib.end_clock";
+    PCALLW 0; *)
     RETURN 0;
     END;
   ]

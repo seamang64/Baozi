@@ -2,7 +2,7 @@ open Printf
 
 type codelab = int
 type symbol = string
-let current_label = ref 3
+let current_label = ref 9
 let label () = incr current_label; !current_label
 let reset_labels () = current_label := 0
 let gen_sym () = "g" ^ (string_of_int (label ()))
@@ -47,14 +47,14 @@ type code =
   | JCASE of codelab list       (* Jump table *)
   | LINE of int                 (* Line number *)
 
-  | LDL of int * int            (* LDL (n, s) = LOCAL n / LOAD s *)
-  | STL of int * int            (* STL (n, s) = LOCAL n / STORE s *)
-  | LDG of symbol * int         (* LDG (x, s) = GLOBAL x / LOAD s *)
-  | STG of symbol * int         (* STG (x, s) = GLOBAL x / STORE s *)
+  | LDL of int                  (* LDL (n, s) = LOCAL n / LOAD s *)
+  | STL of int                  (* STL (n, s) = LOCAL n / STORE s *)
+  | LDG of symbol               (* LDG (x, s) = GLOBAL x / LOAD s *)
+  | STG of symbol               (* STG (x, s) = GLOBAL x / STORE s *)
   | LDNW of int                 (* LDNW n = CONST n / OFFSET / LOAD 4 *)
   | STNW of int                 (* STNW n = CONST n / OFFSET / STORE 4 *)
-  | LDI of int                  (* LDI s = CONST s / TIMES / OFFSET / LOAD s *)
-  | STI of int                  (* STI s = CONST s / TIMES / OFFSET / STORE s *)
+  | LDI                         (* LDI s = CONST s / TIMES / OFFSET / LOAD s *)
+  | STI                         (* STI s = CONST s / TIMES / OFFSET / STORE s *)
   | JUMPCZ of op * codelab      (* Conditional branch with zero (cond, dest) *)
 
   | SEQ of code list            (* Sequence of other instructions *)
@@ -63,22 +63,47 @@ type code =
   | NOP                         (* Null operation *)
   | END
 
-let flatten_instructions x =
+let canon x =
   let rec accum x ys =
     match x with
         SEQ xs -> List.fold_right accum xs ys
       | NOP -> ys
-      | LINE n ->
-          if n = 0 then
-            ys
-          else begin
-            match ys with
-                [] -> ys
-              | LINE _ :: _ -> ys
-              | _ -> LINE n :: ys
-          end
       | _ -> x :: ys in
-  accum x []
+  SEQ (accum x [])
+
+let rec drop n =
+  function
+  | [] -> []
+  | x::xs -> if n = 0 then x::xs else drop (n-1) xs
+
+let rec take n =
+  function
+  | [] -> []
+  | x::xs -> if n = 0 then [] else x :: take (n-1) xs
+
+let int_of_bool b = if b then 1 else 0
+
+let do_binop w x y =
+  match w with
+    | Plus -> x + y
+    | Minus -> x - y
+    | Times -> x * y
+    | Div -> x / y
+    | Mod -> x mod y
+    | Eq -> int_of_bool (x = y)
+    | Lt -> int_of_bool (x < y)
+    | Gt -> int_of_bool (x > y)
+    | Leq -> int_of_bool (x <= y)
+    | Geq -> int_of_bool (x >= y)
+    | Neq -> int_of_bool (x <> y)
+    | And -> if x <> 0 then y else 0
+    | Or -> if x <> 0 then 1 else y
+    | Lsl -> x lsl y
+    | Lsr -> x lsr y
+    | Asr -> x asr y
+    | BitAnd -> x land y
+    | BitOr -> x lor y
+    | _ -> printf "Unrecongised Keiko"; exit 1
 
 let print_op op =
   match op with
@@ -124,6 +149,15 @@ let rec print_keiko prog =
    | LABEL l -> printf "LABEL %d\n" l
    | JUMP l -> printf "JUMP %d\n" l
    | JUMPC (op, l) -> printf "J%s %d\n" (print_op op) l
+   | LDL n -> printf "LDLW %d\n" n
+   | STL n -> printf "STLW %d\n" n
+   | LDG s -> printf "LDGW %s\n" s
+   | STG s -> printf "STGW %s\n" s
+   | LDNW n -> printf "LDNW %d\n" n
+   | STNW n -> printf "STNW %d\n" n
+   | LDI ->  printf "LDIW\n"
+   | STI -> printf "STIW\n"
+   | JUMPCZ (op, l) -> printf "J%sZ %d\n" (print_op op) l
    | SEQ ss -> List.iter print_keiko ss
    | SWAP -> printf "SWAP\n"
    | DUP n -> printf "DUP %d\n" n

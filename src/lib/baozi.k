@@ -1,0 +1,637 @@
+MODULE Baozi 0 0
+IMPORT Lib 0
+ENDHDR
+
+DEFINE Nil
+WORD 0
+
+PROC baozi.make 0 0 0
+LDLW 12
+LDLW 16
+CONST 0
+GLOBAL lib.newgc
+PCALLW 2
+DUP 0
+CONST 0
+LABEL 1
+SWAP
+CONST 4
+OFFSET
+DUP 0
+LDGW Nil
+SWAP
+STOREW
+SWAP
+CONST 4
+PLUS
+DUP 0
+LDLW 12
+JEQ 1
+DUP 2
+RETURNW
+END
+
+PROC baozi.makePrim 0 0 0
+CONST 8
+LDLW 12
+CONST 0
+GLOBAL lib.newgc
+PCALLW 2
+DUP 0
+LDLW 16
+SWAP
+STNW 4
+RETURNW
+END
+
+PROC print 0 0 0
+LDLW 12
+CONST 0
+GLOBAL lib.print_num
+PCALLW 1
+GLOBAL lib.newline
+PCALLW 0
+RETURN
+END
+
+PROC baozi.makeArray 4 0 0x310001
+CONST 12
+LDLW 16
+CONST 0
+GLOBAL lib.newgc
+PCALLW 2
+STLW -4
+
+LDLW 12
+LDNW 4
+GLOBAL baozi.makeArrayData
+CALLW 1
+LDLW -4
+STNW 4
+
+LDLW 12
+LDLW -4
+STNW 8
+
+LDLW -4
+RETURNW
+END
+
+PROC baozi.makeArrayData 0 0 0
+LDLW 12
+CONST 4
+TIMES
+CONST 24
+PLUS
+CONST 0
+CONST 0
+GLOBAL lib.newgc
+PCALLW 2
+DUP 0
+
+DUP 0
+LDLW 12
+CONST 4
+TIMES
+CONST 4
+PLUS
+OFFSET
+SWAP
+STOREW
+
+DUP 0
+CONST 0
+JUMP 9
+LABEL 8
+
+SWAP
+CONST 4
+OFFSET
+DUP 0
+LDGW Nil
+SWAP
+STOREW
+SWAP
+CONST 1
+PLUS
+
+LABEL 9
+DUP 0
+LDLW 12
+JNEQ 8
+POP 1
+
+DUP 0
+CONST -4
+SWAP
+STNW 4
+
+DUP 0
+CONST 22
+SWAP
+STNW 8
+
+DUP 0
+CONST 0
+SWAP
+STNW 12
+
+DUP 0
+LDLW 12
+SWAP
+STNW 16
+
+CONST 10
+SWAP
+STNW 20
+
+RETURNW
+END
+
+PROC baozi.makeString 0 0 0x200001
+CONST 12
+GLOBAL String.%desc
+CONST 0
+GLOBAL lib.newgc
+PCALLW 2
+DUP 0
+CONST 4
+OFFSET
+LDLW 12
+GLOBAL Integer.%desc
+GLOBAL baozi.makePrim
+STKMAP 0x9
+CALLW 2
+SWAP
+STOREW
+DUP 0
+CONST 8
+OFFSET
+LDLW 16
+SWAP
+STOREW
+RETURNW
+END
+
+DEFINE Object.%desc
+WORD 0
+WORD Object.%anc
+WORD Object.%string
+WORD Object.equals
+WORD Object.GetType
+WORD Object.Is
+WORD Object.Print
+
+DEFINE Object.%anc
+WORD 1
+WORD Object.%desc
+
+DEFINE Object.%string
+STRING 4F626A65637400
+
+DEFINE Integer.%desc
+WORD 0
+WORD Integer.%anc
+WORD Integer.%string
+WORD Integer.equals
+WORD Object.GetType
+WORD Object.Is
+WORD Integer.Print
+WORD Integer.add
+WORD Integer.times
+WORD Integer.sub
+WORD Integer.div
+WORD Integer.mod
+WORD Integer.uminus
+WORD Integer.notEquals
+WORD Integer.lessThan
+WORD Integer.greaterThan
+WORD Integer.lessThanEq
+WORD Integer.greaterThanEq
+
+DEFINE Integer.%anc
+WORD 2
+WORD Integer.%desc
+WORD Object.%desc
+
+DEFINE Integer.%string
+STRING 496E7400
+
+DEFINE Bool.%desc
+WORD 0
+WORD Bool.%anc
+WORD Bool.%string
+WORD Bool.equals
+WORD Object.GetType
+WORD Object.Is
+WORD Bool.Print
+WORD Bool.and
+WORD Bool.or
+WORD Bool.not
+
+DEFINE Bool.%anc
+WORD Bool.%desc
+WORD Object.%desc
+
+DEFINE Bool.%string
+STRING 426F6F6C00
+
+DEFINE Bool.TrueString
+STRING 5472756500
+
+DEFINE Bool.FalseString
+STRING 46616C736500
+
+DEFINE Array.%desc
+WORD 0
+WORD Array.%anc
+WORD Array.%string
+WORD Object.equals
+WORD Object.GetType
+WORD Object.Is
+WORD Object.Print
+
+DEFINE Array.%anc
+WORD 2
+WORD Array.%desc
+WORD Object.%desc
+
+DEFINE Array.%string
+STRING 417272617900
+
+DEFINE Type.%desc
+WORD 0
+WORD Type.%anc
+WORD Type.%string
+WORD Object.equals
+WORD Object.GetType
+WORD Object.Is
+WORD Object.Print
+
+DEFINE Type.%anc
+WORD 2
+WORD Type.%desc
+WORD Object.%desc
+
+DEFINE Type.%string
+STRING 5479706500
+
+DEFINE String.%desc
+WORD 3
+WORD String.%anc
+WORD String.%string
+WORD Object.equals
+WORD Object.GetType
+WORD Object.Is
+WORD String.Print
+
+DEFINE String.%anc
+WORD 2
+WORD String.%desc
+WORD Object.%desc
+
+DEFINE String.%string
+STRING 537472696E6700
+
+DEFINE Output.%desc
+WORD 0
+WORD 1
+WORD Output.Int
+WORD Output.IntLn
+WORD Output.String
+WORD Output.StringLn
+WORD Output.Ln
+
+PROC Object.equals 0 0 0x0
+LDLW 12
+LDLW 16
+EQ
+GLOBAL Bool.%desc
+GLOBAL baozi.makePrim
+CALLW 2
+RETURNW
+END
+
+PROC Object.GetType 0 0 0x0
+LDLW 12
+LOADW
+GLOBAL Bool.%desc
+GLOBAL baozi.makePrim
+CALLW 2
+RETURNW
+END
+
+PROC Object.Is 12 0 0x0
+LDLW 16
+LDNW 4
+STLW -4
+CONST 0
+LDLW 12
+LOADW
+LDNW 4
+DUP 0
+LOADW
+STLW -8
+LABEL 5
+SWAP
+DUP 0
+LDLW -8
+JEQ 7
+CONST 4
+PLUS
+SWAP
+CONST 4
+OFFSET
+DUP 0
+LOADW
+LDLW -4
+JNEQ 5
+LABEL 6
+CONST 1
+GLOBAL baozi.makePrim
+CALLW 1
+RETURNW
+LABEL 7
+CONST 0
+GLOBAL baozi.makePrim
+CALLW 1
+RETURNW
+END
+
+PROC Object.Print 0 0 0x0
+LDLW 12
+LOADW
+LDNW 8
+CONST 0
+GLOBAL lib.print_string
+PCALLW 1
+RETURNW
+END
+
+PROC Integer.equals 0 0 0x300001
+LDLW 12
+LDNW 4
+LDLW 16
+LDNW 4
+EQ
+GLOBAL Bool.%desc
+GLOBAL baozi.makePrim
+CALLW 2
+RETURNW
+END
+
+PROC Integer.Print 0 0 0x186A1
+LDLW 12
+LDNW 4
+CONST 0
+GLOBAL lib.print_num
+PCALLW 1
+RETURN
+END
+
+PROC Integer.add 0 0 0x300001
+LDLW 12
+LDNW 4
+LDLW 16
+LDNW 4
+PLUS
+GLOBAL Integer.%desc
+GLOBAL baozi.makePrim
+CALLW 2
+RETURNW
+END
+
+PROC Integer.times 0 0 0x300001
+LDLW 12
+LDNW 4
+LDLW 16
+LDNW 4
+TIMES
+GLOBAL Integer.%desc
+GLOBAL baozi.makePrim
+CALLW 2
+RETURNW
+END
+
+PROC Integer.sub 0 0 0x300001
+LDLW 12
+LDNW 4
+LDLW 16
+LDNW 4
+MINUS
+GLOBAL Integer.%desc
+GLOBAL baozi.makePrim
+CALLW 2
+RETURNW
+END
+
+PROC Integer.div 0 0 0x300001
+LDLW 12
+LDNW 4
+LDLW 16
+LDNW 4
+DIV
+GLOBAL Integer.%desc
+GLOBAL baozi.makePrim
+CALLW 2
+RETURNW
+END
+
+PROC Integer.mod 0 0 0x300001
+LDLW 12
+LDNW 4
+LDLW 16
+LDNW 4
+MOD
+GLOBAL Integer.%desc
+GLOBAL baozi.makePrim
+CALLW 2
+RETURNW
+END
+
+PROC Integer.uminus 0 0 0x100001
+LDLW 12
+LDNW 4
+UMINUS
+GLOBAL Integer.%desc
+GLOBAL baozi.makePrim
+CALLW 2
+RETURNW
+END
+
+PROC Integer.notEquals 0 0 0x300001
+LDLW 12
+LDNW 4
+LDLW 16
+LDNW 4
+NEQ
+GLOBAL Bool.%desc
+GLOBAL baozi.makePrim
+CALLW 2
+RETURNW
+END
+
+PROC Integer.lessThan 0 0 0x300001
+LDLW 12
+LDNW 4
+LDLW 16
+LDNW 4
+LT
+GLOBAL Bool.%desc
+GLOBAL baozi.makePrim
+CALLW 2
+RETURNW
+END
+
+PROC Integer.greaterThan 0 0 0x300001
+LDLW 12
+LDNW 4
+LDLW 16
+LDNW 4
+GT
+GLOBAL Bool.%desc
+GLOBAL baozi.makePrim
+CALLW 2
+RETURNW
+END
+
+PROC Integer.lessThanEq 0 0 0x300001
+LDLW 12
+LDNW 4
+LDLW 16
+LDNW 4
+LEQ
+GLOBAL Bool.%desc
+GLOBAL baozi.makePrim
+CALLW 2
+RETURNW
+END
+
+PROC Integer.greaterThanEq 0 0 0x300001
+LDLW 12
+LDNW 4
+LDLW 16
+LDNW 4
+GEQ
+GLOBAL Bool.%desc
+GLOBAL baozi.makePrim
+CALLW 2
+RETURNW
+END
+
+PROC Bool.equals 4 0 0x300001
+LDLW 12
+LDNW 4
+LDLW 16
+LDNW 4
+EQ
+GLOBAL Bool.%desc
+GLOBAL baozi.makePrim
+CALLW 2
+RETURNW
+END
+
+PROC Bool.Print 4 0 0x0
+LDLW 12
+LDNW 4
+JEQZ 4
+GLOBAL Bool.TrueString
+CONST 0
+GLOBAL lib.print_string
+PCALLW 1
+RETURN
+LABEL 4
+GLOBAL Bool.FalseString
+CONST 0
+GLOBAL lib.print_string
+PCALLW 1
+RETURN
+END
+
+PROC Bool.and 4 0 0x0
+LDLW 12
+LDNW 4
+LDLW 16
+LDNW 4
+EQ
+GLOBAL Bool.%desc
+GLOBAL baozi.makePrim
+CALLW 2
+RETURNW
+END
+
+PROC Bool.or 4 0 0x0
+LDLW 12
+LDNW 4
+LDLW 16
+LDNW 4
+EQ
+GLOBAL Bool.%desc
+GLOBAL baozi.makePrim
+CALLW 2
+RETURNW
+END
+
+PROC Bool.not 4 0 0x0
+LDLW 12
+LDNW 4
+NOT
+GLOBAL Bool.%desc
+GLOBAL baozi.makePrim
+CALLW 2
+RETURNW
+END
+
+PROC String.Print 0 0 0x0
+LDLW 12
+GLOBAL Output.String
+CALLW 1
+RETURN
+END
+
+PROC Output.Int 0 0 0x100001
+LDLW 12
+LDNW 4
+CONST 0
+GLOBAL lib.print_num
+PCALLW 1
+RETURN
+END
+
+PROC Output.IntLn 0 0 0x100001
+LDLW 12
+LDNW 4
+CONST 0
+GLOBAL lib.print_num
+PCALLW 1
+GLOBAL lib.newline
+PCALLW 0
+RETURN
+END
+
+PROC Output.String 0 0 0x100001
+LDLW 12
+LDNW 8
+CONST 0
+GLOBAL lib.print_string
+PCALLW 1
+RETURN
+END
+
+PROC Output.StringLn 0 0 0x100001
+LDLW 12
+LDNW 8
+CONST 0
+GLOBAL lib.print_string
+PCALLW 1
+GLOBAL lib.newline
+PCALLW 0
+RETURN
+END
+
+PROC Output.Ln 0 0 0x0
+CONST 0
+GLOBAL lib.newline
+PCALLW 0
+RETURN
+END

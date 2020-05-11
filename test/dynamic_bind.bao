@@ -1,33 +1,33 @@
 Define Program
 $>
-	ClassMethod Main {} => {}
-	$>
-		!! a is a type of A !!
-		a : A = New A.
-		a->SayHello<-{}.
+    ClassMethod Main {} => {}
+    $>
+        !! a is a type of A !!
+        a : A = New A.
+        a->SayHello<-{}.
 
-		!! Set a to be a type of B !!
-		a = New B.
-		a->SayHello<-{}.
+        !! Set a to be a type of B !!
+        a = New B.
+        a->SayHello<-{}.
 
-		Return.
-	<$
+        Return.
+    <$
 <$
 
 Define A
 $>
-	Method DoSomething {} => Int
-	$>
-		Output->StringLn<-{"Hello! I am an A!"}.
-		Return.
-	<$
+    Method DoSomething {} => Int
+    $>
+        Output->StringLn<-{"Hello! I am an A!"}.
+        Return.
+    <$
 <$
 
 Define B <- A
 $>
-	ReplaceMethod DoSomething {} => Int
-	$>
-		Output->StringLn<-{"Hello! I am an B!"}.
-		Return.
-	<$
+    ReplaceMethod DoSomething {} => Int
+    $>
+        Output->StringLn<-{"Hello! I am an B!"}.
+        Return.
+    <$
 <$

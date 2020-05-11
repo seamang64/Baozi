@@ -139,7 +139,7 @@ and arg_def =
 
 and empty_def = {d_kind=NoneKind; d_type=VoidType}
 
-let method_code = SEQ [equals_code; print_code; and_code; or_code; not_code]
+let method_code = [equals_code; print_code; and_code; or_code; not_code]
 
 let define_code =
   SEQ [
@@ -163,10 +163,4 @@ let define_code =
     STRING "5472756500";
     DEFINE "Bool.FalseString";
     STRING "46616C736500";
-  ]
-
-let bool_code =
-  SEQ [
-    method_code;
-    define_code
   ]

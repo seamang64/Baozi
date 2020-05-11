@@ -67,7 +67,7 @@ and print_code =
     END
   ]
 
-and method_code = SEQ [print_code]
+and method_code = [print_code]
 
 let define_code =
   SEQ [
@@ -85,10 +85,4 @@ let define_code =
     WORD (SYMBOL "Object.%desc");
     DEFINE "String.%string";
     STRING "537472696E6700"
-  ]
-
-let string_code =
-  SEQ [
-    method_code;
-    define_code
   ]

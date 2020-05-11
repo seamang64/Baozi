@@ -42,12 +42,6 @@ let dup n stk =
     | _ -> raise InvalidExpression
   in (dup' n stk)::stk
 
-let rec drop n lst =
-  match (n, lst) with
-  | (0, _) -> lst
-  | (n, _::ls) -> drop (n-1) ls
-  | _ -> lst
-
 let gen_stack_maps code =
   let rec gen_map code' stack =
     match code' with

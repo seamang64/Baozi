@@ -9,7 +9,9 @@ open String
 
 let lib_classes = ["Int", integer_def; "Output", out_def; "Bool", bool_def; "Object", object_def; "Array", array_def; "Type", type_def; "String", string_def]
 
-let lib_code = [object_code; integer_code; out_code; bool_code; array_code; type_code; string_code]
+let lib_method_code = [Object.method_code; Int.method_code; Bool.method_code; String.method_code; Out.method_code]
+
+let lib_define_code = [Object.define_code; Int.define_code; Bool.define_code; Array.define_code; Type.define_code; String.define_code; Out.define_code]
 
 and arg_x =
   {x_name="x"; x_def={d_kind=NoneKind; d_type=(ClassType bool_class)}}

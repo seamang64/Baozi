@@ -144,7 +144,7 @@ and print_code =
     END;
   ]
 
-let method_code = SEQ [equals_code; get_type_code; is_code; print_code]
+let method_code = [equals_code; get_type_code; is_code; print_code]
 
 let define_code =
   SEQ [
@@ -161,10 +161,4 @@ let define_code =
     WORD (SYMBOL "Object.%desc");
     DEFINE "Object.%string";
     STRING "4F626A65637400"
-  ]
-
-let object_code =
-  SEQ [
-    define_code;
-    method_code;
   ]

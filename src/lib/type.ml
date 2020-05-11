@@ -65,8 +65,3 @@ let define_code =
     DEFINE "Type.%string";
     STRING "5479706500"
   ]
-
-let type_code =
-  SEQ [
-    define_code;
-  ]

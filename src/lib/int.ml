@@ -178,7 +178,7 @@ and arg_def =
 
 and empty_def = {d_kind=NoneKind; d_type=VoidType}
 
-let method_code = SEQ [equals_code; print_code; add_code; times_code; sub_code; div_code; mod_code; uminus_code; not_equals_code; less_than_code; greater_than_code; less_than_equal_code; greater_than_equal_code]
+let method_code = [equals_code; print_code; add_code; times_code; sub_code; div_code; mod_code; uminus_code; not_equals_code; less_than_code; greater_than_code; less_than_equal_code; greater_than_equal_code]
 
 let define_code =
   SEQ [
@@ -207,10 +207,4 @@ let define_code =
     WORD (SYMBOL "Object.%desc");
     DEFINE "Integer.%string";
     STRING "496E7400"
-  ]
-
-let integer_code =
-  SEQ [
-    method_code;
-    define_code
   ]
