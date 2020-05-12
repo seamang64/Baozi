@@ -1,5 +1,6 @@
 open Syntax.Keiko
 open Printf
+open Errors
 
 let debug = ref 0
 
@@ -22,6 +23,15 @@ let get_label x =
     Not_found ->
       let y = LabDef { y_id = x; y_refct = ref 0 } in
       Hashtbl.add label_tab x (ref y); y
+
+let int_of_prim s =
+  int_of_string (String.sub s 14 ((String.length s)-14))
+
+let prim_class s =
+  match s with
+  | "Integer.%desc" -> true
+  | "Bool.%desc" -> true
+  | _ -> false
 
 (* |find_label| -- find data about equivalence class of a label *)
 let rec find_label x =
@@ -80,7 +90,16 @@ let ruleset replace =
         replace 2 []
     | CONST a :: CONST b :: BINOP w :: _ ->
         replace 3 [CONST (do_binop w a b)]
-
+    | GLOBAL s :: LDNW 4 :: _ ->
+        replace 2 [CONST (int_of_prim s)]
+    | CONST x :: GLOBAL s :: GLOBAL "baozi.makePrim" :: CALLW _ :: LDNW 4 :: _ when (prim_class s) ->
+        replace 5 [CONST x]
+    | CONST x :: GLOBAL s :: GLOBAL "baozi.makePrim" :: STKMAP _ :: CALLW _ :: LDNW 4 :: _ when (prim_class s) ->
+        replace 6 [CONST x]
+    | CONST n :: LDI :: _ ->
+        replace 2 [CONST (4*n); OFFSET; LOADW]
+    | CONST n :: STI :: _ ->
+        replace 2 [CONST (4*n); OFFSET; STOREW]
     | LOCAL n :: LOADW :: _ ->
         replace 2 [LDL n]
     | LOCAL n :: STOREW :: _ ->
@@ -93,10 +112,16 @@ let ruleset replace =
         replace 2 [LDG x]
     | GLOBAL x :: STOREW :: _ ->
         replace 2 [STG x]
+    | CONST n :: OFFSET :: CONST m :: OFFSET :: _ ->
+        replace 4 [CONST (n+m); OFFSET]
     | CONST n :: OFFSET :: LOADW :: _->
         replace 3 [LDNW n]
     | CONST n :: OFFSET :: STOREW :: _ ->
         replace 3 [STNW n]
+    | CONST n :: OFFSET :: LDNW m :: _->
+        replace 3 [LDNW (n+m)]
+    | CONST n :: OFFSET :: STNW m :: _ ->
+        replace 3 [STNW (n+m)]
     | CONST s :: BINOP Times :: OFFSET :: LOADW :: _ ->
         replace 4 [LDI]
     | CONST s :: BINOP Times :: OFFSET :: STOREW :: _ ->
@@ -115,6 +140,8 @@ let ruleset replace =
         equate a b; replace 2 [JUMP b]
     | JUMPC (w, a) :: JUMP b :: LABEL c :: _ when same_lab a c ->
         replace 2 [JUMPC (opposite w, b)]
+    | JUMPCZ (w, a) :: JUMP b :: LABEL c :: _ when same_lab a c ->
+        replace 2 [JUMPCZ (opposite w, b)]
     | JUMP a :: LABEL b :: _ when same_lab a b ->
         replace 1 []
     | JUMP a :: LABEL b :: _ ->

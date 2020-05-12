@@ -2,7 +2,7 @@ Define Program
 $>
     ClassMethod Main {} => {}
     $>
-        x : Int = 24.
+        x : Int = 12.
         r : Int = Program->twoPow<-{x}.
         Output->String<-{"Result: "}.
         Output->IntLn<-{r}.

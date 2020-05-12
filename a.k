@@ -6,71 +6,31 @@ PROC Program.Main 8 0 0x18001
 ! 		xs : IntVec = New IntVec<-[3].
 LINE 5
 GLOBAL IntVec.%desc
-CONST 3
-GLOBAL Integer.%desc
-GLOBAL baozi.makePrim
-STKMAP 0x9
-CALLW 2
+GLOBAL baozi.%const.%3
 GLOBAL baozi.makeArray
 CALLW 2
 STLW -4
 ! 		xs->[0] = 1.
 LINE 6
-CONST 1
-GLOBAL Integer.%desc
-GLOBAL baozi.makePrim
-CALLW 2
+GLOBAL baozi.%const.%1
 LDLW -4
 LDNW 4
-CONST 4
-OFFSET
-CONST 0
-GLOBAL Integer.%desc
-GLOBAL baozi.makePrim
-STKMAP 0x19
-CALLW 2
-LDNW 4
-STIW
+STOREW
 ! 		xs->[1] = 4.
 LINE 7
-CONST 4
-GLOBAL Integer.%desc
-GLOBAL baozi.makePrim
-CALLW 2
+GLOBAL baozi.%const.%4
 LDLW -4
 LDNW 4
-CONST 4
-OFFSET
-CONST 1
-GLOBAL Integer.%desc
-GLOBAL baozi.makePrim
-STKMAP 0x19
-CALLW 2
-LDNW 4
-STIW
+STNW 4
 ! 		xs->[2] = 9.
 LINE 8
-CONST 9
-GLOBAL Integer.%desc
-GLOBAL baozi.makePrim
-CALLW 2
+GLOBAL baozi.%const.%9
 LDLW -4
 LDNW 4
-CONST 4
-OFFSET
-CONST 2
-GLOBAL Integer.%desc
-GLOBAL baozi.makePrim
-STKMAP 0x19
-CALLW 2
-LDNW 4
-STIW
-! 		For i : Int = 0. Step i = i + 1. Test i < xs->Length.
-LINE 10
-CONST 0
-GLOBAL Integer.%desc
-GLOBAL baozi.makePrim
-CALLW 2
+STNW 8
+! 		<$
+LINE 14
+GLOBAL baozi.%const.%0
 STLW -8
 JUMP 16
 LABEL 15
@@ -78,8 +38,6 @@ LABEL 15
 LINE 12
 LDLW -4
 LDNW 4
-CONST 4
-OFFSET
 LDLW -8
 LDNW 4
 LDIW
@@ -95,10 +53,7 @@ GLOBAL Output.String
 CALLW 1
 ! 		For i : Int = 0. Step i = i + 1. Test i < xs->Length.
 LINE 10
-CONST 1
-GLOBAL Integer.%desc
-GLOBAL baozi.makePrim
-CALLW 2
+GLOBAL baozi.%const.%1
 LDLW -8
 DUP 0
 LOADW
@@ -172,16 +127,14 @@ DEFINE g14
 STRING 2C2000
 
 PROC MAIN 0 0 0x0
-CONST g2
 CONST 0
-GLOBAL lib.gc_debug
-PCALL 1
+GLOBAL lib.start_clock
+PCALLW 0
 GLOBAL Program.Main
 CALLW 0
+CONST 0
+GLOBAL lib.end_clock
+PCALLW 0
 RETURN
 END
-
-! String "sz"
-DEFINE g2
-STRING 737a00
 ! End

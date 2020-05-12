@@ -2,9 +2,9 @@ Define Program
 $>
     ClassMethod Main {} => {}
     $>
-        xs : IntVec = New IntVec<-[3].
-        xs->[0] = 5.
-        Output->IntLn<-{xs->[0]}.
+        xs : IntVec = New IntVec<-[12].
+        xs->[11] = 15.
+        Output->IntLn<-{xs->[11]}.
         Return.
     <$
 <$

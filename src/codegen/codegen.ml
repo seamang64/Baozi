@@ -26,6 +26,10 @@ let is_static m =
 
 let unbox = SEQ [CONST 4; OFFSET; LOADW]
 
+let gen_bool x =
+  if x = 0 then GLOBAL "baozi.%const.%false"
+  else GLOBAL "baozi.%const.%true"
+
 let rec gen_primitive x desc =
   SEQ [
     CONST x;
@@ -48,8 +52,10 @@ and gen_expr e =
   | Constant (x, d) ->
     begin
       match d with
-      | TempType "Int" -> gen_primitive x "Integer.%desc"
-      | TempType "Bool" -> gen_primitive x "Bool.%desc"
+      | TempType "Int" ->
+          if x > 10 or x < -10 then gen_primitive x "Integer.%desc"
+          else GLOBAL (sprintf "baozi.%%const.%%%d" x)
+      | TempType "Bool" -> gen_bool x
       | _ -> raise UnknownConstant
     end
   | String (lab, s) ->
@@ -78,8 +84,6 @@ and gen_expr e =
         CONST 4;
         OFFSET;
         LOADW;
-        CONST 4;
-        OFFSET;
         (* Get the index *)
         gen_expr e2;
         unbox;
@@ -190,8 +194,6 @@ and gen_assigment e1 e2 =
           CONST 4;
           OFFSET;
           LOADW;
-          CONST 4;
-          OFFSET;
           gen_expr e4;
           unbox;
           CONST 4;
@@ -203,7 +205,7 @@ and gen_assigment e1 e2 =
   in gen_stack_maps code
 
 and gen_stmt stmt =
-  let code s =
+  let rec code s =
     match s.s_guts with
     | Assign (e1, e2) -> gen_assigment e1 e2
     | Delc (n, _, e) -> SEQ [gen_stack_maps (gen_expr e); gen_addr n; STOREW]
@@ -238,7 +240,7 @@ and gen_stmt stmt =
     | ForStmt (init, step, test, body) ->
         let lab1 = label () and lab2 = label () and lab3 = label () in
           SEQ [
-            gen_stmt init;
+            code init;
             JUMP lab2;
             LABEL lab1;
             gen_stmt body;
@@ -322,14 +324,14 @@ and gen_program (Program(cs)) =
     SEQ (List.map gen_class cs);
     SEQ (List.map gen_string !strtable);
     PROC ("MAIN", 0, 0, 0);
-    (* CONST 0;
+    CONST 0;
     GLOBAL "lib.start_clock";
-    PCALLW 0; *)
+    PCALLW 0;
     GLOBAL !mainMethod;
     CALLW 0;
-    (* CONST 0;
+    CONST 0;
     GLOBAL "lib.end_clock";
-    PCALLW 0; *)
+    PCALLW 0;
     RETURN 0;
     END;
   ]
