@@ -87,25 +87,25 @@ and bool_def =
   {d_kind=ClassDef; d_type=(ClassType bool_class)}
 
 and method_equals =
-  { m_name=equals_name; m_type=(ClassType bool_class); m_static=false; m_size=4; m_arguments=[Prop(arg_x, VoidType); Prop(arg_y, VoidType)]; m_body=Nop; m_main=false; m_replace=true; m_origin=Mine}
+  { m_name=equals_name; m_type=(ClassType bool_class); m_static=false; m_size=4; m_arguments=[Prop(arg_x, VoidType); Prop(arg_y, VoidType)]; m_body=empty_stmt; m_main=false; m_replace=true; m_origin=Mine}
 
 and method_get_type =
-  { m_name=get_type_name; m_type=VoidType; m_static=false; m_size=0; m_arguments=[Prop(arg_x, ClassType bool_class)]; m_body=Nop; m_main=false; m_replace=false; m_origin=Inherited "Object"}
+  { m_name=get_type_name; m_type=VoidType; m_static=false; m_size=0; m_arguments=[Prop(arg_x, ClassType bool_class)]; m_body=empty_stmt; m_main=false; m_replace=false; m_origin=Inherited "Object"}
 
 and method_is =
-  { m_name=is_name; m_type=ClassType bool_class; m_static=false; m_size=12; m_arguments=[]; m_body=Nop; m_main=false; m_replace=false; m_origin=Inherited "Object"}
+  { m_name=is_name; m_type=ClassType bool_class; m_static=false; m_size=12; m_arguments=[]; m_body=empty_stmt; m_main=false; m_replace=false; m_origin=Inherited "Object"}
 
 and method_print =
-  { m_name=print_name; m_type=VoidType; m_static=false; m_size=0; m_arguments=[Prop(arg_x, ClassType bool_class)]; m_body=Nop; m_main=false; m_replace=false; m_origin=Mine}
+  { m_name=print_name; m_type=VoidType; m_static=false; m_size=0; m_arguments=[Prop(arg_x, ClassType bool_class)]; m_body=empty_stmt; m_main=false; m_replace=false; m_origin=Mine}
 
 and method_and =
-  { m_name=and_name; m_type=(ClassType bool_class); m_static=false; m_size=4; m_arguments=[Prop(arg_x, VoidType); Prop(arg_y, VoidType)]; m_body=Nop; m_main=false; m_replace=false; m_origin=Mine}
+  { m_name=and_name; m_type=(ClassType bool_class); m_static=false; m_size=4; m_arguments=[Prop(arg_x, VoidType); Prop(arg_y, VoidType)]; m_body=empty_stmt; m_main=false; m_replace=false; m_origin=Mine}
 
 and method_or =
-  { m_name=or_name; m_type=(ClassType bool_class); m_static=false; m_size=4; m_arguments=[Prop(arg_x, VoidType); Prop(arg_y, VoidType)]; m_body=Nop; m_main=false; m_replace=false; m_origin=Mine}
+  { m_name=or_name; m_type=(ClassType bool_class); m_static=false; m_size=4; m_arguments=[Prop(arg_x, VoidType); Prop(arg_y, VoidType)]; m_body=empty_stmt; m_main=false; m_replace=false; m_origin=Mine}
 
 and method_not =
-  { m_name=not_name; m_type=(ClassType bool_class); m_static=false; m_size=4; m_arguments=[Prop(arg_x, VoidType)]; m_body=Nop; m_main=false; m_replace=false; m_origin=Mine}
+  { m_name=not_name; m_type=(ClassType bool_class); m_static=false; m_size=4; m_arguments=[Prop(arg_x, VoidType)]; m_body=empty_stmt; m_main=false; m_replace=false; m_origin=Mine}
 
 and equals_name =
   {x_name="equals"; x_def={d_kind=MethodDef (12, false); d_type=(ClassType bool_class)}}
@@ -136,6 +136,9 @@ and arg_y =
 
 and arg_def =
   {d_kind=NoneKind; d_type=(ClassType bool_class)}
+
+and empty_stmt =
+  {s_guts=Nop; s_line=(-1)}
 
 and empty_def = {d_kind=NoneKind; d_type=VoidType}
 

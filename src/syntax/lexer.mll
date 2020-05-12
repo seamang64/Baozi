@@ -1,10 +1,14 @@
 {
   open Parser
   open Keiko
+  open Source
 
   let make_hash n ps =
     let t = Hashtbl.create n in
     List.iter (fun (k, v) -> Hashtbl.add t k v) ps; t
+
+  let next_line lexbuf =
+    incr lineno; Source.note_line !lineno lexbuf
 
   let kwtable = make_hash 64
   [
@@ -73,7 +77,8 @@ let notq = [^'\'''\n']
 let notqq = [^'"''\n']
 
 rule token = parse
-    letter (letter | digit)* as s { lookup s }
+    letter (letter | digit)* as s
+                        { lookup s }
   | digit+ as s         { NUMBER (int_of_string s) }
   | qq (notqq* as s) qq { get_string s }
 
@@ -105,6 +110,8 @@ rule token = parse
   | "$>"                { P_START }
   | "<$"                { P_END }
 
-  | [' ''\t''\n''\r']+  { token lexbuf }
+  | [' ''\t']+          { token lexbuf }
+  | "\r"                { token lexbuf }
+  | "\n"                { next_line lexbuf; token lexbuf }
   | _                   { BADTOKEN }
   | eof                 { EOF }

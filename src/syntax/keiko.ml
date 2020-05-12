@@ -1,4 +1,5 @@
 open Printf
+open Source
 
 type codelab = int
 type symbol = string
@@ -61,6 +62,7 @@ type code =
   | SWAP
   | DUP of int
   | NOP                         (* Null operation *)
+  | COMMENT of string
   | END
 
 let canon x =
@@ -125,7 +127,7 @@ let print_op op =
   | _ -> printf "Unrecongised Keiko"; exit 1
 
 let fType =
-  function 0 -> "" | 1 -> "W"
+  function 0 -> "" | _ -> "W"
 
 let rec print_keiko prog =
   match prog with
@@ -149,6 +151,7 @@ let rec print_keiko prog =
    | LABEL l -> printf "LABEL %d\n" l
    | JUMP l -> printf "JUMP %d\n" l
    | JUMPC (op, l) -> printf "J%s %d\n" (print_op op) l
+   | LINE n -> if n != 0 then printf "! %s\nLINE %d\n" (Source.get_line n) n
    | LDL n -> printf "LDLW %d\n" n
    | STL n -> printf "STLW %d\n" n
    | LDG s -> printf "LDGW %s\n" s
@@ -161,6 +164,7 @@ let rec print_keiko prog =
    | SEQ ss -> List.iter print_keiko ss
    | SWAP -> printf "SWAP\n"
    | DUP n -> printf "DUP %d\n" n
+   | COMMENT s -> printf "\n! %s" s
    | END -> printf "END\n"
    | NOP -> ()
    | _ -> printf "Unrecongised Keiko"; exit 1

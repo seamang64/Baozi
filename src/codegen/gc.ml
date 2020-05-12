@@ -33,7 +33,6 @@ let swap stk =
   match stk with
   | x::y::st -> y::x::st
   | _ -> raise InvalidExpression
-
 let dup n stk =
   let rec dup' n' stk' =
     match (n', stk') with
@@ -46,20 +45,21 @@ let gen_stack_maps code =
   let rec gen_map code' stack =
     match code' with
     | CONST n -> (CONST n, false::stack)
-    | GLOBAL s -> (GLOBAL s, false::stack)
-    | LOCAL n -> (LOCAL n, false::stack)
-    | LOADW -> (LOADW, stack)
+    | GLOBAL s -> (GLOBAL s, true::stack)
+    | LOCAL n -> (LOCAL n, true::stack)
+    | LOADW -> (LOADW, true::(List.tl stack))
+    | STOREW -> (STOREW, drop 2 stack)
     | CALLW n ->
       let stkmap = gen_stack_gc n (List.tl stack) in
         (SEQ [stkmap; CALLW n], true::(drop (n+1) stack))
     | BINOP op -> (BINOP op, false::(drop 2 stack))
     | MONOP op -> (MONOP op, false::(List.tl stack))
-    | OFFSET -> (OFFSET, drop 1 stack)
+    | OFFSET -> (OFFSET, true::(drop 2 stack))
     | SWAP -> (SWAP, swap stack)
     | DUP n -> (DUP n, dup n stack)
     | SEQ ss ->
         let (kcode, stk) = List.fold_left (fun (k', s) k -> let (nk, s') = gen_map k s in (k' @ [nk], s')) ([], stack) ss in
           (SEQ kcode, stk)
     | NOP -> (NOP, stack)
-    | _ -> raise InvalidExpression
+    | s -> print_keiko s; raise InvalidExpression
   in let (k, _) = gen_map code [] in k

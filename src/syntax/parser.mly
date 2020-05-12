@@ -1,5 +1,6 @@
 %{
   open Tree
+  open Source
 %}
 
 %token <Tree.ident> IDENT
@@ -160,15 +161,19 @@ pairs:
 
 stmts :
   | stmt_list
-      { Seq $1 } ;
+      { seq $1 } ;
 
 stmt_list :
-  |  stmt
+  | stmt
       { [$1] }
   | stmt stmt_list
       { $1 :: $2} ;
 
 stmt :
+  | stmt1
+      { createStmt $1 }
+
+stmt1 :
   |  expr O_ASSIGN expr P_DOT
       { Assign($1, $3) }
   | name P_COLON IDENT O_ASSIGN expr P_DOT
@@ -194,13 +199,13 @@ body :
 
 for_stmt :
   | /* empty */
-      { Nop }
+      { createEmptyStmt Nop }
   | stmt
       { $1 } ;
 
 elses :
   | /* empty */
-      { Nop }
+      { createEmptyStmt Nop }
   | K_ELSE body
       { $2 };
 
