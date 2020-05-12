@@ -3,6 +3,7 @@ open Syntax.Keiko
 open Int
 open Object
 open String
+open Bool
 
 let rec out_class =
   { c_name=out_name; c_pname=ClassType object_class; c_array=false; c_size=4; c_properties=[]; c_methods=[method_int; method_intln; method_string; method_stringln; method_ln]; c_ancestors=[] }
@@ -14,19 +15,19 @@ and out_def =
   {d_kind=ClassDef; d_type=(ClassType out_class)}
 
 and method_int =
-  { m_name=int_name; m_type=VoidType; m_static=true; m_size=0; m_arguments=[Prop(int_x, VoidType)]; m_body=Nop; m_main=false; m_replace=false; m_origin=Mine}
+  { m_name=int_name; m_type=VoidType; m_static=true; m_size=0; m_arguments=[Prop(int_x, VoidType)]; m_body=empty_stmt; m_main=false; m_replace=false; m_origin=Mine}
 
 and method_intln =
-  { m_name=intln_name; m_type=VoidType; m_static=true; m_size=0; m_arguments=[Prop(int_x, VoidType)]; m_body=Nop; m_main=false; m_replace=false; m_origin=Mine}
+  { m_name=intln_name; m_type=VoidType; m_static=true; m_size=0; m_arguments=[Prop(int_x, VoidType)]; m_body=empty_stmt; m_main=false; m_replace=false; m_origin=Mine}
 
 and method_string =
-  { m_name=string_name; m_type=VoidType; m_static=true; m_size=0; m_arguments=[Prop(string_x, VoidType)]; m_body=Nop; m_main=false; m_replace=false; m_origin=Mine}
+  { m_name=string_name; m_type=VoidType; m_static=true; m_size=0; m_arguments=[Prop(string_x, VoidType)]; m_body=empty_stmt; m_main=false; m_replace=false; m_origin=Mine}
 
 and method_stringln =
-  { m_name=stringln_name; m_type=VoidType; m_static=true; m_size=0; m_arguments=[Prop(string_x, VoidType)]; m_body=Nop; m_main=false; m_replace=false; m_origin=Mine}
+  { m_name=stringln_name; m_type=VoidType; m_static=true; m_size=0; m_arguments=[Prop(string_x, VoidType)]; m_body=empty_stmt; m_main=false; m_replace=false; m_origin=Mine}
 
 and method_ln =
-  { m_name=ln_name; m_type=VoidType; m_static=true; m_size=0; m_arguments=[]; m_body=Nop; m_main=false; m_replace=false; m_origin=Mine}
+  { m_name=ln_name; m_type=VoidType; m_static=true; m_size=0; m_arguments=[]; m_body=empty_stmt; m_main=false; m_replace=false; m_origin=Mine}
 
 and int_name =
   {x_name="Int"; x_def={d_kind=MethodDef (8, true); d_type=VoidType}}

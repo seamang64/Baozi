@@ -15,19 +15,19 @@ and string_def =
   {d_kind=ClassDef; d_type=ClassType string_class}
 
 and method_equals =
-  {m_name=equals_name; m_type=ClassType bool_class; m_static=false; m_size=0; m_arguments=[Prop(arg_x, VoidType); Prop(arg_y, VoidType)]; m_body=Nop; m_main=false; m_replace=false; m_origin=Inherited "Object"}
+  {m_name=equals_name; m_type=ClassType bool_class; m_static=false; m_size=0; m_arguments=[Prop(arg_x, VoidType); Prop(arg_y, VoidType)]; m_body=empty_stmt; m_main=false; m_replace=false; m_origin=Inherited "Object"}
 
 and method_get_type =
-  { m_name=get_type_name; m_type=ClassType type_class; m_static=false; m_size=0; m_arguments=[Prop(arg_x, ClassType object_class)]; m_body=Nop; m_main=false; m_replace=false; m_origin=Inherited "Object"}
+  { m_name=get_type_name; m_type=ClassType type_class; m_static=false; m_size=0; m_arguments=[Prop(arg_x, ClassType object_class)]; m_body=empty_stmt; m_main=false; m_replace=false; m_origin=Inherited "Object"}
 
 and method_is =
-  { m_name=is_name; m_type=ClassType bool_class; m_static=false; m_size=12; m_arguments=[Prop(arg_x, ClassType object_class); Prop(type_arg, ClassType object_class)]; m_body=Nop; m_main=false; m_replace=false; m_origin=Inherited "Object"}
+  { m_name=is_name; m_type=ClassType bool_class; m_static=false; m_size=12; m_arguments=[Prop(arg_x, ClassType object_class); Prop(type_arg, ClassType object_class)]; m_body=empty_stmt; m_main=false; m_replace=false; m_origin=Inherited "Object"}
 
 and method_print =
-  { m_name=print_name; m_type=VoidType; m_static=false; m_size=0; m_arguments=[Prop(arg_x, ClassType string_class)]; m_body=Nop; m_main=false; m_replace=false; m_origin=Mine}
+  { m_name=print_name; m_type=VoidType; m_static=false; m_size=0; m_arguments=[Prop(arg_x, ClassType string_class)]; m_body=empty_stmt; m_main=false; m_replace=false; m_origin=Mine}
 
 and method_add =
-  {m_name=add_name; m_type=ClassType string_class; m_static=false; m_size=0; m_arguments=[Prop(arg_x, VoidType); Prop(arg_y, VoidType)]; m_body=Nop; m_main=false; m_replace=false; m_origin=Mine}
+  {m_name=add_name; m_type=ClassType string_class; m_static=false; m_size=0; m_arguments=[Prop(arg_x, VoidType); Prop(arg_y, VoidType)]; m_body=empty_stmt; m_main=false; m_replace=false; m_origin=Mine}
 
 and equals_name =
   {x_name="equals"; x_def={d_kind=MethodDef (12, true); d_type=ClassType bool_class}}

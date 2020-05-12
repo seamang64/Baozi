@@ -6,22 +6,22 @@ open Object
 open Type
 
 let rec array_class =
-  { c_name=array_name; c_pname=ClassType object_class; c_array=false; c_size=8; c_properties=[Prop(data, VoidType); Prop(length, TempType "Int")]; c_methods=[method_equals; method_get_type; method_is; method_print]; c_ancestors=[] }
+  { c_name=array_name; c_pname=ClassType object_class; c_array=false; c_size=8; c_properties=[Prop(data, VoidType); Prop(length, TempType "Int")]; c_methods=[method_equals; method_get_type; method_is; method_print]; c_ancestors=[object_class] }
 
 and array_name =
   { x_name="Array"; x_def=array_def}
 
 and method_equals =
-  { m_name=equals_name; m_type=ClassType bool_class; m_static=false; m_size=4; m_arguments=[Prop(arg_x, VoidType); Prop(arg_y, VoidType)]; m_body=Nop; m_main=false; m_replace=false; m_origin=Inherited "Object"}
+  { m_name=equals_name; m_type=ClassType bool_class; m_static=false; m_size=4; m_arguments=[Prop(arg_x, VoidType); Prop(arg_y, VoidType)]; m_body=empty_stmt; m_main=false; m_replace=false; m_origin=Inherited "Object"}
 
 and method_get_type =
-  { m_name=get_type_name; m_type=ClassType type_class; m_static=false; m_size=0; m_arguments=[Prop(arg_x, ClassType object_class)]; m_body=Nop; m_main=false; m_replace=false; m_origin=Inherited "Object"}
+  { m_name=get_type_name; m_type=ClassType type_class; m_static=false; m_size=0; m_arguments=[Prop(arg_x, ClassType object_class)]; m_body=empty_stmt; m_main=false; m_replace=false; m_origin=Inherited "Object"}
 
 and method_is =
-  { m_name=is_name; m_type=ClassType bool_class; m_static=false; m_size=12; m_arguments=[Prop(arg_x, ClassType object_class); Prop(type_arg, ClassType object_class)]; m_body=Nop; m_main=false; m_replace=false; m_origin=Inherited "Object"}
+  { m_name=is_name; m_type=ClassType bool_class; m_static=false; m_size=12; m_arguments=[Prop(arg_x, ClassType object_class); Prop(type_arg, ClassType object_class)]; m_body=empty_stmt; m_main=false; m_replace=false; m_origin=Inherited "Object"}
 
 and method_print =
-  { m_name=print_name; m_type=VoidType; m_static=false; m_size=0; m_arguments=[Prop(arg_x, ClassType object_class)]; m_body=Nop; m_main=false; m_replace=false; m_origin=Inherited "Object"}
+  { m_name=print_name; m_type=VoidType; m_static=false; m_size=0; m_arguments=[Prop(arg_x, ClassType object_class)]; m_body=empty_stmt; m_main=false; m_replace=false; m_origin=Inherited "Object"}
 
 and equals_name =
   {x_name="equals"; x_def={d_kind=MethodDef (12, false); d_type=ClassType bool_class}}

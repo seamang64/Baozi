@@ -23,6 +23,10 @@ and expr =
   | Parent
 
 and stmt =
+  { s_guts: stmt_guts;
+    s_line: int }
+
+and stmt_guts =
     Assign of expr * expr
   | Delc of name * def_type * expr
   | Call of expr
@@ -101,6 +105,18 @@ let can f x = try f x; true with Not_found -> false
 let empty = Env(IdMap.empty)
 
 let empty_def = {d_kind=NoneKind; d_type=VoidType}
+
+let createStmt s =
+  { s_guts=s; s_line=(!Source.lineno) }
+
+let createEmptyStmt s =
+  { s_guts=s; s_line=0 }
+
+let seq =
+  function
+      [] -> createEmptyStmt Nop  (* Use Skip in place of Seq [] *)
+    | [s] -> s                   (* Don't use a Seq node for one element *)
+    | ss -> createEmptyStmt (Seq ss)
 
 let createClass (n, p, arr, props, meths) =
   { c_name=n; c_pname=p; c_array=arr; c_size=0; c_properties=props; c_methods=meths; c_ancestors=[] }

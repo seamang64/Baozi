@@ -96,7 +96,7 @@ let check_return r ret =
   | _ -> raise InvalidReturn
 
 let rec check_stmt s ret =
-  match s with
+  match s.s_guts with
   | Assign (e1, e2) ->
       let (t1, t2) = ((check_expr e1), (check_expr e2)) in
         check_compatible t1 t2

@@ -1,0 +1,24 @@
+Define Program
+$>
+    ClassMethod Main {} => {}
+    $>
+        a : A = New A.
+        a->x = 8.
+        Program->DoSomething<-{67, a->x}.
+        Return.
+    <$
+
+    ClassMethod DoSomething {x: Int, y : Int} => {}
+    $>
+        Output->IntLn<-{x + y}.
+        Return.
+    <$
+<$
+
+Define A
+$>
+    Properties
+    $>
+        x : Int,
+    <$
+<$

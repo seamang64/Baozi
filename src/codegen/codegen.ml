@@ -178,74 +178,78 @@ and gen_cond tlab flab test =
   ]
 
 and gen_assigment e1 e2 =
-  let v = gen_stack_maps (gen_expr e2) in
-  match e1 with
-  | Name n -> SEQ [v; gen_addr n; STOREW]
-  | Property (e, n) -> SEQ[v; gen_expr e; gen_addr n; STOREW]
-  | Sub (e3, e4) ->
-      SEQ [
-        v;
-        gen_expr e3;
-        CONST 4;
-        OFFSET;
-        LOADW;
-        CONST 4;
-        OFFSET;
-        gen_expr e4;
-        unbox;
-        CONST 4;
-        BINOP Times;
-        OFFSET;
-        STOREW;
-      ]
-  | _ -> raise InvalidAssigment
-
-and gen_stmt s =
-  match s with
-  | Assign (e1, e2) -> gen_assigment e1 e2
-  | Delc (n, _, e) -> SEQ [gen_stack_maps (gen_expr e); gen_addr n; STOREW]
-  | Call e  -> gen_stack_maps (gen_expr e)
-  | Return r ->
-    begin
-      match r with
-      | Some e -> SEQ [gen_stack_maps (gen_expr e); RETURN 1]
-      | None -> SEQ [RETURN 0]
-    end
-  | IfStmt (e, ts, fs) ->
-      let lab1 = label () and lab2 = label () and lab3 = label () in
-      SEQ [
-        gen_cond lab1 lab2 e;
-        LABEL lab1;
-        gen_stmt ts;
-        JUMP lab3;
-        LABEL lab2;
-        gen_stmt fs;
-        LABEL lab3;
-      ]
-  | WhileStmt (test, stmt) ->
-      let lab1 = label () and lab2 = label () and lab3 = label () in
-      SEQ [
-        JUMP lab2;
-        LABEL lab1;
-        gen_stmt stmt;
-        LABEL lab2;
-        gen_cond lab1 lab3 test;
-        LABEL lab3
-      ]
-  | ForStmt (init, step, test, body) ->
-      let lab1 = label () and lab2 = label () and lab3 = label () in
+  let code =
+    let v = gen_expr e2 in
+    match e1 with
+    | Name n -> SEQ [v; gen_addr n; STOREW]
+    | Property (e, n) -> SEQ[v; gen_expr e; gen_addr n; STOREW]
+    | Sub (e3, e4) ->
         SEQ [
-          gen_stmt init;
+          v;
+          gen_expr e3;
+          CONST 4;
+          OFFSET;
+          LOADW;
+          CONST 4;
+          OFFSET;
+          gen_expr e4;
+          unbox;
+          CONST 4;
+          BINOP Times;
+          OFFSET;
+          STOREW;
+        ]
+    | _ -> raise InvalidAssigment
+  in gen_stack_maps code
+
+and gen_stmt stmt =
+  let code s =
+    match s.s_guts with
+    | Assign (e1, e2) -> gen_assigment e1 e2
+    | Delc (n, _, e) -> SEQ [gen_stack_maps (gen_expr e); gen_addr n; STOREW]
+    | Call e  -> gen_stack_maps (gen_expr e)
+    | Return r ->
+      begin
+        match r with
+        | Some e -> SEQ [gen_stack_maps (gen_expr e); RETURN 1]
+        | None -> SEQ [RETURN 0]
+      end
+    | IfStmt (e, ts, fs) ->
+        let lab1 = label () and lab2 = label () and lab3 = label () in
+        SEQ [
+          gen_cond lab1 lab2 e;
+          LABEL lab1;
+          gen_stmt ts;
+          JUMP lab3;
+          LABEL lab2;
+          gen_stmt fs;
+          LABEL lab3;
+        ]
+    | WhileStmt (test, stmt) ->
+        let lab1 = label () and lab2 = label () and lab3 = label () in
+        SEQ [
           JUMP lab2;
           LABEL lab1;
-          gen_stmt body;
-          gen_stmt step;
+          gen_stmt stmt;
           LABEL lab2;
           gen_cond lab1 lab3 test;
           LABEL lab3
         ]
-  | Seq ss -> SEQ (List.map gen_stmt ss)
-  | Nop -> NOP
+    | ForStmt (init, step, test, body) ->
+        let lab1 = label () and lab2 = label () and lab3 = label () in
+          SEQ [
+            gen_stmt init;
+            JUMP lab2;
+            LABEL lab1;
+            gen_stmt body;
+            gen_stmt step;
+            LABEL lab2;
+            gen_cond lab1 lab3 test;
+            LABEL lab3
+          ]
+    | Seq ss -> SEQ (List.map gen_stmt ss)
+    | Nop -> NOP
+  in SEQ [ LINE stmt.s_line; code stmt ]
 
 and gen_method classname m =
   match m.m_origin with
@@ -276,7 +280,7 @@ and fold_string s =
 and gen_string (lab, s) =
   let strings = split_string s in
     let string_code = List.map (fun s -> STRING (fold_string s)) strings in
-      SEQ [DEFINE lab; SEQ string_code]
+      SEQ [COMMENT (sprintf "String \"%s\"" s); DEFINE lab; SEQ string_code]
 
 and split_string s =
   let n = String.length s in
@@ -296,11 +300,13 @@ and gen_nil =
 and gen_class c =
   let name = c.c_name.x_name in
   SEQ [
+    COMMENT (sprintf "Descriptor for %s" name);
     DEFINE (name ^ ".%desc");
     WORD (SYMBOL (gen_class_gc_map c.c_size));
     WORD (SYMBOL (name ^ ".%anc"));
     WORD (SYMBOL (name ^ ".%string"));
     SEQ (List.map (fun m -> gen_method_name m c) c.c_methods);
+    COMMENT (sprintf "Ancestor Table for %s" name);
     DEFINE (name ^ ".%anc");
     WORD (DEC (1 + (List.length c.c_ancestors)));
     WORD (SYMBOL (name ^ ".%desc"));
@@ -319,7 +325,6 @@ and gen_program (Program(cs)) =
     (* CONST 0;
     GLOBAL "lib.start_clock";
     PCALLW 0; *)
-    gen_nil;
     GLOBAL !mainMethod;
     CALLW 0;
     (* CONST 0;

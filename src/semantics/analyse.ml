@@ -131,7 +131,7 @@ let rec annotate_expr expr env =
   | Nil -> object_def.d_type
 
 let rec annotate_stmt stmt env =
-  match stmt with
+  match stmt.s_guts with
   | Assign (e1, e2) -> ignore(annotate_expr e1 env); ignore(annotate_expr e2 env); env
   | Delc (n, t, e) ->
       ignore(annotate_expr e env);

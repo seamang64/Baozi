@@ -3,8 +3,8 @@ $>
     ClassMethod Main {} => {}
     $>
         xs : IntVec = New IntVec<-[3].
-		xs->[0] = 1.
-		Output->IntLn<-{xs->[0]}.
+        xs->[0] = 5.
+        Output->IntLn<-{xs->[0]}.
         Return.
     <$
 <$
