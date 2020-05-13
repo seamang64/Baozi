@@ -13,7 +13,6 @@
   let kwtable = make_hash 64
   [
     "Define", K_DEFINE;
-    "As", K_AS;
     "Array", K_ARRAY;
     "Of", K_OF;
 

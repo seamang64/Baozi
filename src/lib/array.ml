@@ -6,7 +6,7 @@ open Object
 open Type
 
 let rec array_class =
-  { c_name=array_name; c_pname=ClassType object_class; c_array=false; c_size=8; c_properties=[Prop(data, VoidType); Prop(length, TempType "Int")]; c_methods=[method_equals; method_get_type; method_is; method_print]; c_ancestors=[object_class] }
+  { c_name=array_name; c_pname=ClassType object_class; c_size=8; c_properties=[Prop(data, VoidType); Prop(length, TempType (Ident "Int"))]; c_methods=[method_equals; method_get_type; method_is; method_print]; c_ancestors=[object_class] }
 
 and array_name =
   { x_name="Array"; x_def=array_def}
@@ -36,10 +36,10 @@ and print_name =
   {x_name="Print"; x_def={d_kind=MethodDef (24, false); d_type=VoidType}}
 
 and length =
-  {x_name="Length"; x_def={d_kind=VariableDef 8; d_type=(ClassType integer_class)}}
+  {x_name="Length"; x_def={d_kind=PropertyDef 8; d_type=(ClassType integer_class)}}
 
 and data =
-  {x_name="Data"; x_def={d_kind=VariableDef 4; d_type=VoidType}}
+  {x_name="Data"; x_def={d_kind=PropertyDef 4; d_type=VoidType}}
 
 and arg_x =
   {x_name="x"; x_def=arg_def}

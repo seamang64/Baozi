@@ -109,15 +109,13 @@ classes :
 
 cls :
   | K_DEFINE name parent P_START properties methods P_END
-      { createClass($2, $3, false, $5, $6) }
-  | K_DEFINE name K_AS K_ARRAY K_OF IDENT
-      { createClass($2, (TempType $6), true, [], []) } ;
+      { createClass($2, $3, $5, $6) }
 
 parent :
   | /* empty */
-      { TempType "Object" }
+      { TempType (Ident "Object") }
   | O_LEFTARROW IDENT
-      { TempType $2 };
+      { TempType (Ident $2) };
 
 properties :
   | /* empty */
@@ -142,14 +140,20 @@ meth :
       { createMethod(createName "Main", true, [], VoidType, $9, true, false) }
 
 mtype :
-  | IDENT
+  | otype
       { TempType $1 }
   | P_LCURL P_RCURL
       { VoidType }
 
+otype :
+  | IDENT
+      {Ident $1 }
+  | K_ARRAY K_OF otype
+      { Array $3}
+
 pair:
-  | name P_COLON IDENT
-      { Prop ($1, TempType($3)) }
+  | name P_COLON otype
+      { Prop ($1, TempType $3) }
 
 pairs:
   | /* empty */
@@ -176,8 +180,8 @@ stmt :
 stmt1 :
   |  expr O_ASSIGN expr P_DOT
       { Assign($1, $3) }
-  | name P_COLON IDENT O_ASSIGN expr P_DOT
-      { Delc($1, TempType($3), $5) }
+  | name P_COLON otype O_ASSIGN expr P_DOT
+      { Delc($1, TempType $3, $5) }
   | K_RETURN expr P_DOT
       { Return (Some $2) }
   | K_RETURN P_DOT
@@ -213,7 +217,7 @@ expr:
   | name
       { Name $1 }
   | NUMBER
-      { Constant ($1, TempType "Int") }
+      { Constant ($1, TempType (Ident "Int")) }
   | STR
       { let (lab, s) = $1 in String (lab, s) }
   | O_TYPEOF expr
@@ -262,16 +266,16 @@ expr:
       { Sub($1, $4) }
   | K_NEW name
       { New $2 }
-  | K_NEW name O_LEFTARROW P_LSQUARE expr P_RSQUARE
-      { NewArray($2, $5) }
+  | K_NEW otype O_LEFTARROW P_LSQUARE expr P_RSQUARE
+      { NewArray(createArrayName (TempType $2), $5) }
   | K_ME
       { Name (createName "Me") }
   | K_PARENT
       { Parent }
   | C_TRUE
-      { Constant (1, TempType("Bool")) }
+      { Constant (1, TempType (Ident "Bool")) }
   | C_FALSE
-      { Constant (0, TempType("Bool")) }
+      { Constant (0, TempType (Ident "Bool")) }
   | P_LPAR expr P_RPAR
       { $2 }
 

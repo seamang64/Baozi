@@ -3,7 +3,9 @@ open Errors
 open Keiko
 
 type ident = string
-and otype = string
+and otype =
+    Ident of ident
+  | Array of otype
 
 and origin =
     Mine
@@ -53,7 +55,6 @@ and m_method =
 and c_class =
   { c_name: name;
     mutable c_pname: def_type;
-    c_array: bool;
     mutable c_size: int;
     mutable c_properties: property list;
     mutable c_methods: m_method list;
@@ -72,7 +73,7 @@ and def =
 
 and def_type =
   | ClassType of c_class
-  | ArrayClassType of c_class * def_type
+  | ArrayType of def_type
   | TempType of otype
   | VoidType
   | NilType
@@ -118,11 +119,14 @@ let seq =
     | [s] -> s                   (* Don't use a Seq node for one element *)
     | ss -> createEmptyStmt (Seq ss)
 
-let createClass (n, p, arr, props, meths) =
-  { c_name=n; c_pname=p; c_array=arr; c_size=0; c_properties=props; c_methods=meths; c_ancestors=[] }
+let createClass (n, p, props, meths) =
+  { c_name=n; c_pname=p; c_size=0; c_properties=props; c_methods=meths; c_ancestors=[] }
 
 let createMethod (n, static, args, t, stmt, main, replace) =
   { m_name=n; m_type=t; m_static=static; m_size=0; m_arguments=args; m_body=stmt; m_main=main; m_replace=replace; m_origin=Mine }
 
 let createName n =
   { x_name=n; x_def=empty_def }
+
+let createArrayName t =
+  { x_name="array_delc"; x_def={d_kind=NoneKind; d_type=t} }

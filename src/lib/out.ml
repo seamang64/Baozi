@@ -6,7 +6,7 @@ open String
 open Bool
 
 let rec out_class =
-  { c_name=out_name; c_pname=ClassType object_class; c_array=false; c_size=4; c_properties=[]; c_methods=[method_int; method_intln; method_string; method_stringln; method_ln]; c_ancestors=[] }
+  { c_name=out_name; c_pname=ClassType object_class; c_size=4; c_properties=[]; c_methods=[method_int; method_intln; method_string; method_stringln; method_ln]; c_ancestors=[] }
 
 and out_name =
   { x_name="Output"; x_def=out_def}

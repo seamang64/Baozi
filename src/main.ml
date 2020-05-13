@@ -26,7 +26,7 @@ let main () =
         exit 1 in
 
   try
-    ignore(Analyse.annotate_program prog);
+    Analyse.annotate_program prog;
     Check.check_program prog;
 
     printf "MODULE Main 0 0\n";

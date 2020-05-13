@@ -33,6 +33,22 @@ let prim_class s =
   | "Bool.%desc" -> true
   | _ -> false
 
+let print_method m =
+  match m with
+  | "Output.String" -> true
+  | "Output.StringLn" -> true
+  | "Output.Int" -> true
+  | "Output.IntLn" -> true
+  | _ -> false
+
+let prim_print m =
+  match m with
+  | "Output.String" -> "baozi.print"
+  | "Output.StringLn" -> "baozi.println"
+  | "Output.String" -> "baozi.printnum"
+  | "Output.StringLn" -> "baozi.printnumln"
+  | _ -> raise InvalidExpression
+
 (* |find_label| -- find data about equivalence class of a label *)
 let rec find_label x =
   match get_label x with
@@ -90,12 +106,21 @@ let ruleset replace =
         replace 2 []
     | CONST a :: CONST b :: BINOP w :: _ ->
         replace 3 [CONST (do_binop w a b)]
+
     | GLOBAL s :: LDNW 4 :: _ ->
         replace 2 [CONST (int_of_prim s)]
-    | CONST x :: GLOBAL s :: GLOBAL "baozi.makePrim" :: CALLW _ :: LDNW 4 :: _ when (prim_class s) ->
+    | GLOBAL s :: GLOBAL m :: CALLW 1 :: _ when print_method m ->
+        replace 2 [CONST (int_of_prim s); GLOBAL (prim_print m); CALLW 1]
+
+    | CONST x :: GLOBAL s :: GLOBAL "baozi.makePrim" :: CALLW _ :: LDNW 4 :: _ when prim_class s ->
         replace 5 [CONST x]
-    | CONST x :: GLOBAL s :: GLOBAL "baozi.makePrim" :: STKMAP _ :: CALLW _ :: LDNW 4 :: _ when (prim_class s) ->
+    | CONST x :: GLOBAL s :: GLOBAL "baozi.makePrim" :: STKMAP _ :: CALLW _ :: LDNW 4 :: _ when prim_class s ->
         replace 6 [CONST x]
+    | CONST x :: GLOBAL s :: GLOBAL "baozi.makePrim" :: CALLW _ :: GLOBAL m :: CALLW 1 :: _ when (prim_class s) && (print_method m) ->
+        replace 6 [CONST x; GLOBAL (prim_print m); CALLW 1]
+    | GLOBAL lab :: CONST _ :: GLOBAL "baozi.makeString" :: CALLW 2 :: GLOBAL m :: CALLW 1 :: _ when print_method m ->
+        replace 6 [GLOBAL lab; GLOBAL (prim_print m); CALLW 1]
+
     | CONST n :: LDI :: _ ->
         replace 2 [CONST (4*n); OFFSET; LOADW]
     | CONST n :: STI :: _ ->

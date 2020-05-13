@@ -1,0 +1,11 @@
+Define Program
+$>
+    ClassMethod Main {} => {}
+    $>
+        xs : Array Of Array Of Int = New Array Of Array Of Int<-[3].
+        xs->[2] = New Array Of Int<-[4].
+        xs->[2]->[1] = 14.
+        Output->IntLn<-{xs->[2]->[1]}.
+        Return.
+    <$
+<$

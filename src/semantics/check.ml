@@ -4,16 +4,22 @@ open Lib.Int
 open Lib.Bool
 open Lib.Type
 open Lib.String
+open Lib.Array
 open Printf
 
 let p_type = ref VoidType
 
-let print_type t =
+let rec print_temp_type t =
+  match t with
+  | Ident n -> n
+  | Array t' -> sprintf "Array of %s" (print_temp_type t')
+
+let rec print_type t =
   match t with
   | ClassType c -> c.c_name.x_name
-  | ArrayClassType (c, _) -> c.c_name.x_name
+  | ArrayType d -> sprintf "Array of %s" (print_type d)
   | VoidType -> "Void"
-  | TempType n -> n
+  | TempType d -> print_temp_type d
   | NilType -> "Nil"
 
 let rec check_compatible t1 t2 =
@@ -21,9 +27,7 @@ let rec check_compatible t1 t2 =
   | (ClassType c1, ClassType c2) ->
       if c1.c_name.x_name == c2.c_name.x_name then ()
       else check_compatible t1 c2.c_pname
-  | (ArrayClassType (c1, _), ArrayClassType (c2, _)) ->
-      if c1.c_name.x_name != c2.c_name.x_name then raise (TypeError((print_type t1), (print_type t2)))
-      else ()
+  | (ArrayType d1, ArrayType d2) -> check_compatible d1 d2
   | (_, NilType) -> ()
   | _ -> raise (TypeError((print_type t1), (print_type t2)))
 
@@ -34,13 +38,13 @@ let find_method meth cls =
         try List.find (fun m-> m.m_name.x_name = meth.x_name) c.c_methods with
           Not_found -> raise (UnknownName meth.x_name)
       end
-  | ArrayClassType (c, _) ->
+  | ArrayType _ ->
       begin
-        try List.find (fun m-> m.m_name.x_name = meth.x_name) c.c_methods with
+        try List.find (fun m-> m.m_name.x_name = meth.x_name) array_class.c_methods with
           Not_found -> raise (UnknownName meth.x_name)
       end
   | VoidType -> raise VoidOperation
-  | TempType n -> raise (UnannotatedName n)
+  | TempType n -> raise (UnannotatedName (print_temp_type n))
   | NilType -> raise (UnknownName meth.x_name)
 
 let rec check_args args margs =
@@ -57,8 +61,8 @@ and check_expr e =
   | Constant (_, d) ->
     begin
       match d with
-      | TempType "Int" -> integer_def.d_type
-      | TempType "Bool" -> bool_def.d_type
+      | TempType (Ident "Int") -> integer_def.d_type
+      | TempType (Ident "Bool") -> bool_def.d_type
       | _ -> raise UnknownConstant
     end
   | String _ -> string_def.d_type
@@ -75,22 +79,23 @@ and check_expr e =
   | Sub (e1, e2) ->
       begin
         match check_expr e1 with
-        | ArrayClassType (_, d1) ->
+        | ArrayType d1 ->
             let d2 = check_expr e2 in
               check_compatible d2 integer_def.d_type; d1
         | _ -> raise InvalidSub
       end
   | New n -> n.x_def.d_type
-  | NewArray (n, e) ->
+  | NewArray (d, e) ->
       let t = check_expr e in
-        check_compatible t integer_def.d_type;
-        n.x_def.d_type;
+        check_compatible t integer_def.d_type; d.x_def.d_type
   | Parent -> !p_type
   | Nil -> NilType
 
 let check_return r ret =
   match (r, ret) with
   | (Some e, ClassType _) ->
+      let t = check_expr e in check_compatible t ret
+  | (Some e, ArrayType _) ->
       let t = check_expr e in check_compatible t ret
   | (None, VoidType) -> ()
   | _ -> raise InvalidReturn

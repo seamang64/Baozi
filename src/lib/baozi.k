@@ -31,16 +31,22 @@ DUP 2
 RETURNW
 END
 
+! Procedure for creating a new primitive object
 PROC baozi.makePrim 0 0 0
+! Need 8 bytes for a primitive
 CONST 8
+! Load the class pointer
 LDLW 12
+! Allocate the memory
 CONST 0
 GLOBAL lib.newgc
 PCALLW 2
 DUP 0
+! Store the primitve value at offset 4
 LDLW 16
 SWAP
 STNW 4
+! Return the primitive
 RETURNW
 END
 
@@ -54,30 +60,37 @@ PCALLW 0
 RETURN
 END
 
-PROC baozi.makeArray 4 0 0x310001
+! Procedure for allocating and initialising a new array object
+PROC baozi.makeArray 4 0 0x110001
+! 	Allocate 12 bytes for Array
 CONST 12
-LDLW 16
+GLOBAL Array.%desc
 CONST 0
 GLOBAL lib.newgc
 PCALLW 2
 STLW -4
-
+! 	Create the body of the Array
 LDLW 12
 LDNW 4
 GLOBAL baozi.makeArrayData
 CALLW 1
+!	Offset, so we are pointing to the first element
+CONST 4
+OFFSET
 LDLW -4
 STNW 4
-
+! 	Store the length in the array
 LDLW 12
 LDLW -4
 STNW 8
-
+! 	Return
 LDLW -4
 RETURNW
 END
 
+! Procedure for allocating and initialising the elements and GC map in an array
 PROC baozi.makeArrayData 0 0 0
+! 	Allocate 4*n + 32 bytes of memory
 LDLW 12
 CONST 4
 TIMES
@@ -88,7 +101,7 @@ CONST 0
 GLOBAL lib.newgc
 PCALLW 2
 DUP 0
-
+! 	Store a pointer to p+4n+4 at p
 DUP 0
 LDLW 12
 CONST 4
@@ -98,12 +111,11 @@ PLUS
 OFFSET
 SWAP
 STOREW
-
+! 	Loop through the elements of the array storing Nil
 DUP 0
 CONST 0
 JUMP 9
 LABEL 8
-
 SWAP
 CONST 4
 OFFSET
@@ -114,41 +126,40 @@ STOREW
 SWAP
 CONST 1
 PLUS
-
 LABEL 9
 DUP 0
 LDLW 12
 JNEQ 8
 POP 1
-
+! 	Store a pointer to p+4n+8 at p+4n+4
 DUP 0
 CONST 8
 OFFSET
 DUP 1
 STNW 4
-
+! 	Store -4
 CONST -4
 DUP 1
 STNW 8
-
+! 	Store 4n
 LDLW 12
 CONST 4
 TIMES
 DUP 1
 STNW 12
-
+! 	Store GC_BLOCK
 CONST 22
 DUP 1
 STNW 16
-
+! 	Store 0
 CONST 0
 DUP 1
 STNW 20
-
+! 	Store n
 LDLW 12
 DUP 1
 STNW 24
-
+! 	Store GC_END
 CONST 10
 DUP 1
 STNW 28
@@ -169,7 +180,7 @@ OFFSET
 LDLW 12
 GLOBAL Integer.%desc
 GLOBAL baozi.makePrim
-STKMAP 0x9
+STKMAP 0x19
 CALLW 2
 SWAP
 STOREW
@@ -180,6 +191,42 @@ LDLW 16
 SWAP
 STOREW
 RETURNW
+END
+
+PROC baozi.print 0 0 0x100001
+LDLW 12
+CONST 0
+GLOBAL lib.print_string
+PCALLW 1
+RETURN
+END
+
+PROC baozi.println 0 0 0x100001
+LDLW 12
+CONST 0
+GLOBAL lib.print_string
+PCALLW 1
+GLOBAL lib.newline
+PCALLW 0
+RETURN
+END
+
+PROC baozi.printnum 0 0 0x100001
+LDLW 12
+CONST 0
+GLOBAL lib.print_num
+PCALLW 1
+RETURN
+END
+
+PROC baozi.printnumln 0 0 0x100001
+LDLW 12
+CONST 0
+GLOBAL lib.print_num
+PCALLW 1
+GLOBAL lib.newline
+PCALLW 0
+RETURN
 END
 
 DEFINE Object.%desc
@@ -252,7 +299,7 @@ DEFINE Bool.FalseString
 STRING 46616C736500
 
 DEFINE Array.%desc
-WORD 0
+WORD 0x7
 WORD Array.%anc
 WORD Array.%string
 WORD Object.equals
@@ -324,7 +371,7 @@ END
 PROC Object.GetType 0 0 0x0
 LDLW 12
 LOADW
-GLOBAL Bool.%desc
+GLOBAL Type.%desc
 GLOBAL baozi.makePrim
 CALLW 2
 RETURNW
@@ -644,3 +691,118 @@ GLOBAL lib.newline
 PCALLW 0
 RETURN
 END
+
+! Constant 0
+DEFINE baozi.%const.%0
+WORD Integer.%desc
+WORD 0
+
+! Constant 1
+DEFINE baozi.%const.%1
+WORD Integer.%desc
+WORD 1
+
+! Constant 2
+DEFINE baozi.%const.%2
+WORD Integer.%desc
+WORD 2
+
+! Constant 3
+DEFINE baozi.%const.%3
+WORD Integer.%desc
+WORD 3
+
+! Constant 4
+DEFINE baozi.%const.%4
+WORD Integer.%desc
+WORD 4
+
+! Constant 5
+DEFINE baozi.%const.%5
+WORD Integer.%desc
+WORD 5
+
+! Constant 6
+DEFINE baozi.%const.%6
+WORD Integer.%desc
+WORD 6
+
+! Constant 7
+DEFINE baozi.%const.%7
+WORD Integer.%desc
+WORD 7
+
+! Constant 8
+DEFINE baozi.%const.%8
+WORD Integer.%desc
+WORD 8
+
+! Constant 9
+DEFINE baozi.%const.%9
+WORD Integer.%desc
+WORD 9
+
+! Constant 10
+DEFINE baozi.%const.%10
+WORD Integer.%desc
+WORD 10
+
+! Constant -1
+DEFINE baozi.%const.%-1
+WORD Integer.%desc
+WORD -1
+
+! Constant -2
+DEFINE baozi.%const.%-2
+WORD Integer.%desc
+WORD -2
+
+! Constant -3
+DEFINE baozi.%const.%-3
+WORD Integer.%desc
+WORD -3
+
+! Constant -4
+DEFINE baozi.%const.%-4
+WORD Integer.%desc
+WORD -4
+
+! Constant -5
+DEFINE baozi.%const.%-5
+WORD Integer.%desc
+WORD -5
+
+! Constant -6
+DEFINE baozi.%const.%-6
+WORD Integer.%desc
+WORD -6
+
+! Constant -7
+DEFINE baozi.%const.%-7
+WORD Integer.%desc
+WORD -7
+
+! Constant -8
+DEFINE baozi.%const.%-8
+WORD Integer.%desc
+WORD -8
+
+! Constant -9
+DEFINE baozi.%const.%-9
+WORD Integer.%desc
+WORD -9
+
+! Constant -10
+DEFINE baozi.%const.%-10
+WORD Integer.%desc
+WORD -10
+
+! Constant false
+DEFINE baozi.%const.%false
+WORD Bool.%desc
+WORD 0
+
+! Constant true
+DEFINE baozi.%const.%true
+WORD Bool.%desc
+WORD 1

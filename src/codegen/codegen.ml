@@ -26,10 +26,6 @@ let is_static m =
 
 let unbox = SEQ [CONST 4; OFFSET; LOADW]
 
-let gen_bool x =
-  if x = 0 then GLOBAL "baozi.%const.%false"
-  else GLOBAL "baozi.%const.%true"
-
 let rec gen_primitive x desc =
   SEQ [
     CONST x;
@@ -52,10 +48,12 @@ and gen_expr e =
   | Constant (x, d) ->
     begin
       match d with
-      | TempType "Int" ->
+      | TempType (Ident "Int") ->
           if x > 10 or x < -10 then gen_primitive x "Integer.%desc"
           else GLOBAL (sprintf "baozi.%%const.%%%d" x)
-      | TempType "Bool" -> gen_bool x
+      | TempType (Ident "Bool") ->
+          if x = 0 then GLOBAL "baozi.%const.%false"
+          else GLOBAL "baozi.%const.%true"
       | _ -> raise UnknownConstant
     end
   | String (lab, s) ->
@@ -104,12 +102,11 @@ and gen_expr e =
         GLOBAL "baozi.make";
         CALLW 2;
       ]
-  | NewArray (n, e) ->
+  | NewArray (_, e) ->
       SEQ [
-        GLOBAL (n.x_name ^ ".%desc");
         gen_expr e;
         GLOBAL "baozi.makeArray";
-        CALLW 2;
+        CALLW 1;
       ]
   | Parent -> SEQ [LOCAL 12; LOADW]
   | Nil -> LDG "Nil"
@@ -139,7 +136,7 @@ and gen_call expr meth args =
         DUP 0;
         (* Get the object's class descriptor *)
         LOADW;
-        (* Get the ancestor table at *)
+        (* Get the ancestor table at offset 4 *)
         CONST 4;
         OFFSET;
         LOADW;
@@ -324,14 +321,8 @@ and gen_program (Program(cs)) =
     SEQ (List.map gen_class cs);
     SEQ (List.map gen_string !strtable);
     PROC ("MAIN", 0, 0, 0);
-    CONST 0;
-    GLOBAL "lib.start_clock";
-    PCALLW 0;
     GLOBAL !mainMethod;
     CALLW 0;
-    CONST 0;
-    GLOBAL "lib.end_clock";
-    PCALLW 0;
     RETURN 0;
     END;
   ]

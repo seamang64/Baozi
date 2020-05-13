@@ -5,6 +5,7 @@ open Lib.Lib_all
 open Lib.Type
 open Lib.String
 open Lib.Object
+open Lib.Array
 open Printf
 
 let propertyOffset = 4
@@ -29,13 +30,22 @@ let rec copy inherited cls=
   | [] -> []
 
 let create_me cls =
-  Prop({x_name="Me"; x_def=(create_def NoneKind VoidType)}, TempType cls.c_name.x_name)
+  Prop({x_name="Me"; x_def=(create_def NoneKind VoidType)}, TempType (Ident cls.c_name.x_name))
 
-let get_class t env =
+let rec get_temp_type t env =
   match t with
-  | TempType n -> let d = lookup n env in d.d_type
-  | VoidType -> VoidType
+  | Ident n -> let d = lookup n env in d.d_type
+  | Array t' -> ArrayType (get_temp_type t' env)
+
+let get_type t env =
+  match t with
+  | TempType d -> get_temp_type d env
   | _ -> t
+
+let rec print_temp_type t =
+  match t with
+  | Ident n -> n
+  | Array d -> sprintf "Array of %s" (print_temp_type d)
 
 let find_method meth cls =
   match cls with
@@ -44,14 +54,14 @@ let find_method meth cls =
         try (List.find (fun m -> meth = m.m_name.x_name) c.c_methods).m_name.x_def with
           Not_found -> raise (UnknownName meth)
       end
-  | ArrayClassType (c, _) ->
+  | ArrayType _ ->
       begin
-        try (List.find (fun m -> meth = m.m_name.x_name) c.c_methods).m_name.x_def with
+        try (List.find (fun m -> meth = m.m_name.x_name) array_class.c_methods).m_name.x_def with
           Not_found -> raise (UnknownName meth)
       end
   | VoidType -> raise VoidOperation
   | NilType -> raise (UnknownName meth)
-  | TempType n -> raise (UnannotatedName n)
+  | TempType n -> raise (UnannotatedName (print_temp_type n))
 
 let find_properties prop cls =
   match cls with
@@ -60,13 +70,13 @@ let find_properties prop cls =
         try List.find (fun n -> prop.x_name = n.x_name) (List.map (fun (Prop(n, _)) -> n) c.c_properties) with
           Not_found -> raise (UnknownName prop.x_name)
       end
-  | ArrayClassType (c, _) ->
+  | ArrayType _ ->
       begin
-        try List.find (fun n -> prop.x_name = n.x_name) (List.map (fun (Prop(n, _)) -> n) c.c_properties) with
+        try List.find (fun n -> prop.x_name = n.x_name) (List.map (fun (Prop(n, _)) -> n) array_class.c_properties) with
           Not_found -> raise (UnknownName prop.x_name)
       end
   | VoidType -> raise VoidOperation
-  | TempType n -> raise (UnannotatedName n)
+  | TempType n -> raise (UnannotatedName (print_temp_type n))
   | NilType -> raise (UnknownName prop.x_name)
 
 let rec annotate_classes classes env =
@@ -79,7 +89,7 @@ let rec annotate_classes classes env =
 let rec annotate_arguments args index env =
   match args with
   | (Prop(x, t))::props ->
-      x.x_def <- create_def (VariableDef(argumentOffset + index)) (get_class t env);
+      x.x_def <- create_def (VariableDef(argumentOffset + index)) (get_type t env);
       let env' = define x.x_name x.x_def env in
         annotate_arguments props (index+4) env'
   | _ -> env
@@ -87,14 +97,14 @@ let rec annotate_arguments args index env =
 let rec annotate_properties properties index env =
   match properties with
   | (Prop(x, t))::props ->
-      x.x_def <- create_def (PropertyDef(propertyOffset + index)) (get_class t env);
+      x.x_def <- create_def (PropertyDef(propertyOffset + index)) (get_type t env);
       annotate_properties props (index+4) env
   | _ -> ()
 
 let rec annotate_expr expr env =
   match expr with
   | Name n -> let d = lookup n.x_name env in n.x_def <- d; n.x_def.d_type
-  | Constant (_, d) -> get_class d env
+  | Constant (_, d) -> get_type d env
   | String _ -> string_def.d_type;
   | TypeOf e -> ignore(annotate_expr e env); type_def.d_type
   | MethodCall (e, m, args) ->
@@ -110,7 +120,7 @@ let rec annotate_expr expr env =
       ignore (annotate_expr e2 env);
       begin
         match annotate_expr e1 env with
-        | ArrayClassType (_, d) -> d
+        | ArrayType d -> d
         | _ -> raise InvalidSub
       end
   | New n ->
@@ -121,12 +131,9 @@ let rec annotate_expr expr env =
           | _ -> raise (InvalidNew n.x_name)
         end
   | NewArray (n, e) ->
-      let d = lookup n.x_name env in
-        begin
-          match d.d_type with
-          | ArrayClassType(_, _) -> n.x_def <- d; ignore(annotate_expr e env); n.x_def.d_type
-          | _ -> raise (InvalidNew n.x_name)
-        end
+      ignore(annotate_expr e env);
+      let t = get_type n.x_def.d_type env in
+        n.x_def <- create_def ClassDef t; t
   | Parent -> !p_type
   | Nil -> object_def.d_type
 
@@ -135,7 +142,7 @@ let rec annotate_stmt stmt env =
   | Assign (e1, e2) -> ignore(annotate_expr e1 env); ignore(annotate_expr e2 env); env
   | Delc (n, t, e) ->
       ignore(annotate_expr e env);
-      n.x_def <- create_def (VariableDef(variableOffset - !variableIndex)) (get_class t env);
+      n.x_def <- create_def (VariableDef(variableOffset - !variableIndex)) (get_type t env);
       variableIndex := !variableIndex + 4;
       define n.x_name n.x_def env
   | Call e -> ignore(annotate_expr e env); env
@@ -166,7 +173,7 @@ let rec annotate_stmt stmt env =
 let rec annotate_methods methods index env =
   match methods with
   | m::ms ->
-      m.m_name.x_def <- create_def (MethodDef(vtableOffset + index, m.m_static)) (get_class m.m_type env);
+      m.m_name.x_def <- create_def (MethodDef(vtableOffset + index, m.m_static)) (get_type m.m_type env);
       annotate_methods ms (index + 4) env
   | _ -> ()
 
@@ -212,7 +219,7 @@ let annotate_members cls env =
 let rec annotate_parent cls env =
   match cls.c_pname with
   | TempType _ ->
-      let ClassType p = get_class cls.c_pname env in
+      let ClassType p = get_type cls.c_pname env in
         annotate_parent p env;
         cls.c_pname <- ClassType p;
         let (r, n) = split cls.c_methods in
@@ -228,24 +235,9 @@ let modify_non_static c =
     else ()
   in List.iter modify c.c_methods
 
-let rec annotate_arrays clss env =
-   match clss with
-   | c::cs ->
-      if c.c_array then
-        begin
-          c.c_name.x_def <- create_def ClassDef (ArrayClassType(c, (get_class c.c_pname env)));
-          c.c_pname <- TempType "Array";
-          let env' = define c.c_name.x_name c.c_name.x_def env in
-            annotate_classes cs env'
-        end
-      else annotate_arrays cs env
-   | [] -> env
-
 let annotate_program (Program(cs)) =
   let env = annotate_classes cs start_env in
-    let env' = annotate_arrays cs env in
-      List.iter modify_non_static cs;
-      List.iter (fun c -> annotate_parent c env') cs;
-      List.iter (fun c -> annotate_members c env') cs;
-      List.iter (fun c -> annotate_bodies c env') cs;
-      env'
+    List.iter modify_non_static cs;
+    List.iter (fun c -> annotate_parent c env) cs;
+    List.iter (fun c -> annotate_members c env) cs;
+    List.iter (fun c -> annotate_bodies c env) cs

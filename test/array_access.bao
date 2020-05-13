@@ -2,11 +2,9 @@ Define Program
 $>
     ClassMethod Main {} => {}
     $>
-        xs : IntVec = New IntVec<-[12].
+        xs : Array Of Int = New Array Of Int<-[12].
         xs->[11] = 15.
         Output->IntLn<-{xs->[11]}.
         Return.
     <$
 <$
-
-Define IntVec As Array Of Int

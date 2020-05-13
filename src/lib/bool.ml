@@ -78,7 +78,7 @@ let print_code =
     ]
 
 let rec bool_class =
-  { c_name=bool_name; c_pname=VoidType; c_array=false; c_size=4; c_properties=[]; c_methods=[method_and; method_or; method_not]; c_ancestors=[] }
+  { c_name=bool_name; c_pname=VoidType; c_size=4; c_properties=[]; c_methods=[method_and; method_or; method_not]; c_ancestors=[] }
 
 and bool_name =
   { x_name="Bool"; x_def=bool_def}
