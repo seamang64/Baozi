@@ -17,6 +17,7 @@
 %token K_METHOD
 %token K_PROPERTIES
 %token K_REPLACE
+%token K_CONSTRUCTOR
 
 %token K_ME
 %token K_NIL
@@ -43,6 +44,7 @@
 %token O_ASSIGN
 %token O_RIGHTARROW
 %token O_LEFTARROW
+%token O_LEFTARROWSQUARE
 %token O_EQUALS
 %token O_NOTEQUALS
 %token O_LESSTHAN
@@ -78,6 +80,7 @@
 %left O_MOD
 %left O_ASSIGN
 %left O_LEFTARROW
+%left O_LEFTARROWSQUARE
 %left O_EQUALS
 %left O_NOTEQUALS
 %left O_LESSTHAN
@@ -136,6 +139,8 @@ meth :
       { createMethod($2, true, $4, $7, $9, false, false) }
   | K_REPLACE name P_LCURL pairs P_RCURL P_DOUBLEARROW mtype P_START stmts P_END
       { createMethod($2, false, $4, $7, $9, false, true) }
+  | K_CONSTRUCTOR P_LCURL pairs P_RCURL P_DOUBLEARROW mtype P_START stmts P_END
+      { createMethod(createName "%constructor", false, $3, $6, $8, false, true) }
   | K_CLASSMETHOD K_MAIN P_LCURL P_RCURL P_DOUBLEARROW P_LCURL P_RCURL P_START stmts P_END
       { createMethod(createName "Main", true, [], VoidType, $9, true, false) }
 
@@ -259,17 +264,21 @@ expr:
   | K_NIL
       { Nil }
   | expr O_RIGHTARROW name O_LEFTARROW P_LCURL arguments P_RCURL
-      { MethodCall($1, $3, $6) }
+      { MethodCall ($1, $3, $6) }
   | expr O_RIGHTARROW name
       { Property($1, $3) }
   | expr O_RIGHTARROW P_LSQUARE expr P_RSQUARE
       { Sub($1, $4) }
+  | K_NEW name O_LEFTARROW P_LCURL arguments P_RCURL
+      { MethodCall (New $2, createName "%constructor", $5) }
+  | K_NEW otype O_LEFTARROWSQUARE expr P_RSQUARE
+      { NewArray (createArrayName (TempType $2), $4) }
   | K_NEW name
       { New $2 }
-  | K_NEW otype O_LEFTARROW P_LSQUARE expr P_RSQUARE
-      { NewArray(createArrayName (TempType $2), $5) }
   | K_ME
       { Name (createName "Me") }
+  | K_PARENT O_LEFTARROW P_LCURL arguments P_RCURL
+      { MethodCall (Parent, createName "%constructor", $4) }
   | K_PARENT
       { Parent }
   | C_TRUE

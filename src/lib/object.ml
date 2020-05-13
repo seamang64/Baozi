@@ -4,7 +4,7 @@ open Bool
 open Type
 
 let rec object_class =
-  { c_name=object_name; c_pname=VoidType; c_size=0; c_properties=[]; c_methods=[method_equals; method_get_type; method_is; method_print]; c_ancestors=[] }
+  { c_name=object_name; c_pname=VoidType; c_size=0; c_properties=[]; c_methods=[method_equals; method_get_type; method_is; method_print; method_constructor]; c_ancestors=[] }
 
 and object_name =
   { x_name="Object"; x_def=object_def}
@@ -21,6 +21,9 @@ and method_is =
 and method_print =
   { m_name=print_name; m_type=VoidType; m_static=false; m_size=0; m_arguments=[Prop(arg_x, ClassType object_class)]; m_body=empty_stmt; m_main=false; m_replace=false; m_origin=Mine}
 
+and method_constructor =
+  { m_name=constructor_name; m_type=ClassType object_class; m_static=false; m_size=0; m_arguments=[Prop(arg_x, ClassType object_class)]; m_body=empty_stmt; m_main=false; m_replace=false; m_origin=Mine}
+
 and equals_name =
   {x_name="equals"; x_def={d_kind=MethodDef (12, false); d_type=ClassType bool_class}}
 
@@ -32,6 +35,9 @@ and is_name =
 
 and print_name =
   {x_name="Print"; x_def={d_kind=MethodDef (24, false); d_type=VoidType}}
+
+and constructor_name =
+  {x_name="%constructor"; x_def={d_kind=MethodDef (28, false); d_type=ClassType object_class}}
 
 and arg_x =
   {x_name="x"; x_def=arg_def}

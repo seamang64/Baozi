@@ -1,0 +1,28 @@
+Define Program
+$>
+    ClassMethod Main {} => {}
+    $>
+        v : Vector = New Vector<-{4, 5}.
+        Output->String<-{"Created Vector with: x = "}.
+        Output->Int<-{v->x}.
+        Output->String<-{", y = "}.
+        Output->IntLn<-{v->y}.
+        Return.
+    <$
+<$
+
+Define Vector
+$>
+    Properties
+    $>
+        x : Int,
+        y : Int,
+    <$
+
+    ConstructorMethod {a : Int, b : Int} => Vector
+    $>
+        My->x = a.
+        My->y = b.
+        Return Me.
+    <$
+<$

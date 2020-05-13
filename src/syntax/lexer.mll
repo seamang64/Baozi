@@ -21,6 +21,7 @@
     "Method", K_METHOD;
     "Properties", K_PROPERTIES;
     "ReplaceMethod", K_REPLACE;
+    "ConstructorMethod", K_CONSTRUCTOR;
 
     "Me", K_ME;
     "My", K_ME;
@@ -76,7 +77,7 @@ let notq = [^'\'''\n']
 let notqq = [^'"''\n']
 
 rule token = parse
-    letter (letter | digit)* as s
+    letter (letter | digit | '_')* as s
                         { lookup s }
   | digit+ as s         { NUMBER (int_of_string s) }
   | qq (notqq* as s) qq { get_string s }
@@ -87,6 +88,7 @@ rule token = parse
   | "/"                 { O_DIV }
   | "%"                 { O_MOD }
   | "="                 { O_ASSIGN }
+  | "<-["               { O_LEFTARROWSQUARE }
   | "->"                { O_RIGHTARROW }
   | "<-"                { O_LEFTARROW }
   | "=="                { O_EQUALS }

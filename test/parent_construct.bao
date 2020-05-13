@@ -1,0 +1,45 @@
+Define Program
+$>
+    ClassMethod Main {} => {}
+    $>
+        v : ThreeDVector = New ThreeDVector<-{5, 9, 12}.
+        Output->String<-{"Created 3D Vector with: x = "}.
+        Output->Int<-{v->x}.
+        Output->String<-{", y = "}.
+        Output->Int<-{v->y}.
+        Output->String<-{", z = "}.
+        Output->IntLn<-{v->z}.
+        Return.
+    <$
+<$
+
+Define Vector
+$>
+    Properties
+    $>
+        x : Int,
+        y : Int,
+    <$
+
+    ConstructorMethod {a : Int, b : Int} => Vector
+    $>
+        My->x = a.
+        My->y = b.
+        Return Me.
+    <$
+<$
+
+Define ThreeDVector <- Vector
+$>
+    Properties
+    $>
+        z : Int,
+    <$
+
+    ConstructorMethod {a : Int, b : Int, c : Int} => ThreeDVector
+    $>
+        Parent<-{a, b}.
+        My->z = c.
+        Return Me.
+    <$
+<$

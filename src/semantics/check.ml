@@ -137,7 +137,7 @@ let check_method meth =
   check_stmt meth.m_body meth.m_name.x_def.d_type
 
 let check_class c =
-  p_type := ClassType c;
+  p_type := c.c_pname;
   List.iter check_method c.c_methods
 
 let check_program (Program(cs)) =

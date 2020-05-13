@@ -50,16 +50,6 @@ STNW 4
 RETURNW
 END
 
-PROC print 0 0 0
-LDLW 12
-CONST 0
-GLOBAL lib.print_num
-PCALLW 1
-GLOBAL lib.newline
-PCALLW 0
-RETURN
-END
-
 ! Procedure for allocating and initialising a new array object
 PROC baozi.makeArray 4 0 0x110001
 ! 	Allocate 12 bytes for Array
