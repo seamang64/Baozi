@@ -67,7 +67,7 @@ let print_code =
   ]
 
 let rec integer_class =
-  { c_name=integer_name; c_pname=VoidType; c_size=4; c_properties=[]; c_methods=integer_methods; c_ancestors=[] }
+  { c_name=integer_name; c_pname=VoidType; c_size=4; c_properties=[]; c_methods=integer_methods; c_ancestors=[]; c_generics=[] }
 
 and integer_methods = [method_equals; method_get_type; method_is; method_print; method_add; method_times; method_sub; method_div; method_mod; method_not_equals; method_less_than; method_greater_than; method_less_than_equal; method_greater_than_equal]
 

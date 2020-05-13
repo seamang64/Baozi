@@ -13,8 +13,7 @@
   let kwtable = make_hash 64
   [
     "Define", K_DEFINE;
-    "Array", K_ARRAY;
-    "Of", K_OF;
+    "Using", K_USING;
 
     "ClassMethod", K_CLASSMETHOD;
     "Main", K_MAIN;
@@ -45,8 +44,11 @@
     "Step", K_STEP;
     "Test", K_TEST;
 
+    "Array", K_ARRAY;
     "New", K_NEW;
-    "Return", K_RETURN
+    "Of", K_OF;
+    "Return", K_RETURN;
+    "With", K_WITH;
   ]
 
   let idtable = Hashtbl.create 64

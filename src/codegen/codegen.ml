@@ -12,7 +12,14 @@ let mainMethod = ref ""
 let get_size x =
   match x.x_def.d_type with
   | ClassType c -> c.c_size
+  | GenericClassType (c, _) -> c.c_size
   | _ -> raise (InvalidNew x.x_name)
+
+let get_name n =
+  match n.x_def.d_type with
+    | ClassType c -> GLOBAL (c.c_name.x_name ^ ".%desc")
+    | GenericClassType (c, _) -> GLOBAL (c.c_name.x_name ^ ".%desc")
+    | _ -> raise (InvalidNew n.x_name)
 
 let is_int x =
   match x.x_def.d_type with
@@ -95,7 +102,7 @@ and gen_expr e =
   | New n ->
       SEQ [
         (* get the address of the class descriptor *)
-        GLOBAL (n.x_name ^ ".%desc");
+        get_name n;
         (* need space for all the properties + class descriptor *)
         CONST (4 + (get_size n));
         (* Call the make proceduure *)

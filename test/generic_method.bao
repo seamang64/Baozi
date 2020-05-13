@@ -1,0 +1,24 @@
+Define Program
+$>
+    ClassMethod Main {} => {}
+    $>
+        l : List With (Int) = New List With (Int).
+        l->Add<-{12}.
+        Return.
+    <$
+<$
+
+Define List Using T
+$>
+    Properties
+    $>
+        value : T,
+        next : List,
+    <$
+
+    Method Add {v : T} => {}
+    $>
+        My->value = v.
+        Return.
+    <$
+<$

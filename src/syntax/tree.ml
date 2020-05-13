@@ -3,13 +3,18 @@ open Errors
 open Keiko
 
 type ident = string
-and otype =
+and ttype =
     Ident of ident
-  | Array of otype
+  | Array of ttype
+  | Generic of ident * ttype list
 
 and origin =
     Mine
   | Inherited of string
+
+and generic_type =
+    { g_name: name;
+      g_ptype: def_type}
 
 and expr =
     Name of name
@@ -58,7 +63,8 @@ and c_class =
     mutable c_size: int;
     mutable c_properties: property list;
     mutable c_methods: m_method list;
-    mutable c_ancestors: c_class list }
+    mutable c_ancestors: c_class list;
+    c_generics: generic_type list }
 
 and def_kind =
   | ClassDef
@@ -74,7 +80,9 @@ and def =
 and def_type =
   | ClassType of c_class
   | ArrayType of def_type
-  | TempType of otype
+  | GenericClassType of c_class * (ident * def_type) list
+  | GenericType of ident * def_type
+  | TempType of ttype
   | VoidType
   | NilType
 
@@ -119,8 +127,11 @@ let seq =
     | [s] -> s                   (* Don't use a Seq node for one element *)
     | ss -> createEmptyStmt (Seq ss)
 
-let createClass (n, p, props, meths) =
-  { c_name=n; c_pname=p; c_size=0; c_properties=props; c_methods=meths; c_ancestors=[] }
+let createClass (n, p, props, meths, generics) =
+  { c_name=n; c_pname=p; c_size=0; c_properties=props; c_methods=meths; c_ancestors=[]; c_generics=generics }
+
+let createGeneric n t =
+  { g_name=n; g_ptype=t }
 
 let createMethod (n, static, args, t, stmt, main, replace) =
   { m_name=n; m_type=t; m_static=static; m_size=0; m_arguments=args; m_body=stmt; m_main=main; m_replace=replace; m_origin=Mine }
@@ -128,5 +139,5 @@ let createMethod (n, static, args, t, stmt, main, replace) =
 let createName n =
   { x_name=n; x_def=empty_def }
 
-let createArrayName t =
-  { x_name="array_delc"; x_def={d_kind=NoneKind; d_type=t} }
+let createTypeName t =
+  { x_name="type_delc"; x_def={d_kind=NoneKind; d_type=t} }

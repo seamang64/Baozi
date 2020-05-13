@@ -32,6 +32,8 @@ exception IncorrectSyntaxError
 
 exception InvalidExpression
 
+exception InvalidGeneric
+
 let print_exception e =
   match e with
   | UnknownName n -> printf "Error: The name '%s' does not exist in the current context\n" n
@@ -50,4 +52,5 @@ let print_exception e =
   | NoneKindError n -> printf "%s has defintion kind of None\n" n
   | IncorrectSyntaxError -> printf "Incorrect syntax\n"
   | InvalidExpression -> printf "An error occured when evaluating an expression\n"
+  | InvalidGeneric -> printf "Error in creating a generic object.\n"
   | _ -> printf "Unknown Error\n";

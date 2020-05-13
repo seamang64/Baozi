@@ -4,7 +4,7 @@ open Bool
 open Type
 
 let rec object_class =
-  { c_name=object_name; c_pname=VoidType; c_size=0; c_properties=[]; c_methods=[method_equals; method_get_type; method_is; method_print; method_constructor]; c_ancestors=[] }
+  { c_name=object_name; c_pname=VoidType; c_size=0; c_properties=[]; c_methods=[method_equals; method_get_type; method_is; method_print; method_constructor]; c_ancestors=[]; c_generics=[] }
 
 and object_name =
   { x_name="Object"; x_def=object_def}

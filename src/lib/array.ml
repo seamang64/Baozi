@@ -6,7 +6,8 @@ open Object
 open Type
 
 let rec array_class =
-  { c_name=array_name; c_pname=ClassType object_class; c_size=8; c_properties=[Prop(data, VoidType); Prop(length, TempType (Ident "Int"))]; c_methods=[method_equals; method_get_type; method_is; method_print]; c_ancestors=[object_class] }
+  { c_name=array_name; c_pname=ClassType object_class; c_size=8; c_properties=[Prop(data, VoidType); Prop(length, TempType (Ident "Int"))];
+    c_methods=[method_equals; method_get_type; method_is; method_print]; c_ancestors=[object_class]; c_generics=[]  }
 
 and array_name =
   { x_name="Array"; x_def=array_def}

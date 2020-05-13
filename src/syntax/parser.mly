@@ -11,6 +11,8 @@
 %token K_AS
 %token K_ARRAY
 %token K_OF
+%token K_USING
+%token K_WITH
 
 %token K_CLASSMETHOD
 %token K_MAIN
@@ -111,8 +113,24 @@ classes :
       { $1 :: $2 } ;
 
 cls :
-  | K_DEFINE name parent P_START properties methods P_END
-      { createClass($2, $3, $5, $6) }
+  | K_DEFINE name parent generics P_START properties methods P_END
+      { createClass($2, $3, $6, $7, $4) }
+
+generics :
+  | /* empty */
+      { [] }
+  | K_USING generic_list
+      { $2 }
+
+generic_list :
+  | name
+      { [createGeneric $1 VoidType] }
+  | name O_LEFTARROW IDENT
+      { [createGeneric $1 (TempType (Ident $3))] }
+  | name P_COMMA generic_list
+      { (createGeneric $1 VoidType) :: $3 }
+  | name O_LEFTARROW IDENT P_COMMA generic_list
+      { (createGeneric $1 (TempType (Ident $3))) :: $5 }
 
 parent :
   | /* empty */
@@ -145,19 +163,27 @@ meth :
       { createMethod(createName "Main", true, [], VoidType, $9, true, false) }
 
 mtype :
-  | otype
+  | ttype
       { TempType $1 }
   | P_LCURL P_RCURL
       { VoidType }
 
-otype :
+ttype :
   | IDENT
-      {Ident $1 }
-  | K_ARRAY K_OF otype
+      { Ident $1 }
+  | K_ARRAY K_OF ttype
       { Array $3}
+  | IDENT K_WITH P_LPAR type_list P_RPAR
+      { Generic ($1, $4) }
+
+type_list :
+  | ttype
+      { [$1] }
+  | ttype P_COMMA type_list
+      { $1 :: $3 }
 
 pair:
-  | name P_COLON otype
+  | name P_COLON ttype
       { Prop ($1, TempType $3) }
 
 pairs:
@@ -185,7 +211,7 @@ stmt :
 stmt1 :
   |  expr O_ASSIGN expr P_DOT
       { Assign($1, $3) }
-  | name P_COLON otype O_ASSIGN expr P_DOT
+  | name P_COLON ttype O_ASSIGN expr P_DOT
       { Delc($1, TempType $3, $5) }
   | K_RETURN expr P_DOT
       { Return (Some $2) }
@@ -269,12 +295,12 @@ expr:
       { Property($1, $3) }
   | expr O_RIGHTARROW P_LSQUARE expr P_RSQUARE
       { Sub($1, $4) }
-  | K_NEW name O_LEFTARROW P_LCURL arguments P_RCURL
-      { MethodCall (New $2, createName "%constructor", $5) }
-  | K_NEW otype O_LEFTARROWSQUARE expr P_RSQUARE
-      { NewArray (createArrayName (TempType $2), $4) }
-  | K_NEW name
-      { New $2 }
+  | K_NEW ttype O_LEFTARROW P_LCURL arguments P_RCURL
+      { MethodCall (New (createTypeName (TempType $2)), createName "%constructor", $5) }
+  | K_NEW ttype O_LEFTARROWSQUARE expr P_RSQUARE
+      { NewArray (createTypeName (TempType $2), $4) }
+  | K_NEW ttype
+      { New (createTypeName (TempType $2)) }
   | K_ME
       { Name (createName "Me") }
   | K_PARENT O_LEFTARROW P_LCURL arguments P_RCURL

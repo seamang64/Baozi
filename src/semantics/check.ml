@@ -18,6 +18,8 @@ let rec print_type t =
   match t with
   | ClassType c -> c.c_name.x_name
   | ArrayType d -> sprintf "Array of %s" (print_type d)
+  | GenericClassType (c, ts) -> (sprintf "%s with " c.c_name.x_name) ^ (List.fold_right (fun (n, t') s -> (print_type t') ^ s) ts "")
+  | GenericType (n, d) -> sprintf "%s as %s" n (print_type d)
   | VoidType -> "Void"
   | TempType d -> print_temp_type d
   | NilType -> "Nil"
@@ -27,9 +29,42 @@ let rec check_compatible t1 t2 =
   | (ClassType c1, ClassType c2) ->
       if c1.c_name.x_name == c2.c_name.x_name then ()
       else check_compatible t1 c2.c_pname
+  | (GenericClassType (c1, ts1), GenericClassType (c2, ts2)) ->
+      check_compatible (ClassType c1) (ClassType c2);
+      List.iter (fun ((_, x),(_, y)) -> check_compatible x y) (List.combine ts1 ts2)
+  | (ClassType c1, GenericClassType (c2,_)) ->
+      if c1.c_name.x_name == c2.c_name.x_name then ()
+      else check_compatible t1 c2.c_pname
   | (ArrayType d1, ArrayType d2) -> check_compatible d1 d2
+  | (GenericType (_, d1), GenericType (_, d2)) -> check_compatible d1 d2
   | (_, NilType) -> ()
   | _ -> raise (TypeError((print_type t1), (print_type t2)))
+
+let validate_generic (t, g) =
+  match g.g_ptype with
+  | VoidType -> ();
+  | t' -> check_compatible t' t
+
+let rec validate_type t =
+  match t with
+  | GenericClassType (c, ts) ->
+      let ds = List.map (fun (_,y) -> y) ts in
+        List.iter validate_type ds; List.iter validate_generic (List.combine ds c.c_generics)
+  | ArrayType t' -> validate_type t'
+  | _ -> ()
+
+let get_type ct t =
+  match (ct, t) with
+  | (GenericClassType (_, ts), GenericType (n, _)) -> let (_, d) = List.find (fun (i, _) -> i = n) ts in d
+  | _ -> t
+
+let rec get_class d =
+  match d with
+  | ClassType c -> c
+  | ArrayType _ -> array_class
+  | GenericClassType (c, _) -> c
+  | GenericType (_, d) -> get_class d
+  | _ -> raise InvalidExpression
 
 let find_method meth cls =
   match cls with
@@ -43,14 +78,25 @@ let find_method meth cls =
         try List.find (fun m-> m.m_name.x_name = meth.x_name) array_class.c_methods with
           Not_found -> raise (UnknownName meth.x_name)
       end
+  | GenericClassType (c, _) ->
+      begin
+        try List.find (fun m-> m.m_name.x_name = meth.x_name) c.c_methods with
+          Not_found -> raise (UnknownName meth.x_name)
+      end
+  | GenericType (_, d) ->
+      let c = get_class d in
+      begin
+        try List.find (fun m-> m.m_name.x_name = meth.x_name) c.c_methods with
+          Not_found -> raise (UnknownName meth.x_name)
+      end
   | VoidType -> raise VoidOperation
   | TempType n -> raise (UnannotatedName (print_temp_type n))
   | NilType -> raise (UnknownName meth.x_name)
 
 let rec check_args args margs =
   match (args, margs) with
-  | (t::ts, Prop(x, _)::ms) ->
-      check_compatible x.x_def.d_type t;
+  | (t::ts, m::ms) ->
+      check_compatible m t;
       check_args ts ms
   | ([], []) -> ()
   | _ -> raise IncorrectArgumentCount
@@ -70,12 +116,13 @@ and check_expr e =
   | MethodCall (e1, m, args) ->
       let t = check_expr e1 in
         let meth = find_method m t in
-          if meth.m_static then check_args (List.map check_expr args) meth.m_arguments
-          else  check_args (t::(List.map check_expr args)) meth.m_arguments;
-          m.x_def.d_type
+          let margs = List.map (fun (Prop(x, _)) -> get_type t x.x_def.d_type) meth.m_arguments in
+            if meth.m_static then check_args (List.map check_expr args) margs
+            else  check_args (t::(List.map check_expr args)) margs;
+            get_type t m.x_def.d_type
   | Property (e1, n) ->
-      ignore(check_expr e1);
-      n.x_def.d_type
+      let t = check_expr e1 in
+      get_type t n.x_def.d_type
   | Sub (e1, e2) ->
       begin
         match check_expr e1 with
@@ -84,10 +131,11 @@ and check_expr e =
               check_compatible d2 integer_def.d_type; d1
         | _ -> raise InvalidSub
       end
-  | New n -> n.x_def.d_type
-  | NewArray (d, e) ->
-      let t = check_expr e in
-        check_compatible t integer_def.d_type; d.x_def.d_type
+  | New n -> let d = n.x_def.d_type in validate_type d; d
+  | NewArray (n, e) ->
+      let t = check_expr e and d = n.x_def.d_type in
+        validate_type d;
+        check_compatible t integer_def.d_type; d
   | Parent -> !p_type
   | Nil -> NilType
 
