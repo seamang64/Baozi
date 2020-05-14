@@ -47,7 +47,7 @@ let rec get_temp_type t env =
   | Generic (n, ts) ->
       let c = get_class (lookup n env).d_type in
         try GenericClassType (c, List.combine (List.map (fun g -> g.g_name.x_name) c.c_generics) (List.map (fun x -> get_temp_type x env) ts))
-          with Invalid_argument _ -> raise InvalidGeneric
+          with Invalid_argument e -> raise InvalidGeneric e
 
 let get_type t env =
   match t with
@@ -143,9 +143,13 @@ let rec annotate_expr expr env =
   | String _ -> string_def.d_type;
   | TypeOf e -> ignore(annotate_expr e env); type_def.d_type
   | MethodCall (e, m, args) ->
+      (* Annotate the calling object *)
       let c = annotate_expr e env in
+      (* Find method that is being call *)
       m.x_def <- find_method m.x_name c;
+      (* Annotate all the arguments *)
       List.iter (fun x -> ignore(annotate_expr x env)) args;
+      (* Return the type of the method *)
       m.x_def.d_type
   | Property (e, n) ->
       let c = annotate_expr e env in

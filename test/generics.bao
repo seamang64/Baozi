@@ -3,7 +3,8 @@ $>
     ClassMethod Main {} => {}
     $>
         l : List With (Int) = New List With (Int).
-        l->value = l2.
+        l->value = 12.
+        l->next = New List With (Int).
         Return.
     <$
 <$
@@ -13,6 +14,33 @@ $>
     Properties
     $>
         value : T,
-        next : List,
+        next : List With (T),
+    <$
+
+    Method ListMethod {} => {}
+    $>
+        My->value->DoSomething<-{}.
+        ! Invalid as Object does not have a method DoSomething
+    <$
+<$
+
+Define Gen T, U <- T
+$>
+
+<$
+
+Define Vector
+$>
+    Properties
+    $>
+        x : Int,
+        y : Int,
+    <$
+
+    ConstructorMethod {a : Int, b : Int} => Vector
+    $>
+        My->x = a.
+        My->y = b.
+        Return Me.
     <$
 <$

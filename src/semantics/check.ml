@@ -24,14 +24,25 @@ let rec print_type t =
   | TempType d -> sprintf "Temp %s" (print_temp_type d)
   | NilType -> "Nil"
 
-let rec check_compatible t1 t2 =
+let rec check__strict_compatible t1 t2 =
+  match (t1, t2) with
+  | (ClassType c1, ClassType c2) ->
+      if c1.c_name.x_name == c2.c_name.x_name then ()
+      else raise (TypeError((print_type t1), (print_type t2)))
+  | (ArrayType d1, ArrayType d2) -> check_strict_compatible d1 d2
+  | (GenericType (n1, d1), GenericType (n2, d2)) ->
+      if n1 == n2 then ()
+      else raise (TypeError((print_type t1), (print_type t2)))
+  | _ -> check_compatible t1 t2;
+
+and check_compatible t1 t2 =
   match (t1, t2) with
   | (ClassType c1, ClassType c2) ->
       if c1.c_name.x_name == c2.c_name.x_name then ()
       else check_compatible t1 c2.c_pname
   | (GenericClassType (c1, ts1), GenericClassType (c2, ts2)) ->
       check_compatible (ClassType c1) (ClassType c2);
-      List.iter (fun ((_, x),(_, y)) -> check_compatible x y) (List.combine ts1 ts2)
+      List.iter (fun ((_, x),(_, y)) -> check__strict_compatible x y) (List.combine ts1 ts2)
   | (ClassType c1, GenericClassType (c2,_)) ->
       if c1.c_name.x_name == c2.c_name.x_name then ()
       else check_compatible t1 c2.c_pname
@@ -43,18 +54,19 @@ let rec check_compatible t1 t2 =
   | _ -> raise (TypeError((print_type t1), (print_type t2)))
 
 let validate_generics generics =
-  let rec validate prev = function
-  | (t, g)::gs ->
-    begin
-      match g.g_ptype with
+  let rec validate prev =
+    let validate_pair t gt =
+      match gt with
       | GenericType (n1, d1) ->
           let (n, d) = List.find (fun (n2, d2) -> n1 == n2) prev in
             check_compatible d t
-      | t' -> check_compatible t' t
-    end;
-    validate ((g.g_name.x_name, g.g_ptype)::prev) gs
-  | _ -> () in
-  validate [] generics
+      | pt -> check_compatible pt t
+      in function
+        | (t, g)::gs ->
+            validate_pair t g.g_ptype;
+            validate ((g.g_name.x_name, g.g_ptype)::prev) gs
+        | _ -> ()
+  in validate [] generics
 
 
 let rec validate_type t =
@@ -66,8 +78,14 @@ let rec validate_type t =
   | _ -> ()
 
 let get_type ct t =
-  match (ct, t) with
-  | (GenericClassType (_, ts), GenericType (n, _)) -> let (_, d) = List.find (fun (i, _) -> i = n) ts in d
+  let rec get_type_with_generic ts =
+    function
+    | GenericType (n, _) ->  let (_, d) = List.find (fun (i, _) -> i = n) ts in d
+    | GenericClassType (c, ts') -> GenericClassType (c, List.map (fun (i,t') -> (i, get_type_with_generic ts t')) ts')
+    | ArrayType d -> ArrayType (get_type_with_generic ts d)
+    | t' -> t'
+  in match (ct, t) with
+  | (GenericClassType (_, ts), _) -> get_type_with_generic ts t
   | _ -> t
 
 let rec get_class d =
