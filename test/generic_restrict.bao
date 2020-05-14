@@ -1,0 +1,26 @@
+Define Program
+$>
+    ClassMethod Main {} => {}
+    $>
+        l : List With (A, B) = New List With (A, B).
+        Return.
+    <$
+<$
+
+Define List Using T, U <- T
+$>
+    Properties
+    $>
+        value1 : T,
+        value2 : U,
+        next : List,
+    <$
+<$
+
+Define A
+$>
+<$
+
+Define B <- A
+$>
+<$

@@ -14,7 +14,7 @@ and origin =
 
 and generic_type =
     { g_name: name;
-      g_ptype: def_type}
+      mutable g_ptype: def_type}
 
 and expr =
     Name of name

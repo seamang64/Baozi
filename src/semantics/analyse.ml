@@ -32,21 +32,6 @@ let rec copy inherited cls=
 let create_me cls =
   Prop({x_name="Me"; x_def=(create_def NoneKind VoidType)}, TempType (Ident cls.c_name.x_name))
 
-let rec print_temp_type t =
-  match t with
-  | Ident n -> n
-  | Array t' -> sprintf "Array of %s" (print_temp_type t')
-
-let rec print_type t =
-  match t with
-  | ClassType c -> c.c_name.x_name
-  | ArrayType d -> sprintf "Array of %s" (print_type d)
-  | GenericClassType (c, ts) -> (sprintf "%s with " c.c_name.x_name) ^ (List.fold_right (fun (n, t') s -> (print_type t') ^ s) ts "")
-  | GenericType (n, d) -> sprintf "%s as %s" n (print_type d)
-  | VoidType -> "Void"
-  | TempType d -> print_temp_type d
-  | NilType -> "Nil"
-
 let rec get_class d =
   match d with
   | ClassType c -> c
@@ -219,7 +204,9 @@ let rec annotate_stmt stmt env =
 let annotate_generics env generic =
   match generic.g_ptype with
   | VoidType -> define generic.g_name.x_name (create_def ClassDef (GenericType (generic.g_name.x_name, (ClassType object_class)))) env
-  | t -> let d = get_type t env in define generic.g_name.x_name (create_def ClassDef (GenericType (generic.g_name.x_name, d))) env
+  | t -> let d = get_type t env in
+      generic.g_ptype <- d;
+      define generic.g_name.x_name (create_def ClassDef (GenericType (generic.g_name.x_name, d))) env
 
 let rec annotate_methods methods index env =
   match methods with

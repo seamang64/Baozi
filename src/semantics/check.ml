@@ -21,7 +21,7 @@ let rec print_type t =
   | GenericClassType (c, ts) -> (sprintf "%s with " c.c_name.x_name) ^ (List.fold_right (fun (n, t') s -> (print_type t') ^ s) ts "")
   | GenericType (n, d) -> sprintf "%s as %s" n (print_type d)
   | VoidType -> "Void"
-  | TempType d -> print_temp_type d
+  | TempType d -> sprintf "Temp %s" (print_temp_type d)
   | NilType -> "Nil"
 
 let rec check_compatible t1 t2 =
@@ -36,20 +36,32 @@ let rec check_compatible t1 t2 =
       if c1.c_name.x_name == c2.c_name.x_name then ()
       else check_compatible t1 c2.c_pname
   | (ArrayType d1, ArrayType d2) -> check_compatible d1 d2
-  | (GenericType (_, d1), GenericType (_, d2)) -> check_compatible d1 d2
+  | (GenericType (n1, d1), GenericType (n2, d2)) ->
+      if n1 == n2 then ()
+      else check_compatible t1 d2
   | (_, NilType) -> ()
   | _ -> raise (TypeError((print_type t1), (print_type t2)))
 
-let validate_generic (t, g) =
-  match g.g_ptype with
-  | VoidType -> ();
-  | t' -> check_compatible t' t
+let validate_generics generics =
+  let rec validate prev = function
+  | (t, g)::gs ->
+    begin
+      match g.g_ptype with
+      | GenericType (n1, d1) ->
+          let (n, d) = List.find (fun (n2, d2) -> n1 == n2) prev in
+            check_compatible d t
+      | t' -> check_compatible t' t
+    end;
+    validate ((g.g_name.x_name, g.g_ptype)::prev) gs
+  | _ -> () in
+  validate [] generics
+
 
 let rec validate_type t =
   match t with
   | GenericClassType (c, ts) ->
       let ds = List.map (fun (_,y) -> y) ts in
-        List.iter validate_type ds; List.iter validate_generic (List.combine ds c.c_generics)
+        List.iter validate_type ds; validate_generics (List.combine ds c.c_generics)
   | ArrayType t' -> validate_type t'
   | _ -> ()
 

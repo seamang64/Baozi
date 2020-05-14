@@ -124,11 +124,11 @@ generics :
 
 generic_list :
   | name
-      { [createGeneric $1 VoidType] }
+      { [createGeneric $1 (TempType (Ident "Object"))] }
   | name O_LEFTARROW IDENT
       { [createGeneric $1 (TempType (Ident $3))] }
   | name P_COMMA generic_list
-      { (createGeneric $1 VoidType) :: $3 }
+      { (createGeneric $1 (TempType (Ident "Object"))) :: $3 }
   | name O_LEFTARROW IDENT P_COMMA generic_list
       { (createGeneric $1 (TempType (Ident $3))) :: $5 }
 
