@@ -16,31 +16,4 @@ $>
         value : T,
         next : List With (T),
     <$
-
-    Method ListMethod {} => {}
-    $>
-        My->value->DoSomething<-{}.
-        ! Invalid as Object does not have a method DoSomething
-    <$
-<$
-
-Define Gen T, U <- T
-$>
-
-<$
-
-Define Vector
-$>
-    Properties
-    $>
-        x : Int,
-        y : Int,
-    <$
-
-    ConstructorMethod {a : Int, b : Int} => Vector
-    $>
-        My->x = a.
-        My->y = b.
-        Return Me.
-    <$
 <$

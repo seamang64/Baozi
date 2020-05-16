@@ -3,31 +3,23 @@ IMPORT Lib 0
 ENDHDR
 
 PROC Program.Main 4 0 0x10001
-!         l : List With (Int) = New List With (Int).
+!         l : List = New List.
 LINE 5
 GLOBAL List.%desc
 CONST 12
 GLOBAL baozi.make
 CALLW 2
 STLW -4
-!         l->value = 12.
+!         l->value = 15.
 LINE 6
-CONST 12
+CONST 15
 GLOBAL Integer.%desc
 GLOBAL baozi.makePrim
 CALLW 2
 LDLW -4
 STNW 4
-!         l->next = New List With (Int).
-LINE 7
-GLOBAL List.%desc
-CONST 12
-GLOBAL baozi.make
-CALLW 2
-LDLW -4
-STNW 8
 !         Return.
-LINE 8
+LINE 7
 RETURN
 END
 
@@ -53,6 +45,27 @@ WORD Object.%desc
 DEFINE Program.%string
 STRING 50726F6772616D00
 
+! Descriptor for Collection
+DEFINE Collection.%desc
+WORD 0x7
+WORD Collection.%anc
+WORD Collection.%string
+WORD Object.equals
+WORD Object.GetType
+WORD Object.Is
+WORD Object.Print
+WORD Object.%constructor
+
+! Ancestor Table for Collection
+DEFINE Collection.%anc
+WORD 2
+WORD Collection.%desc
+WORD Object.%desc
+
+! String "Collection"
+DEFINE Collection.%string
+STRING 436F6C6C656374696F6E00
+
 ! Descriptor for List
 DEFINE List.%desc
 WORD 0x7
@@ -66,13 +79,35 @@ WORD Object.%constructor
 
 ! Ancestor Table for List
 DEFINE List.%anc
-WORD 2
+WORD 3
 WORD List.%desc
+WORD Collection.%desc
 WORD Object.%desc
 
 ! String "List"
 DEFINE List.%string
 STRING 4C69737400
+
+! Descriptor for A
+DEFINE A.%desc
+WORD 0
+WORD A.%anc
+WORD A.%string
+WORD Object.equals
+WORD Object.GetType
+WORD Object.Is
+WORD Object.Print
+WORD Object.%constructor
+
+! Ancestor Table for A
+DEFINE A.%anc
+WORD 2
+WORD A.%desc
+WORD Object.%desc
+
+! String "A"
+DEFINE A.%string
+STRING 4100
 
 PROC MAIN 0 0 0x0
 GLOBAL Program.Main

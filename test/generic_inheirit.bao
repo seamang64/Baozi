@@ -1,0 +1,22 @@
+Define Program
+$>
+    ClassMethod Main {} => {}
+    $>
+        l : List = New List.
+        l->value = 15.
+        Return.
+    <$
+<$
+
+Define Collection Using T
+$>
+    Properties
+    $>
+        value : T,
+        next : Collection With (T),
+    <$
+<$
+
+Define List <- Collection With (Int)
+$>
+<$

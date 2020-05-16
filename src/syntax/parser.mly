@@ -135,8 +135,8 @@ generic_list :
 parent :
   | /* empty */
       { TempType (Ident "Object") }
-  | O_LEFTARROW IDENT
-      { TempType (Ident $2) };
+  | O_LEFTARROW ttype
+      { TempType $2 };
 
 properties :
   | /* empty */

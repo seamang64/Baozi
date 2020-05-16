@@ -24,7 +24,7 @@ let rec print_type t =
   | TempType d -> sprintf "Temp %s" (print_temp_type d)
   | NilType -> "Nil"
 
-let rec check__strict_compatible t1 t2 =
+let rec check_strict_compatible t1 t2 =
   match (t1, t2) with
   | (ClassType c1, ClassType c2) ->
       if c1.c_name.x_name == c2.c_name.x_name then ()
@@ -42,7 +42,7 @@ and check_compatible t1 t2 =
       else check_compatible t1 c2.c_pname
   | (GenericClassType (c1, ts1), GenericClassType (c2, ts2)) ->
       check_compatible (ClassType c1) (ClassType c2);
-      List.iter (fun ((_, x),(_, y)) -> check__strict_compatible x y) (List.combine ts1 ts2)
+      List.iter (fun ((_, x),(_, y)) -> check_strict_compatible x y) (List.combine ts1 ts2)
   | (ClassType c1, GenericClassType (c2,_)) ->
       if c1.c_name.x_name == c2.c_name.x_name then ()
       else check_compatible t1 c2.c_pname
@@ -68,13 +68,11 @@ let validate_generics generics =
         | _ -> ()
   in validate [] generics
 
-
 let rec validate_type t =
   match t with
   | GenericClassType (c, ts) ->
       let ds = List.map (fun (_,y) -> y) ts in
         List.iter validate_type ds; validate_generics (List.combine ds c.c_generics)
-  | ArrayType t' -> validate_type t'
   | _ -> ()
 
 let get_type ct t =
@@ -215,6 +213,7 @@ let check_method meth =
   check_stmt meth.m_body meth.m_name.x_def.d_type
 
 let check_class c =
+  validate_type c.c_pname;
   p_type := c.c_pname;
   List.iter check_method c.c_methods
 

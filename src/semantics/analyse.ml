@@ -47,7 +47,7 @@ let rec get_temp_type t env =
   | Generic (n, ts) ->
       let c = get_class (lookup n env).d_type in
         try GenericClassType (c, List.combine (List.map (fun g -> g.g_name.x_name) c.c_generics) (List.map (fun x -> get_temp_type x env) ts))
-          with Invalid_argument e -> raise InvalidGeneric e
+          with Invalid_argument e -> raise (InvalidGeneric e)
 
 let get_type t env =
   match t with
@@ -257,16 +257,28 @@ let rec split methods =
 
 let annotate_members cls env =
   let env' = List.fold_left annotate_generics env cls.c_generics in
-    annotate_methods cls.c_methods 0 env';
-    annotate_properties cls.c_properties 0 env'
+    let generics =
+      function
+        | GenericClassType (_, ts) -> ts
+        | _ -> [] in
+      let env'' = List.fold_left (fun e (i, t) -> define i (create_def ClassDef t) e) env' (generics cls.c_pname) in
+        annotate_methods cls.c_methods 0 env'';
+        annotate_properties cls.c_properties 0 env''
 
-let rec annotate_parent cls env =
+let rec annotate_parent_type p env =
+  match p with
+  | TempType _ -> annotate_parent_type (get_type p env) env
+  | ClassType c -> annotate_parent c env
+  | GenericClassType (c, ts) -> annotate_parent c env; List.iter (fun (_, t) -> annotate_parent_type t env) ts
+  | _ -> raise InvalidParent
+
+and annotate_parent cls env =
   match cls.c_pname with
   | TempType _ ->
-      let ClassType p = get_type cls.c_pname env in
-        annotate_parent p env;
-        cls.c_pname <- ClassType p;
-        let (r, n) = split cls.c_methods in
+      let parent = get_type cls.c_pname env in
+        annotate_parent_type parent env;
+        cls.c_pname <- parent;
+        let (r, n) = split cls.c_methods and p = get_class parent in
           cls.c_methods <- (replace_methods p.c_methods r p) @ n;
           cls.c_properties <- p.c_properties @ cls.c_properties;
           cls.c_size <- 4 * (List.length cls.c_properties);
