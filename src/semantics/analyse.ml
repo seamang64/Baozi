@@ -17,17 +17,16 @@ let p_type = ref VoidType
 
 let create_def kind t = { d_kind=kind; d_type = t }
 
-let create_method i r = {m_name=i.m_name; m_type=r.m_type; m_static=i.m_static; m_size=i.m_size; m_arguments=r.m_arguments; m_body=r.m_body; m_main=false; m_replace=false; m_origin=Mine}
+let create_method i r =
+  {m_name=i.m_name; m_type=r.m_type; m_static=i.m_static; m_size=i.m_size; m_arguments=r.m_arguments; m_body=r.m_body; m_main=false; m_replace=true; m_origin=Mine}
 
 let create_origin i c =
   match i.m_origin with
   | Mine -> Inherited c.c_name.x_name
   | o -> o
 
-let rec copy inherited cls=
-  match inherited with
-  | i::is -> {m_name=i.m_name; m_type=i.m_type; m_static=i.m_static; m_size=i.m_size; m_arguments=i.m_arguments; m_body=i.m_body; m_main=false; m_replace=false; m_origin = create_origin i cls} :: (copy is cls)
-  | [] -> []
+let copy i cls =
+  {m_name=i.m_name; m_type=i.m_type; m_static=i.m_static; m_size=i.m_size; m_arguments=i.m_arguments; m_body=i.m_body; m_main=false; m_replace=false; m_origin = create_origin i cls}
 
 let create_me cls =
   Prop({x_name="Me"; x_def=(create_def NoneKind VoidType)}, TempType (Ident cls.c_name.x_name))
@@ -212,7 +211,7 @@ let annotate_generics env generic =
       generic.g_ptype <- d;
       define generic.g_name.x_name (create_def ClassDef (GenericType (generic.g_name.x_name, d))) env
 
-let rec annotate_methods methods index env =
+let rec annotate_methods methods index env=
   match methods with
   | m::ms ->
       m.m_name.x_def <- create_def (MethodDef(vtableOffset + index, m.m_static)) (get_type m.m_type env);
@@ -245,7 +244,7 @@ let rec replace_method r inherited =
 let rec replace_methods inherited replacing cls =
   match replacing with
   | r::rs -> replace_method r (replace_methods inherited rs cls)
-  | [] -> copy inherited cls
+  | [] -> List.map (fun i -> copy i cls) inherited
 
 let rec split methods =
   match methods with
@@ -265,24 +264,17 @@ let annotate_members cls env =
         annotate_methods cls.c_methods 0 env'';
         annotate_properties cls.c_properties 0 env''
 
-let rec annotate_parent_type p env =
-  match p with
-  | TempType _ -> annotate_parent_type (get_type p env) env
-  | ClassType c -> annotate_parent c env
-  | GenericClassType (c, ts) -> annotate_parent c env; List.iter (fun (_, t) -> annotate_parent_type t env) ts
-  | _ -> raise InvalidParent
-
-and annotate_parent cls env =
+let rec annotate_parent cls env =
   match cls.c_pname with
   | TempType _ ->
       let parent = get_type cls.c_pname env in
-        annotate_parent_type parent env;
+        annotate_parent (get_class parent) env;
         cls.c_pname <- parent;
         let (r, n) = split cls.c_methods and p = get_class parent in
           cls.c_methods <- (replace_methods p.c_methods r p) @ n;
           cls.c_properties <- p.c_properties @ cls.c_properties;
           cls.c_size <- 4 * (List.length cls.c_properties);
-          cls.c_ancestors <- p :: p.c_ancestors;
+          cls.c_ancestors <- p :: p.c_ancestors
   | _ -> ()
 
 let modify_non_static c =

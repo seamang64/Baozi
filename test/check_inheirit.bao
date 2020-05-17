@@ -1,0 +1,15 @@
+Define A
+$>
+    Method DoNothing {a : A} => {}
+    $>
+        Return.
+    <$
+<$
+
+Define B <- A
+$>
+    ReplaceMethod DoNothing {b : B} => {}
+    $>
+        Return.
+    <$
+<$

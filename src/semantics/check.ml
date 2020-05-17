@@ -50,7 +50,9 @@ and check_compatible t1 t2 =
   | (GenericType (n1, d1), GenericType (n2, d2)) ->
       if n1 == n2 then ()
       else check_compatible t1 d2
+  | (ClassType c, GenericType(_, t)) -> check_compatible t1 t
   | (_, NilType) -> ()
+  | (VoidType, VoidType) -> ()
   | _ -> raise (TypeError((print_type t1), (print_type t2)))
 
 let validate_generics generics =
@@ -209,13 +211,19 @@ let rec check_stmt s ret =
   | Seq(ss) -> List.iter (fun st -> check_stmt st ret) ss
   | Nop -> ()
 
-let check_method meth =
+let check_method meth parent =
+  if meth.m_replace && meth.m_name.x_name.[0] != '%' then
+  begin
+    let p_meth = find_method meth.m_name parent and get_types args = List.map (fun (Prop(x, _)) -> get_type VoidType x.x_def.d_type) args in
+      check_compatible p_meth.m_name.x_def.d_type meth.m_name.x_def.d_type;
+      check_args (get_types meth.m_arguments) (get_types p_meth.m_arguments);
+  end;
   check_stmt meth.m_body meth.m_name.x_def.d_type
 
 let check_class c =
   validate_type c.c_pname;
   p_type := c.c_pname;
-  List.iter check_method c.c_methods
+  List.iter (fun m -> check_method m c.c_pname) c.c_methods
 
 let check_program (Program(cs)) =
   List.iter check_class cs
