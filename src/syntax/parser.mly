@@ -1,12 +1,20 @@
 %{
   open Tree
-  open Source
 %}
 
-%token <Tree.ident> IDENT
-%token <int> NUMBER
-%token <Keiko.symbol * string> STR
+/* Token names use underscores to denote their "type" for clarity of reading
+    - K : Keyword
+    - P : Punctuation
+    - O : Operator
+    - C : Constant
+*/
 
+/* Primitives */
+%token <Tree.ident> IDENT
+%token <int> C_NUMBER
+%token <Keiko.symbol * string> C_STR
+
+/* Keywords */
 %token K_DEFINE
 %token K_AS
 %token K_ARRAY
@@ -35,9 +43,11 @@
 %token K_STEP
 %token K_TEST
 
+/* Boolean Constants */
 %token C_TRUE
 %token C_FALSE
 
+/* Operators */
 %token O_PLUS
 %token O_TIMES
 %token O_MINUS
@@ -58,7 +68,9 @@
 %token O_NOT
 %token O_IS
 %token O_TYPEOF
+%nonassoc O_UMINUS
 
+/* Punctution */
 %token P_DOT
 %token P_COLON
 %token P_COMMA
@@ -75,29 +87,8 @@
 %token BADTOKEN
 %token EOF
 
-%left O_PLUS
-%left O_TIMES
-%left O_MINUS
-%left O_DIV
-%left O_MOD
-%left O_ASSIGN
-%left O_LEFTARROW
-%left O_LEFTARROWSQUARE
-%left O_EQUALS
-%left O_NOTEQUALS
-%left O_LESSTHAN
-%left O_GREATERTHAN
-%left O_LESSTHANEQ
-%left O_GREATERTHANEQ
-%left O_AND
-%left O_OR
-%left O_IS
-%nonassoc O_NOT
-%nonassoc O_UMINUS
-%nonassoc O_TYPEOF
-
+/* Program */
 %type <Tree.program> program
-
 %start program
 
 %%
@@ -116,12 +107,14 @@ cls :
   | K_DEFINE name parent generics P_START properties methods P_END
       { createClass($2, $3, $6, $7, $4) }
 
+/* Generic types for class */
 generics :
   | /* empty */
       { [] }
   | K_USING generic_list
       { $2 }
 
+/* List of generic definitions */
 generic_list :
   | name
       { [createGeneric $1 (TempType (Ident "Object"))] }
@@ -132,18 +125,21 @@ generic_list :
   | name O_LEFTARROW IDENT P_COMMA generic_list
       { (createGeneric $1 (TempType (Ident $3))) :: $5 }
 
+/* Parent type of class */
 parent :
   | /* empty */
       { TempType (Ident "Object") }
   | O_LEFTARROW ttype
       { TempType $2 };
 
+/* Properties for class */
 properties :
   | /* empty */
       { [] }
   | K_PROPERTIES P_START pairs P_END
       { $3 } ;
 
+/* List of methods */
 methods :
   | /* empty */
       { [] }
@@ -151,6 +147,8 @@ methods :
       { $1 :: $2 } ;
 
 meth :
+  | K_CLASSMETHOD K_MAIN P_LCURL P_RCURL P_DOUBLEARROW P_LCURL P_RCURL P_START stmts P_END
+      { createMethod(createName "Main", true, [], VoidType, $9, true, false) }
   | K_METHOD name P_LCURL pairs P_RCURL P_DOUBLEARROW mtype P_START stmts P_END
       { createMethod($2, false, $4, $7, $9, false, false) }
   | K_CLASSMETHOD name P_LCURL pairs P_RCURL P_DOUBLEARROW mtype P_START stmts P_END
@@ -159,15 +157,15 @@ meth :
       { createMethod($2, false, $4, $7, $9, false, true) }
   | K_CONSTRUCTOR P_LCURL pairs P_RCURL P_DOUBLEARROW mtype P_START stmts P_END
       { createMethod(createName "%constructor", false, $3, $6, $8, false, true) }
-  | K_CLASSMETHOD K_MAIN P_LCURL P_RCURL P_DOUBLEARROW P_LCURL P_RCURL P_START stmts P_END
-      { createMethod(createName "Main", true, [], VoidType, $9, true, false) }
 
+/* Type of a method */
 mtype :
   | ttype
       { TempType $1 }
   | P_LCURL P_RCURL
       { VoidType }
 
+/* Temporary type */
 ttype :
   | IDENT
       { Ident $1 }
@@ -176,16 +174,19 @@ ttype :
   | IDENT K_WITH P_LPAR type_list P_RPAR
       { Generic ($1, $4) }
 
+/* List of types for generic type */
 type_list :
   | ttype
       { [$1] }
   | ttype P_COMMA type_list
       { $1 :: $3 }
 
+/* Pair of a name and a type */
 pair:
   | name P_COLON ttype
       { Prop ($1, TempType $3) }
 
+/* List of pairs */
 pairs:
   | /* empty */
       { [] }
@@ -226,18 +227,20 @@ stmt1 :
   | K_FOR for_stmt K_STEP for_stmt K_TEST expr P_DOT body
       { ForStmt($2, $4, $6, $8) } ;
 
+/* Body of if/for/while statments */
 body :
-  | stmt
+  | stmt P_DOT
     { $1 }
   | P_START stmts P_END
     { $2 }
 
+/* Initial and step statments for for loop */
 for_stmt :
   | /* empty */
       { createEmptyStmt Nop }
   | stmt
       { $1 } ;
-
+/* else statment for if */
 elses :
   | /* empty */
       { createEmptyStmt Nop }
@@ -245,56 +248,66 @@ elses :
       { $2 };
 
 expr:
-  | name
-      { Name $1 }
-  | NUMBER
-      { Constant ($1, TempType (Ident "Int")) }
-  | STR
-      { let (lab, s) = $1 in String (lab, s) }
-  | O_TYPEOF expr
-      { TypeOf $2 }
-  | O_MINUS expr %prec O_UMINUS
-      { MethodCall($2, createName "uminus", []) }
-  | O_NOT expr
-      { MethodCall($2, createName "not", []) }
-  | expr O_PLUS expr
-      { MethodCall($1, createName "add", [$3]) }
-  | expr O_TIMES expr
-      { MethodCall($1, createName "times", [$3]) }
-  | expr O_MINUS expr
-      { MethodCall($1, createName "sub", [$3]) }
-  | expr O_DIV expr
-      { MethodCall($1, createName "div", [$3]) }
-  | expr O_MOD expr
-      { MethodCall($1, createName "mod", [$3]) }
-  | expr O_EQUALS expr
+  | simple
+      { $1 }
+  | simple O_EQUALS simple
       { MethodCall($1, createName "equals", [$3]) }
-  | expr O_NOTEQUALS expr
+  | simple O_NOTEQUALS simple
       { MethodCall($1, createName "notEquals", [$3]) }
-  | expr O_LESSTHAN expr
+  | simple O_LESSTHAN simple
       { MethodCall($1, createName "lessThan", [$3]) }
-  | expr O_GREATERTHAN expr
+  | simple O_GREATERTHAN simple
       { MethodCall($1, createName "greaterThan", [$3]) }
-  | expr O_LESSTHANEQ expr
+  | simple O_LESSTHANEQ simple
       { MethodCall($1, createName "lessThanEq", [$3]) }
-  | expr O_GREATERTHANEQ expr
+  | simple O_GREATERTHANEQ simple
       { MethodCall($1, createName "greaterThanEq", [$3]) }
-  | expr O_AND expr
+  | simple O_AND simple
       { MethodCall($1, createName "and", [$3]) }
-  | expr O_OR expr
+  | simple O_OR simple
       { MethodCall($1, createName "or", [$3]) }
-  | expr O_IS expr
+  | simple O_IS simple
       { MethodCall($1, createName "Is", [$3]) }
-  | expr P_LSQUARE expr P_RSQUARE
-      { Sub($1, $3) }
-  | K_NIL
-      { Nil }
   | expr O_RIGHTARROW name O_LEFTARROW P_LCURL arguments P_RCURL
       { MethodCall ($1, $3, $6) }
   | expr O_RIGHTARROW name
       { Property($1, $3) }
   | expr O_RIGHTARROW P_LSQUARE expr P_RSQUARE
       { Sub($1, $4) }
+
+simple :
+  | term
+      { $1 }
+  | O_MINUS term %prec O_UMINUS
+      { MethodCall($2, createName "uminus", []) }
+  | simple O_PLUS term
+      { MethodCall($1, createName "add", [$3]) }
+  | simple O_MINUS term
+      { MethodCall($1, createName "sub", [$3]) }
+  | O_TYPEOF name
+      { TypeOf $2 }
+
+term :
+  | factor
+      { $1 }
+  | term O_TIMES factor
+      { MethodCall($1, createName "times", [$3]) }
+  | term O_DIV factor
+      { MethodCall($1, createName "div", [$3]) }
+  | term O_MOD factor
+      { MethodCall($1, createName "mod", [$3]) }
+
+factor :
+  | name
+      { Name $1 }
+  | C_NUMBER
+      { Constant ($1, TempType (Ident "Int")) }
+  | C_STR
+      { let (lab, s) = $1 in String (lab, s) }
+  | O_NOT factor
+      { MethodCall($2, createName "not", []) }
+  | K_NIL
+      { Nil }
   | K_NEW ttype O_LEFTARROW P_LCURL arguments P_RCURL
       { MethodCall (New (createTypeName (TempType $2)), createName "%constructor", $5) }
   | K_NEW ttype O_LEFTARROWSQUARE expr P_RSQUARE
@@ -313,6 +326,7 @@ expr:
       { Constant (0, TempType (Ident "Bool")) }
   | P_LPAR expr P_RPAR
       { $2 }
+
 
 arguments :
   | /* empty */

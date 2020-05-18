@@ -142,7 +142,7 @@ and check_expr e =
       | _ -> raise UnknownConstant
     end
   | String _ -> string_def.d_type
-  | TypeOf e -> ignore(check_expr e); type_def.d_type
+  | TypeOf _ -> type_def.d_type
   | MethodCall (e1, m, args) ->
       let t = check_expr e1 in
         let meth = find_method m t in
@@ -171,9 +171,7 @@ and check_expr e =
 
 let check_return r ret =
   match (r, ret) with
-  | (Some e, ClassType _) ->
-      let t = check_expr e in check_compatible t ret
-  | (Some e, ArrayType _) ->
+  | (Some e, _) ->
       let t = check_expr e in check_compatible t ret
   | (None, VoidType) -> ()
   | _ -> raise InvalidReturn

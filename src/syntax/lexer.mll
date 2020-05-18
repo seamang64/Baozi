@@ -2,6 +2,7 @@
   open Parser
   open Keiko
   open Source
+  open Errors
 
   let make_hash n ps =
     let t = Hashtbl.create n in
@@ -10,6 +11,7 @@
   let next_line lexbuf =
     incr lineno; Source.note_line !lineno lexbuf
 
+  (* Keyword hash table *)
   let kwtable = make_hash 64
   [
     "Define", K_DEFINE;
@@ -59,29 +61,23 @@
         Hashtbl.replace idtable s ();
         IDENT s
 
-  let get_vars () =
-    Hashtbl.fold (fun k () ks -> k::ks) idtable []
-
   let strtable = ref []
 
   let get_string s =
     let lab = gen_sym () in
       strtable := (lab, s)::!strtable;
-      STR (lab, s)
+      C_STR (lab, s)
 }
 
 let letter = ['A'-'Z''a'-'z']
 let digit = ['0'-'9']
-let hexdigit = ['0'-'9''A'-'F']
-let q = '\''
 let qq = '"'
-let notq = [^'\'''\n']
 let notqq = [^'"''\n']
 
 rule token = parse
     letter (letter | digit | '_')* as s
                         { lookup s }
-  | digit+ as s         { NUMBER (int_of_string s) }
+  | digit+ as s         { C_NUMBER (int_of_string s) }
   | qq (notqq* as s) qq { get_string s }
 
   | "+"                 { O_PLUS }
@@ -113,8 +109,16 @@ rule token = parse
   | "$>"                { P_START }
   | "<$"                { P_END }
 
+  | "!!"                { comment lexbuf; token lexbuf}
   | [' ''\t']+          { token lexbuf }
   | "\r"                { token lexbuf }
   | "\n"                { next_line lexbuf; token lexbuf }
   | _                   { BADTOKEN }
   | eof                 { EOF }
+
+and comment =
+  parse
+    | "!!"              { () }
+    | "\n"              { next_line lexbuf; comment lexbuf}
+    | _                 { comment lexbuf }
+    | eof               { raise UnexpectedEnd }

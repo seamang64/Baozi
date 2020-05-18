@@ -3,19 +3,24 @@ open Errors
 open Keiko
 
 type ident = string
+
+(* Temporary type before annotation *)
 and ttype =
     Ident of ident
   | Array of ttype
   | Generic of ident * ttype list
 
+(* Origin of method *)
 and origin =
     Mine
   | Inherited of string
 
+(* Generic type with name and most general type *)
 and generic_type =
     { g_name: name;
       mutable g_ptype: def_type}
 
+(* Language constructs *)
 and expr =
     Name of name
   | Sub of expr * expr
@@ -24,7 +29,7 @@ and expr =
   | Property of expr * name
   | Constant of int * def_type
   | String of symbol * string
-  | TypeOf of expr
+  | TypeOf of name
   | New of name
   | NewArray of name * expr
   | Parent
@@ -66,6 +71,10 @@ and c_class =
     mutable c_ancestors: c_class list;
     c_generics: generic_type list }
 
+and program =
+  Program of c_class list
+
+(* Kind of a name *)
 and def_kind =
   | ClassDef
   | VariableDef of int
@@ -73,10 +82,12 @@ and def_kind =
   | MethodDef of int * bool
   | NoneKind
 
+(* Name defintion *)
 and def =
   { d_kind: def_kind;
     mutable d_type: def_type}
 
+(* Type of name *)
 and def_type =
   | ClassType of c_class
   | ArrayType of def_type
@@ -90,9 +101,7 @@ and name =
   { x_name: ident;
     mutable x_def: def}
 
-and program =
-  Program of c_class list
-
+(* Enviroment of idents to defintions *)
 module IdMap =
   Map.Make(struct
     type t = ident
@@ -115,6 +124,7 @@ let empty = Env(IdMap.empty)
 
 let empty_def = {d_kind=NoneKind; d_type=VoidType}
 
+(* create functions for parser *)
 let createStmt s =
   { s_guts=s; s_line=(!Source.lineno) }
 
@@ -123,8 +133,8 @@ let createEmptyStmt s =
 
 let seq =
   function
-      [] -> createEmptyStmt Nop  (* Use Skip in place of Seq [] *)
-    | [s] -> s                   (* Don't use a Seq node for one element *)
+    | [] -> createEmptyStmt Nop       (* Use Nop in place of Seq [] *)
+    | [s] -> s                        (* Don't use a Seq node for one element *)
     | ss -> createEmptyStmt (Seq ss)
 
 let createClass (n, p, props, meths, generics) =

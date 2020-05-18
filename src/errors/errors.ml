@@ -36,6 +36,8 @@ exception InvalidGeneric of string
 
 exception InvalidParent
 
+exception UnexpectedEnd
+
 let print_exception e =
   match e with
   | UnknownName n -> printf "Error: The name '%s' does not exist in the current context\n" n
@@ -56,4 +58,5 @@ let print_exception e =
   | InvalidExpression -> printf "An error occured when evaluating an expression\n"
   | InvalidGeneric s -> printf "Error in creating a generic object. %s\n" s
   | InvalidParent -> printf "Cannot inheirit from an Array type.\n"
+  | UnexpectedEnd -> printf "Error: End of file in comment\n."
   | _ -> printf "Unknown Error\n";

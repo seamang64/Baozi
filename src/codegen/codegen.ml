@@ -70,7 +70,7 @@ and gen_expr e =
         GLOBAL "baozi.makeString";
         CALLW 2
       ]
-  | TypeOf (Name n) ->
+  | TypeOf n ->
       SEQ [
         GLOBAL (n.x_name ^ ".%desc");
         GLOBAL "Type.%desc";
