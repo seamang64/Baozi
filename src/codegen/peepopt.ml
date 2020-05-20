@@ -43,10 +43,10 @@ let print_method m =
 
 let prim_print m =
   match m with
-  | "Output.String" -> "baozi.print"
-  | "Output.StringLn" -> "baozi.println"
-  | "Output.String" -> "baozi.printnum"
-  | "Output.StringLn" -> "baozi.printnumln"
+  | "Output.String" -> "baozi.%print"
+  | "Output.StringLn" -> "baozi.%println"
+  | "Output.String" -> "baozi.%printnum"
+  | "Output.StringLn" -> "baozi.%printnumln"
   | _ -> raise InvalidExpression
 
 (* |find_label| -- find data about equivalence class of a label *)
@@ -112,13 +112,13 @@ let ruleset replace =
     | GLOBAL s :: GLOBAL m :: CALLW 1 :: _ when print_method m ->
         replace 2 [CONST (int_of_prim s); GLOBAL (prim_print m); CALLW 1]
 
-    | CONST x :: GLOBAL s :: GLOBAL "baozi.makePrim" :: CALLW _ :: LDNW 4 :: _ when prim_class s ->
+    | CONST x :: GLOBAL s :: GLOBAL "baozi.%makePrim" :: CALLW _ :: LDNW 4 :: _ when prim_class s ->
         replace 5 [CONST x]
-    | CONST x :: GLOBAL s :: GLOBAL "baozi.makePrim" :: STKMAP _ :: CALLW _ :: LDNW 4 :: _ when prim_class s ->
+    | CONST x :: GLOBAL s :: GLOBAL "baozi.%makePrim" :: STKMAP _ :: CALLW _ :: LDNW 4 :: _ when prim_class s ->
         replace 6 [CONST x]
-    | CONST x :: GLOBAL s :: GLOBAL "baozi.makePrim" :: CALLW _ :: GLOBAL m :: CALLW 1 :: _ when (prim_class s) && (print_method m) ->
+    | CONST x :: GLOBAL s :: GLOBAL "baozi.%makePrim" :: CALLW _ :: GLOBAL m :: CALLW 1 :: _ when (prim_class s) && (print_method m) ->
         replace 6 [CONST x; GLOBAL (prim_print m); CALLW 1]
-    | GLOBAL lab :: CONST _ :: GLOBAL "baozi.makeString" :: CALLW 2 :: GLOBAL m :: CALLW 1 :: _ when print_method m ->
+    | GLOBAL lab :: CONST _ :: GLOBAL "baozi.%makeString" :: CALLW 2 :: GLOBAL m :: CALLW 1 :: _ when print_method m ->
         replace 6 [GLOBAL lab; GLOBAL (prim_print m); CALLW 1]
 
     | CONST n :: LDI :: _ ->

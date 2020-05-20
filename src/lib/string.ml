@@ -6,7 +6,7 @@ open Type
 open Object
 
 let rec string_class =
-  { c_name=string_name; c_pname=VoidType; c_size=4; c_properties=[Prop(length, ClassType integer_class)];
+  { c_name=string_name; c_ptype=VoidType; c_size=4; c_properties=[Prop(length, ClassType integer_class)];
       c_methods=[method_equals; method_get_type; method_is; method_print; method_add]; c_ancestors=[]; c_generics=[] }
 
 and string_name =

@@ -64,7 +64,7 @@ and m_method =
 
 and c_class =
   { c_name: name;
-    mutable c_pname: def_type;
+    mutable c_ptype: def_type;
     mutable c_size: int;
     mutable c_properties: property list;
     mutable c_methods: m_method list;
@@ -138,7 +138,7 @@ let seq =
     | ss -> createEmptyStmt (Seq ss)
 
 let createClass (n, p, props, meths, generics) =
-  { c_name=n; c_pname=p; c_size=0; c_properties=props; c_methods=meths; c_ancestors=[]; c_generics=generics }
+  { c_name=n; c_ptype=p; c_size=0; c_properties=props; c_methods=meths; c_ancestors=[]; c_generics=generics }
 
 let createGeneric n t =
   { g_name=n; g_ptype=t }

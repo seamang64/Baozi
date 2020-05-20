@@ -17,16 +17,19 @@ let p_type = ref VoidType
 
 let create_def kind t = { d_kind=kind; d_type = t }
 
+(* Replace inheirited method with new method *)
 let create_method i r =
-  {m_name=i.m_name; m_type=r.m_type; m_static=i.m_static; m_size=i.m_size; m_arguments=r.m_arguments; m_body=r.m_body; m_main=false; m_replace=true; m_origin=Mine}
+  { m_name=i.m_name; m_type=r.m_type; m_static=i.m_static; m_size=i.m_size; m_arguments=r.m_arguments; m_body=r.m_body; m_main=false; m_replace=true; m_origin=Mine }
 
+(* Get the origin of a method *)
 let create_origin i c =
   match i.m_origin with
   | Mine -> Inherited c.c_name.x_name
   | o -> o
 
+(* copy inheirited method *)
 let copy i cls =
-  {m_name=i.m_name; m_type=i.m_type; m_static=i.m_static; m_size=i.m_size; m_arguments=i.m_arguments; m_body=i.m_body; m_main=false; m_replace=false; m_origin = create_origin i cls}
+  { m_name=i.m_name; m_type=i.m_type; m_static=i.m_static; m_size=i.m_size; m_arguments=i.m_arguments; m_body=i.m_body; m_main=false; m_replace=false; m_origin = create_origin i cls }
 
 let create_me cls =
   Prop({x_name="Me"; x_def=(create_def NoneKind VoidType)}, TempType (Ident cls.c_name.x_name))
@@ -39,6 +42,7 @@ let rec get_class d =
   | GenericType (_, d) -> get_class d
   | _ -> raise InvalidExpression
 
+(* Get proper type from temp type *)
 let rec get_temp_type t env =
   match t with
   | Ident n -> let d = lookup n env in d.d_type
@@ -46,7 +50,7 @@ let rec get_temp_type t env =
   | Generic (n, ts) ->
       let c = get_class (lookup n env).d_type in
         try GenericClassType (c, List.combine (List.map (fun g -> g.g_name.x_name) c.c_generics) (List.map (fun x -> get_temp_type x env) ts))
-          with Invalid_argument e -> raise (InvalidGeneric e)
+          with Invalid_argument _ -> raise InvalidGeneric
 
 let get_type t env =
   match t with
@@ -59,6 +63,7 @@ let rec print_temp_type t =
   | Array d -> sprintf "Array of %s" (print_temp_type d)
   | _ -> "A Generic"
 
+(* Find a method within an class *)
 let find_method meth cls =
   match cls with
   | ClassType c ->
@@ -67,6 +72,7 @@ let find_method meth cls =
           Not_found -> raise (UnknownName meth)
       end
   | ArrayType _ ->
+      (* Arrays only have methods from Array *)
       begin
         try (List.find (fun m -> meth = m.m_name.x_name) array_class.c_methods).m_name.x_def with
           Not_found -> raise (UnknownName meth)
@@ -77,6 +83,7 @@ let find_method meth cls =
           Not_found -> raise (UnknownName meth)
       end
   | GenericType (_, d) ->
+      (* Generic types are treated as their most general type *)
       let c = get_class d in
       begin
         try (List.find (fun m -> meth = m.m_name.x_name) c.c_methods).m_name.x_def with
@@ -86,54 +93,62 @@ let find_method meth cls =
   | NilType -> raise (UnknownName meth)
   | TempType n -> raise (UnannotatedName (print_temp_type n))
 
+(* Find a property within an class *)
 let find_properties prop cls =
   match cls with
   | ClassType c ->
       begin
-        try List.find (fun n -> prop.x_name = n.x_name) (List.map (fun (Prop(n, _)) -> n) c.c_properties) with
+        try (List.find (fun n -> prop.x_name = n.x_name) (List.map (fun (Prop(n, _)) -> n) c.c_properties)).x_def with
           Not_found -> raise (UnknownName prop.x_name)
       end
   | ArrayType _ ->
+      (* Arrays only have properties from Array *)
       begin
-        try List.find (fun n -> prop.x_name = n.x_name) (List.map (fun (Prop(n, _)) -> n) array_class.c_properties) with
+        try (List.find (fun n -> prop.x_name = n.x_name) (List.map (fun (Prop(n, _)) -> n) array_class.c_properties)).x_def with
           Not_found -> raise (UnknownName prop.x_name)
       end
   | GenericClassType (c, _) ->
       begin
-        try List.find (fun n -> prop.x_name = n.x_name) (List.map (fun (Prop(n, _)) -> n) c.c_properties) with
+        try (List.find (fun n -> prop.x_name = n.x_name) (List.map (fun (Prop(n, _)) -> n) c.c_properties)).x_def with
           Not_found -> raise (UnknownName prop.x_name)
       end
   | GenericType (_, d) ->
+      (* Generic types are treated as their most general type *)
       let c = get_class d in
       begin
-        try List.find (fun n -> prop.x_name = n.x_name) (List.map (fun (Prop(n, _)) -> n) c.c_properties) with
+        try (List.find (fun n -> prop.x_name = n.x_name) (List.map (fun (Prop(n, _)) -> n) c.c_properties)).x_def with
           Not_found -> raise (UnknownName prop.x_name)
       end
   | VoidType -> raise VoidOperation
   | TempType n -> raise (UnannotatedName (print_temp_type n))
   | NilType -> raise (UnknownName prop.x_name)
 
-let rec annotate_classes classes env =
-  match classes with
-  | c::cs -> c.c_name.x_def <- create_def ClassDef (ClassType c);
-            let env' = define c.c_name.x_name c.c_name.x_def env in
-              annotate_classes cs env'
-  | _ -> env
+(* Add classes to environment *)
+let annotate_classes classes env =
+  let annotate c e =
+    c.c_name.x_def <- create_def ClassDef (ClassType c);
+    define c.c_name.x_name c.c_name.x_def e
+  in List.fold_right annotate classes env
 
-let rec annotate_arguments args index env =
-  match args with
-  | (Prop(x, t))::props ->
-      x.x_def <- create_def (VariableDef(argumentOffset + index)) (get_type t env);
-      let env' = define x.x_name x.x_def env in
-        annotate_arguments props (index+4) env'
-  | _ -> env
+(* Add Arguments to environment *)
+let annotate_arguments args env =
+  let rec annotate a i e =
+    match a with
+    | (Prop(x, t))::props ->
+        x.x_def <- create_def (VariableDef(argumentOffset + i)) (get_type t e);
+        let env' = define x.x_name x.x_def e in
+          annotate props (i+4) env'
+    | _ -> e
+  in annotate args 0 env
 
-let rec annotate_properties properties index env =
-  match properties with
-  | (Prop(x, t))::props ->
-      x.x_def <- create_def (PropertyDef(propertyOffset + index)) (get_type t env);
-      annotate_properties props (index+4) env
-  | _ -> ()
+let annotate_properties properties env =
+  let rec annotate ps i e =
+    match ps with
+    | (Prop(x, t))::props ->
+        x.x_def <- create_def (PropertyDef(propertyOffset + i)) (get_type t e);
+        annotate props (i+4) e
+    | _ -> ()
+  in annotate properties 0 env
 
 let rec annotate_expr expr env =
   match expr with
@@ -144,21 +159,25 @@ let rec annotate_expr expr env =
   | MethodCall (e, m, args) ->
       (* Annotate the calling object *)
       let c = annotate_expr e env in
-      (* Find method that is being call *)
+      (* Find method that is being called *)
       m.x_def <- find_method m.x_name c;
       (* Annotate all the arguments *)
       List.iter (fun x -> ignore(annotate_expr x env)) args;
       (* Return the type of the method *)
       m.x_def.d_type
   | Property (e, n) ->
+      (* Annotate the calling object *)
       let c = annotate_expr e env in
-      n.x_def <- (find_properties n c).x_def;
+      (* Find the property in the calls *)
+      n.x_def <- find_properties n c;
+      (* Return the type of the property *)
       n.x_def.d_type
   | Sub (e1, e2) ->
+      (* Annotate the index *)
       ignore (annotate_expr e2 env);
       begin
         match annotate_expr e1 env with
-        | ArrayType d -> d
+        | ArrayType d -> d        (* Cannot use sub notation on anything expect arrays *)
         | _ -> raise InvalidSub
       end
   | New n ->
@@ -175,7 +194,9 @@ let rec annotate_stmt stmt env =
   match stmt.s_guts with
   | Assign (e1, e2) -> ignore(annotate_expr e1 env); ignore(annotate_expr e2 env); env
   | Delc (n, t, e) ->
+      (* Annotate the assinged value *)
       ignore(annotate_expr e env);
+      (* Add this new variable to the environment *)
       n.x_def <- create_def (VariableDef(variableOffset - !variableIndex)) (get_type t env);
       variableIndex := !variableIndex + 4;
       define n.x_name n.x_def env
@@ -206,24 +227,30 @@ let rec annotate_stmt stmt env =
 
 let annotate_generics env generic =
   match generic.g_ptype with
-  | VoidType -> define generic.g_name.x_name (create_def ClassDef (GenericType (generic.g_name.x_name, (ClassType object_class)))) env
-  | t -> let d = get_type t env in
+  | VoidType ->
+      (* VoidType denotes no parent type. Most general type therefore is Object *)
+      define generic.g_name.x_name (create_def ClassDef (GenericType (generic.g_name.x_name, (ClassType object_class)))) env
+  | t ->
+      let d = get_type t env in
       generic.g_ptype <- d;
+      (* Create new generic type in enviroment with it's mpost general type *)
       define generic.g_name.x_name (create_def ClassDef (GenericType (generic.g_name.x_name, d))) env
 
-let rec annotate_methods methods index env=
-  match methods with
-  | m::ms ->
-      m.m_name.x_def <- create_def (MethodDef(vtableOffset + index, m.m_static)) (get_type m.m_type env);
-      annotate_methods ms (index + 4) env
-  | _ -> ()
+let annotate_methods methods env=
+  let rec annotate meths i e =
+    match meths with
+    | m::ms ->
+        m.m_name.x_def <- create_def (MethodDef(vtableOffset + i, m.m_static)) (get_type m.m_type e);
+        annotate ms (i + 4) e
+    | _ -> ()
+  in annotate methods 0 env
 
 let annotate_body meth cls env =
   match meth.m_origin with
-  | Mine ->
+  | Mine -> (* Only annotate if this is a new method *)
       if meth.m_main then mainMethod := cls.c_name.x_name ^ "." ^ meth.m_name.x_name;
-      let env' = List.fold_left annotate_generics env cls.c_generics in
-      let newEnv = annotate_arguments meth.m_arguments 0 env' in
+      let env' = List.fold_left annotate_generics env cls.c_generics in (* Add generic types to environment *)
+      let newEnv = annotate_arguments meth.m_arguments env' in        (* Add arguments to environment *)
       variableIndex := 0;
       p_type := ClassType cls;
       ignore(annotate_stmt meth.m_body newEnv);
@@ -241,11 +268,7 @@ let rec replace_method r inherited =
         else i :: (replace_method r is)
   | [] -> []
 
-let rec replace_methods inherited replacing cls =
-  match replacing with
-  | r::rs -> replace_method r (replace_methods inherited rs cls)
-  | [] -> List.map (fun i -> copy i cls) inherited
-
+(* Split methods into replacing and normal *)
 let rec split methods =
   match methods with
   | m::ms ->
@@ -260,18 +283,18 @@ let annotate_members cls env =
       function
         | GenericClassType (_, ts) -> ts
         | _ -> [] in
-      let env'' = List.fold_left (fun e (i, t) -> define i (create_def ClassDef t) e) env' (generics cls.c_pname) in
-        annotate_methods cls.c_methods 0 env'';
-        annotate_properties cls.c_properties 0 env''
+      let env'' = List.fold_left (fun e (i, t) -> define i (create_def ClassDef t) e) env' (generics cls.c_ptype) in
+        annotate_methods cls.c_methods env'';
+        annotate_properties cls.c_properties env''
 
 let rec annotate_parent cls env =
-  match cls.c_pname with
-  | TempType _ ->
-      let parent = get_type cls.c_pname env in
-        annotate_parent (get_class parent) env;
-        cls.c_pname <- parent;
+  match cls.c_ptype with
+  | TempType _ -> (* If the parent has not been annotated *)
+      let parent = get_type cls.c_ptype env in
+        annotate_parent (get_class parent) env; (* Recursivly annotate the parent of the parent *)
+        cls.c_ptype <- parent;                  (* Update own parent *)
         let (r, n) = split cls.c_methods and p = get_class parent in
-          cls.c_methods <- (replace_methods p.c_methods r p) @ n;
+          cls.c_methods <- (List.fold_right replace_method r (List.map (fun i -> copy i p) p.c_methods)) @ n;
           cls.c_properties <- p.c_properties @ cls.c_properties;
           cls.c_size <- 4 * (List.length cls.c_properties);
           cls.c_ancestors <- p :: p.c_ancestors
@@ -283,6 +306,7 @@ let modify_non_static c =
     else ()
   in List.iter modify c.c_methods
 
+(* Annotate the whole program *)
 let annotate_program (Program(cs)) =
   let env = annotate_classes cs start_env in
     List.iter modify_non_static cs;

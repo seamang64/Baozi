@@ -8,6 +8,7 @@ open Lib.Lib_all
 
 let me_pointer = 4
 let mainMethod = ref ""
+let p_name = ref ""
 
 let get_size x =
   match x.x_def.d_type with
@@ -20,6 +21,12 @@ let get_name n =
     | ClassType c -> GLOBAL (c.c_name.x_name ^ ".%desc")
     | GenericClassType (c, _) -> GLOBAL (c.c_name.x_name ^ ".%desc")
     | _ -> raise (InvalidNew n.x_name)
+
+let get_pname t =
+  match t with
+    | ClassType c -> c.c_name.x_name
+    | GenericClassType (c, _) -> c.c_name.x_name
+    | _ -> raise IncorrectSyntaxError
 
 let is_int x =
   match x.x_def.d_type with
@@ -135,26 +142,12 @@ and gen_call expr meth args =
   match expr with
   | Parent ->
       SEQ [
-        (* evaulate arguments *)
+        (* evaluate the arugments *)
         SEQ (List.map gen_expr (List.rev args));
-        (* evaulate calling object *)
+        (* evaluate the calling object as an argument *)
         gen_expr expr;
-        (* duplicate, as the calling object is also an argument *)
-        DUP 0;
-        (* Get the object's class descriptor *)
-        LOADW;
-        (* Get the ancestor table at offset 4 *)
-        CONST 4;
-        OFFSET;
-        LOADW;
-        (* Get the parent class descriptor *)
-        CONST 8;
-        OFFSET;
-        LOADW;
-        (* get the offset for the method *)
-        gen_addr meth;
-        (* load the method *)
-        LOADW;
+        (* get the method from the parent *)
+        GLOBAL (!p_name ^ "." ^ meth.x_name);
         (* call the method *)
         CALLW (List.length args + 1)
       ]
@@ -267,7 +260,7 @@ and gen_method classname m =
       ]
   | Inherited _ -> NOP
 
-and gen_methods c = SEQ (List.map (gen_method c.c_name.x_name) c.c_methods)
+and gen_methods c = p_name := get_pname c.c_ptype; SEQ (List.map (gen_method c.c_name.x_name) c.c_methods)
 
 and gen_method_name meth cls =
   match meth.m_origin with

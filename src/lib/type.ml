@@ -3,7 +3,7 @@ open Syntax.Keiko
 open Bool
 
 let rec type_class =
-  { c_name=type_name; c_pname=VoidType; c_size=4; c_properties=[]; c_methods=[method_equals]; c_ancestors=[]; c_generics=[] }
+  { c_name=type_name; c_ptype=VoidType; c_size=4; c_properties=[]; c_methods=[method_equals]; c_ancestors=[]; c_generics=[] }
 
 and type_name =
   { x_name="Type"; x_def=type_def}

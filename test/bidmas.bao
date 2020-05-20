@@ -1,8 +1,8 @@
 Define Program
 $>
-	ClassMethod Main {} => {}
-	$>
-		Output->IntLn<-{5 + 4 * 2}.
-		Return.
-	<$
+    ClassMethod Main {} => {}
+    $>
+        Output->IntLn<-{3 - 4 + 2}.
+        Return.
+    <$
 <$

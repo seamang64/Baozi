@@ -24,36 +24,43 @@ let rec print_type t =
   | TempType d -> sprintf "Temp %s" (print_temp_type d)
   | NilType -> "Nil"
 
-let rec check_strict_compatible t1 t2 =
-  match (t1, t2) with
-  | (ClassType c1, ClassType c2) ->
-      if c1.c_name.x_name == c2.c_name.x_name then ()
-      else raise (TypeError((print_type t1), (print_type t2)))
-  | (ArrayType d1, ArrayType d2) -> check_strict_compatible d1 d2
-  | (GenericType (n1, d1), GenericType (n2, d2)) ->
-      if n1 == n2 then ()
-      else raise (TypeError((print_type t1), (print_type t2)))
-  | _ -> check_compatible t1 t2;
+let rec check_strict_compatible type1 type2 =
+  let pt1 = ref VoidType and pt2 = ref VoidType in
+  let rec check t1 t2 =
+    match (t1, t2) with
+    | (ClassType c1, ClassType c2) ->
+        if c1.c_name.x_name == c2.c_name.x_name then ()
+        else raise (TypeError((print_type t1), (print_type t2)))
+    | (ArrayType d1, ArrayType d2) -> check d1 d2
+    | (GenericType (n1, d1), GenericType (n2, d2)) ->
+        if n1 == n2 then ()
+        else raise (TypeError((print_type t1), (print_type t2)))
+    | (_, NilType) -> ()
+    | _ -> raise (TypeError((print_type !pt1), (print_type !pt2)))
+  in pt1 := type1; pt2 := type2; check type1 type2
 
-and check_compatible t1 t2 =
-  match (t1, t2) with
-  | (ClassType c1, ClassType c2) ->
-      if c1.c_name.x_name == c2.c_name.x_name then ()
-      else check_compatible t1 c2.c_pname
-  | (GenericClassType (c1, ts1), GenericClassType (c2, ts2)) ->
-      check_compatible (ClassType c1) (ClassType c2);
-      List.iter (fun ((_, x),(_, y)) -> check_strict_compatible x y) (List.combine ts1 ts2)
-  | (ClassType c1, GenericClassType (c2,_)) ->
-      if c1.c_name.x_name == c2.c_name.x_name then ()
-      else check_compatible t1 c2.c_pname
-  | (ArrayType d1, ArrayType d2) -> check_compatible d1 d2
-  | (GenericType (n1, d1), GenericType (n2, d2)) ->
-      if n1 == n2 then ()
-      else check_compatible t1 d2
-  | (ClassType c, GenericType(_, t)) -> check_compatible t1 t
-  | (_, NilType) -> ()
-  | (VoidType, VoidType) -> ()
-  | _ -> raise (TypeError((print_type t1), (print_type t2)))
+and check_compatible type1 type2 =
+  let pt1 = ref VoidType and pt2 = ref VoidType in
+  let rec check t1 t2 =
+    match (t1, t2) with
+    | (ClassType c1, ClassType c2) ->
+        if c1.c_name.x_name == c2.c_name.x_name then ()
+        else check t1 c2.c_ptype (* Recurse and check t1 against t2's paraent type *)
+    | (GenericClassType (c1, ts1), GenericClassType (c2, ts2)) ->
+        check (ClassType c1) (ClassType c2);
+        List.iter2 (fun (_, x) (_, y) -> check_strict_compatible x y) ts1 ts2
+    | (ClassType c1, GenericClassType (c2,_)) ->
+        if c1.c_name.x_name == c2.c_name.x_name then ()
+        else check t1 c2.c_ptype
+    | (ArrayType d1, ArrayType d2) -> check d1 d2
+    | (GenericType (n1, d1), GenericType (n2, d2)) ->
+        if n1 == n2 then ()
+        else check t1 d2
+    | (ClassType c, GenericType(_, t)) -> check t1 t
+    | (_, NilType) -> ()
+    | (VoidType, VoidType) -> ()
+    | _ -> raise (TypeError((print_type !pt1), (print_type !pt2)))
+  in pt1 := type1; pt2 := type2; check type1 type2
 
 let validate_generics generics =
   let rec validate prev =
@@ -219,9 +226,9 @@ let check_method meth parent =
   check_stmt meth.m_body meth.m_name.x_def.d_type
 
 let check_class c =
-  validate_type c.c_pname;
-  p_type := c.c_pname;
-  List.iter (fun m -> check_method m c.c_pname) c.c_methods
+  validate_type c.c_ptype;
+  p_type := c.c_ptype;
+  List.iter (fun m -> check_method m c.c_ptype) c.c_methods
 
 let check_program (Program(cs)) =
   List.iter check_class cs

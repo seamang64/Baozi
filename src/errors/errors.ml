@@ -32,7 +32,7 @@ exception IncorrectSyntaxError
 
 exception InvalidExpression
 
-exception InvalidGeneric of string
+exception InvalidGeneric
 
 exception InvalidParent
 
@@ -56,7 +56,7 @@ let print_exception e =
   | NoneKindError n -> printf "%s has defintion kind of None\n" n
   | IncorrectSyntaxError -> printf "Incorrect syntax\n"
   | InvalidExpression -> printf "An error occured when evaluating an expression\n"
-  | InvalidGeneric s -> printf "Error in creating a generic object. %s\n" s
+  | InvalidGeneric -> printf "Error in creating a generic object.\n"
   | InvalidParent -> printf "Cannot inheirit from an Array type.\n"
   | UnexpectedEnd -> printf "Error: End of file in comment\n."
   | _ -> printf "Unknown Error\n";
