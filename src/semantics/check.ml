@@ -24,7 +24,7 @@ let rec print_type t =
   | TempType d -> sprintf "Temp %s" (print_temp_type d)
   | NilType -> "Nil"
 
-let rec check_strict_compatible type1 type2 =
+let check_strict_comp type1 type2 =
   let pt1 = ref VoidType and pt2 = ref VoidType in
   let rec check t1 t2 =
     match (t1, t2) with
@@ -39,7 +39,7 @@ let rec check_strict_compatible type1 type2 =
     | _ -> raise (TypeError((print_type !pt1), (print_type !pt2)))
   in pt1 := type1; pt2 := type2; check type1 type2
 
-and check_compatible type1 type2 =
+let check_compatible type1 type2 =
   let pt1 = ref VoidType and pt2 = ref VoidType in
   let rec check t1 t2 =
     match (t1, t2) with
@@ -48,7 +48,7 @@ and check_compatible type1 type2 =
         else check t1 c2.c_ptype (* Recurse and check t1 against t2's paraent type *)
     | (GenericClassType (c1, ts1), GenericClassType (c2, ts2)) ->
         check (ClassType c1) (ClassType c2);
-        List.iter2 (fun (_, x) (_, y) -> check_strict_compatible x y) ts1 ts2
+        List.iter2 (fun (_, x) (_, y) -> check_strict_comp x y) ts1 ts2
     | (ClassType c1, GenericClassType (c2,_)) ->
         if c1.c_name.x_name == c2.c_name.x_name then ()
         else check t1 c2.c_ptype

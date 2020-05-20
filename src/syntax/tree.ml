@@ -97,11 +97,12 @@ and def_type =
   | VoidType
   | NilType
 
+(* Name for a class, method, property or variable *)
 and name =
   { x_name: ident;
     mutable x_def: def}
 
-(* Enviroment of idents to defintions *)
+(* Environment of idents to definitions *)
 module IdMap =
   Map.Make(struct
     type t = ident

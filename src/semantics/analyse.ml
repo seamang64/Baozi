@@ -45,10 +45,11 @@ let rec get_class d =
 (* Get proper type from temp type *)
 let rec get_temp_type t env =
   match t with
-  | Ident n -> let d = lookup n env in d.d_type
-  | Array t' -> ArrayType (get_temp_type t' env)
+  | Ident n -> let d = lookup n env in d.d_type (* Find the name n in the enviroment *)
+  | Array t' -> ArrayType (get_temp_type t' env) (* Recurse on the type of the array elements *)
   | Generic (n, ts) ->
-      let c = get_class (lookup n env).d_type in
+      let c = get_class (lookup n env).d_type in (* Find the name in in the enviroment *)
+        (* Then do the same for all the types that are passed to the type variables *)
         try GenericClassType (c, List.combine (List.map (fun g -> g.g_name.x_name) c.c_generics) (List.map (fun x -> get_temp_type x env) ts))
           with Invalid_argument _ -> raise InvalidGeneric
 
@@ -97,7 +98,7 @@ let find_method meth cls =
 let find_properties prop cls =
   match cls with
   | ClassType c ->
-      begin
+      begin (* Find a method in c with the same name as meth *)
         try (List.find (fun n -> prop.x_name = n.x_name) (List.map (fun (Prop(n, _)) -> n) c.c_properties)).x_def with
           Not_found -> raise (UnknownName prop.x_name)
       end
