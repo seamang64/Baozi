@@ -33,6 +33,12 @@ let prim_class s =
   | "Bool.%desc" -> true
   | _ -> false
 
+let prim_type s =
+  match s with
+  | "Int" -> true
+  | "Object" -> true
+  | _ -> false
+
 let print_method m =
   match m with
   | "Output.String" -> true
@@ -45,8 +51,18 @@ let prim_print m =
   match m with
   | "Output.String" -> "baozi.%print"
   | "Output.StringLn" -> "baozi.%println"
-  | "Output.String" -> "baozi.%printnum"
-  | "Output.StringLn" -> "baozi.%printnumln"
+  | "Output.Int" -> "baozi.%printnum"
+  | "Output.IntLn" -> "baozi.%printnumln"
+  | _ -> raise InvalidExpression
+
+let get_op n =
+  match n with
+  | 12 -> Neq
+  | 52 -> Eq
+  | 56 -> Geq
+  | 60 -> Leq
+  | 64 -> Gt
+  | 68 -> Lt
   | _ -> raise InvalidExpression
 
 (* |find_label| -- find data about equivalence class of a label *)
@@ -112,14 +128,19 @@ let ruleset replace =
     | GLOBAL s :: GLOBAL m :: CALLW 1 :: _ when print_method m ->
         replace 2 [CONST (int_of_prim s); GLOBAL (prim_print m); CALLW 1]
 
-    | CONST x :: GLOBAL s :: GLOBAL "baozi.%makePrim" :: CALLW _ :: LDNW 4 :: _ when prim_class s ->
+    | CONST x :: GLOBAL "baozi.%makeInt" :: CALLW _ :: LDNW 4 :: _ ->
+        replace 4 [CONST x]
+    | CONST x :: GLOBAL "baozi.%makeInt" :: STKMAP _ :: CALLW _ :: LDNW 4 :: _ ->
         replace 5 [CONST x]
-    | CONST x :: GLOBAL s :: GLOBAL "baozi.%makePrim" :: STKMAP _ :: CALLW _ :: LDNW 4 :: _ when prim_class s ->
-        replace 6 [CONST x]
-    | CONST x :: GLOBAL s :: GLOBAL "baozi.%makePrim" :: CALLW _ :: GLOBAL m :: CALLW 1 :: _ when (prim_class s) && (print_method m) ->
-        replace 6 [CONST x; GLOBAL (prim_print m); CALLW 1]
+    | CONST x :: GLOBAL "baozi.%makeInt" :: CALLW _ :: GLOBAL m :: CALLW 1 :: _ when print_method m ->
+        replace 5 [CONST x; GLOBAL (prim_print m); CALLW 1]
     | GLOBAL lab :: CONST _ :: GLOBAL "baozi.%makeString" :: CALLW 2 :: GLOBAL m :: CALLW 1 :: _ when print_method m ->
         replace 6 [GLOBAL lab; GLOBAL (prim_print m); CALLW 1]
+
+    | CONST x :: GLOBAL "baozi.%makeInt" :: CALLW _ :: _ when x >= -10 && x <= 10->
+        replace 3 [GLOBAL (sprintf "baozi.%%const.%%%d" x)]
+    | CONST x :: GLOBAL "baozi.%makeInt" :: STKMAP _ :: CALLW _ :: _ when x >= -10 && x <= 10->
+        replace 4 [GLOBAL (sprintf "baozi.%%const.%%%d" x)]
 
     | CONST n :: LDI :: _ ->
         replace 2 [CONST (4*n); OFFSET; LOADW]
@@ -152,8 +173,16 @@ let ruleset replace =
     | CONST s :: BINOP Times :: OFFSET :: STOREW :: _ ->
         replace 4 [STI]
 
-    | CONST 0 :: JUMPC (w, lab) :: _ ->
+    (*| CONST 0 :: JUMPC (w, lab) :: _ ->
         replace 2 [JUMPCZ (w, lab)]
+    | DUP 0 :: LOADW :: LDNW n :: TYPE "Integer" :: CALLW 2 :: LDNW 4 :: JUMPCZ (_, lab) :: _ when n = 12 || n >= 52 ->
+        replace 7 [LDNW 4; SWAP; LDNW 4; JUMPC(get_op n, lab)]
+    | DUP 0 :: LOADW :: LDNW n :: TYPE "Integer" :: STKMAP _ :: CALLW 2 :: LDNW 4 :: JUMPCZ (_, lab) :: _ when n = 12 || n >= 52 ->
+        replace 8 [LDNW 4; SWAP; LDNW 4; JUMPC(get_op n, lab)]*)
+    | DUP 0 :: LOADW :: LDNW 12 :: TYPE "Object" :: CALLW 2 :: LDNW 4 :: JUMPCZ (_, lab) :: _  ->
+        replace 7 [JUMPC(Neq, lab)]
+    | DUP 0 :: LOADW :: LDNW 12 :: TYPE "Object" :: STKMAP _ :: CALLW 2 :: LDNW 4 :: JUMPCZ (_, lab) :: _  ->
+        replace 8 [JUMPC(Neq, lab)]
 
     | LINE n :: LABEL a :: _ ->
         replace 2 [LABEL a; LINE n]

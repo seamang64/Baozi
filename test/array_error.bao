@@ -1,0 +1,23 @@
+Define Program
+$>
+    ClassMethod Main {} => {}
+    $>
+        bs : Array Of A = New Array Of B<-[3].
+        bs->[0] = New C.
+
+        bss : Array Of Array Of A = New Array Of Array Of B<-[3].
+        bss->[0] = New Array Of C<-[1].
+    <$
+<$
+
+Define A
+$>
+<$
+
+Define B <- A
+$>
+<$
+
+Define C <- A
+$>
+<$

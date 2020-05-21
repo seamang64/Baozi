@@ -2,53 +2,50 @@ open Syntax.Tree
 open Syntax.Keiko
 open Syntax.Lexer
 open Errors
+open Semantics
 open Gc
 open Printf
-open Lib.Lib_all
 
-let me_pointer = 4
-let mainMethod = ref ""
-let p_name = ref ""
+let p_name = ref "" (* Name of the parent class *)
 
+(* Get the string indicating a type *)
+let type_name t =
+  match t with
+  | ClassType c -> c.c_name.x_name
+  | _ -> "Other"
+
+(* Get the size of a class *)
 let get_size x =
   match x.x_def.d_type with
   | ClassType c -> c.c_size
   | GenericClassType (c, _) -> c.c_size
   | _ -> raise (InvalidNew x.x_name)
 
+(* Get a pointer to a class descriptor *)
 let get_name n =
   match n.x_def.d_type with
     | ClassType c -> GLOBAL (c.c_name.x_name ^ ".%desc")
     | GenericClassType (c, _) -> GLOBAL (c.c_name.x_name ^ ".%desc")
     | _ -> raise (InvalidNew n.x_name)
 
+(* Get the name of the parent class from the type *)
 let get_pname t =
   match t with
     | ClassType c -> c.c_name.x_name
     | GenericClassType (c, _) -> c.c_name.x_name
     | _ -> raise IncorrectSyntaxError
 
-let is_int x =
-  match x.x_def.d_type with
-  | ClassType c -> c.c_name.x_name = "Integer"
-  | _ -> false
-
+(* Check if a method is static *)
 let is_static m =
   match m.x_def.d_kind with
   | MethodDef(_, s) -> s
   | _ -> raise (UnknownName m.x_name)
 
+(* Unbox a primitive *)
 let unbox = SEQ [CONST 4; OFFSET; LOADW]
 
-let rec gen_primitive x desc =
-  SEQ [
-    CONST x;
-    GLOBAL desc;
-    GLOBAL "baozi.makePrim";
-    CALLW 2
-  ]
-
-and gen_addr n =
+(* Generate code for getting the address assoicated with a name *)
+let rec gen_addr n =
   match n.x_def.d_kind with
   | ClassDef -> SEQ [GLOBAL (n.x_name ^ ".%desc")]
   | VariableDef off -> SEQ [LOCAL off]
@@ -56,32 +53,31 @@ and gen_addr n =
   | MethodDef (off, _) -> SEQ [CONST off; OFFSET]
   | NoneKind -> raise (NoneKindError n.x_name)
 
+(* Generate code for an expression *)
 and gen_expr e =
   match e with
   | Name n -> SEQ [gen_addr n; LOADW]
   | Constant (x, d) ->
     begin
       match d with
-      | TempType (Ident "Int") ->
-          if x > 10 or x < -10 then gen_primitive x "Integer.%desc"
-          else GLOBAL (sprintf "baozi.%%const.%%%d" x)
+      | TempType (Ident "Int") -> SEQ [CONST x; GLOBAL "baozi.%makeInt"; CALLW 1]
       | TempType (Ident "Bool") ->
           if x = 0 then GLOBAL "baozi.%const.%false"
           else GLOBAL "baozi.%const.%true"
       | _ -> raise UnknownConstant
     end
-  | String (lab, s) ->
+  | String (lab, s) -> (* A String constant *)
        SEQ [
         GLOBAL lab;
         CONST (String.length s);
-        GLOBAL "baozi.makeString";
+        GLOBAL "baozi.%makeString";
         CALLW 2
       ]
-  | TypeOf n ->
+  | TypeOf n -> (* A TypeOf expression creates a Type object *)
       SEQ [
         GLOBAL (n.x_name ^ ".%desc");
         GLOBAL "Type.%desc";
-        GLOBAL "baozi.makePrim";
+        GLOBAL "baozi.%makePrim";
         CALLW 2;
       ]
   | MethodCall (e1, m, args) ->
@@ -113,34 +109,36 @@ and gen_expr e =
         (* need space for all the properties + class descriptor *)
         CONST (4 + (get_size n));
         (* Call the make proceduure *)
-        GLOBAL "baozi.make";
+        GLOBAL "baozi.%make";
         CALLW 2;
       ]
   | NewArray (_, e) ->
       SEQ [
         gen_expr e;
-        GLOBAL "baozi.makeArray";
+        GLOBAL "baozi.%makeArray";
         CALLW 1;
       ]
   | Parent -> SEQ [LOCAL 12; LOADW]
   | Nil -> LDG "Nil"
-  | _ -> raise UnknownExpression
 
-and gen_static_call (Name n) meth args =
-  SEQ [
-    (* evaluate that arguments *)
-    SEQ (List.map gen_expr (List.rev args));
-    (* get the address of the method *)
-    GLOBAL (n.x_name ^"." ^ meth.x_name);
-    (* Call the method *)
-    CALLW (List.length args)
-  ]
+(* Generate code for a static call *)
+and gen_static_call expr meth args =
+  match expr with
+  | Name n ->
+      SEQ [
+        (* evaluate that arguments *)
+        SEQ (List.map gen_expr (List.rev args));
+        (* get the address of the method *)
+        GLOBAL (n.x_name ^"." ^ meth.x_name);
+        (* Call the method *)
+        CALLW (List.length args)
+      ]
+  | _ -> raise IncorrectSyntaxError
 
-and gem_static_call _ _ _ = raise IncorrectSyntaxError
-
+(* Generate the code for a non-static method call *)
 and gen_call expr meth args =
   match expr with
-  | Parent ->
+  | Parent -> (* If the method is called on Parent, use the parent's method *)
       SEQ [
         (* evaluate the arugments *)
         SEQ (List.map gen_expr (List.rev args));
@@ -166,9 +164,11 @@ and gen_call expr meth args =
         (* load the method *)
         LOADW;
         (* call the method *)
+        TYPE (type_name (Check.check_expr expr));
         CALLW (List.length args + 1)
       ]
 
+(* Gererate code for a conditional jump *)
 and gen_cond tlab flab test =
   SEQ [
     gen_stack_maps (gen_expr test);
@@ -178,6 +178,7 @@ and gen_cond tlab flab test =
     JUMP flab
   ]
 
+(* Generate code for an assignment *)
 and gen_assigment e1 e2 =
   let code =
     let v = gen_expr e2 in
@@ -187,20 +188,26 @@ and gen_assigment e1 e2 =
     | Sub (e3, e4) ->
         SEQ [
           v;
+          (* Get the array the we are indexing from *)
           gen_expr e3;
+          (* Get the "Data" *)
           CONST 4;
           OFFSET;
           LOADW;
+          (* Get the index *)
           gen_expr e4;
           unbox;
+          (* The element we want is at offset 4*i *)
           CONST 4;
           BINOP Times;
           OFFSET;
+          (* Load the element *)
           STOREW;
         ]
     | _ -> raise InvalidAssigment
   in gen_stack_maps code
 
+(*Generate code for a statement *)
 and gen_stmt stmt =
   let rec code s =
     match s.s_guts with
@@ -216,12 +223,12 @@ and gen_stmt stmt =
     | IfStmt (e, ts, fs) ->
         let lab1 = label () and lab2 = label () and lab3 = label () in
         SEQ [
-          gen_cond lab1 lab2 e;
+          gen_cond lab1 lab2 e; (* Generate code for the condition *)
           LABEL lab1;
-          gen_stmt ts;
+          gen_stmt ts; (* Generate code for the body *)
           JUMP lab3;
           LABEL lab2;
-          gen_stmt fs;
+          gen_stmt fs; (* Generate code for the else body *)
           LABEL lab3;
         ]
     | WhileStmt (test, stmt) ->
@@ -229,19 +236,19 @@ and gen_stmt stmt =
         SEQ [
           JUMP lab2;
           LABEL lab1;
-          gen_stmt stmt;
+          gen_stmt stmt; (* Generate code for  the body *)
           LABEL lab2;
-          gen_cond lab1 lab3 test;
+          gen_cond lab1 lab3 test; (* Generate code for the condition *)
           LABEL lab3
         ]
     | ForStmt (init, step, test, body) ->
         let lab1 = label () and lab2 = label () and lab3 = label () in
           SEQ [
-            code init;
+            code init; (* Generate code for the initial statement *)
             JUMP lab2;
             LABEL lab1;
-            gen_stmt body;
-            gen_stmt step;
+            gen_stmt body; (* Generate code for the body *)
+            gen_stmt step; (* Generate code for the step *)
             LABEL lab2;
             gen_cond lab1 lab3 test;
             LABEL lab3
@@ -250,78 +257,77 @@ and gen_stmt stmt =
     | Nop -> NOP
   in SEQ [ LINE stmt.s_line; code stmt ]
 
+(* Generate code for a method *)
 and gen_method classname m =
   match m.m_origin with
-  | Mine ->
+  | Mine -> (* If it is a new method, generate the code *)
       SEQ [
         PROC (classname ^ "." ^ m.m_name.x_name, m.m_size, 0, gen_proc_gc_map m.m_size (List.length m.m_arguments));
-        Peepopt.optimise (gen_stmt m.m_body);
+        Peepopt.optimise (gen_stmt m.m_body); (* Optimise the code *)
         END
       ]
   | Inherited _ -> NOP
 
+(* Generate code for all methods in a class *)
 and gen_methods c = p_name := get_pname c.c_ptype; SEQ (List.map (gen_method c.c_name.x_name) c.c_methods)
 
+(* Create a pointer to the correct procedure *)
 and gen_method_name meth cls =
   match meth.m_origin with
   | Mine -> WORD (SYMBOL (cls.c_name.x_name ^ "." ^ meth.m_name.x_name))
   | Inherited n -> WORD (SYMBOL (n ^ "." ^ meth.m_name.x_name))
 
+(* Generate a hex string from a char *)
 and gen_hex_string c =
   let chr = Char.code c and hex = "0123456789ABCDEF" in
     (Char.escaped (hex.[chr / 16])) ^ (Char.escaped (hex.[chr mod 16]))
 
+(* Create a hex string from a string *)
 and fold_string s =
   match s with
   | "" -> ""
   | _ -> (gen_hex_string (s.[0])) ^ (fold_string (String.sub s 1 ((String.length s) - 1)))
 
+(* Generate a definintion in the data segment for a string constant *)
 and gen_string (lab, s) =
   let strings = split_string s in
     let string_code = List.map (fun s -> STRING (fold_string s)) strings in
       SEQ [COMMENT (sprintf "String \"%s\"" s); DEFINE lab; SEQ string_code]
 
+(* Split the a string into 32 bit chunks *)
 and split_string s =
   let n = String.length s in
     if n > 31 then
       (String.sub s 0 32) :: (split_string (String.sub s 32 (n-32)))
     else [s ^ "\000"]
 
-and gen_nil =
-  SEQ [
-    GLOBAL "Object.%desc";
-    CONST 4;
-    GLOBAL "baozi.make";
-    CALLW 2;
-    STG "Nil";
-  ]
-
+(* Generate code for a class *)
 and gen_class c =
   let name = c.c_name.x_name in
   SEQ [
     COMMENT (sprintf "Descriptor for %s" name);
     DEFINE (name ^ ".%desc");
-    WORD (SYMBOL (gen_class_gc_map c.c_size));
+    WORD (SYMBOL (gen_class_gc_map c.c_size)); (* Create GC Map *)
     WORD (SYMBOL (name ^ ".%anc"));
     WORD (SYMBOL (name ^ ".%string"));
     SEQ (List.map (fun m -> gen_method_name m c) c.c_methods);
     COMMENT (sprintf "Ancestor Table for %s" name);
-    DEFINE (name ^ ".%anc");
+    DEFINE (name ^ ".%anc"); (* Create ancestor table *)
     WORD (DEC (1 + (List.length c.c_ancestors)));
     WORD (SYMBOL (name ^ ".%desc"));
     SEQ (List.map (fun c -> WORD (SYMBOL (c.c_name.x_name ^ ".%desc"))) c.c_ancestors);
     gen_string (name ^ ".%string", name);
   ]
 
+(* Generate code for the whole program *)
 and gen_program (Program(cs)) =
   SEQ [
-    (* SEQ lib_define_code;
-    SEQ (List.map (fun k -> SEQ (List.map Peepopt.optimise k)) lib_method_code); *)
     SEQ (List.map gen_methods cs);
     SEQ (List.map gen_class cs);
     SEQ (List.map gen_string !strtable);
+    (* Create the MAIN method *)
     PROC ("MAIN", 0, 0, 0);
-    GLOBAL !mainMethod;
+    GLOBAL !Analyse.mainMethod;
     CALLW 0;
     RETURN 0;
     END;

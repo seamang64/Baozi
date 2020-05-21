@@ -155,8 +155,6 @@ meth :
       { createMethod($2, true, $4, $7, $9, false, false) }
   | K_REPLACE name P_LCURL pairs P_RCURL P_DOUBLEARROW mtype P_START stmts P_END
       { createMethod($2, false, $4, $7, $9, false, true) }
-  | K_CONSTRUCTOR P_LCURL pairs P_RCURL P_DOUBLEARROW mtype P_START stmts P_END
-      { createMethod(createName "%constructor", false, $3, $6, $8, false, true) }
 
 /* Type of a method */
 mtype :
@@ -229,7 +227,7 @@ stmt1 :
 
 /* Body of if/for/while statments */
 body :
-  | stmt P_DOT
+  | stmt
     { $1 }
   | P_START stmts P_END
     { $2 }
@@ -269,12 +267,6 @@ expr:
       { MethodCall($1, createName "or", [$3]) }
   | simple O_IS simple
       { MethodCall($1, createName "Is", [$3]) }
-  | expr O_RIGHTARROW name O_LEFTARROW P_LCURL arguments P_RCURL
-      { MethodCall ($1, $3, $6) }
-  | expr O_RIGHTARROW name
-      { Property($1, $3) }
-  | expr O_RIGHTARROW P_LSQUARE expr P_RSQUARE
-      { Sub($1, $4) }
 
 simple :
   | term
@@ -305,6 +297,12 @@ factor :
       { Constant ($1, TempType (Ident "Int")) }
   | C_STR
       { let (lab, s) = $1 in String (lab, s) }
+  | expr O_RIGHTARROW name O_LEFTARROW P_LCURL arguments P_RCURL
+      { MethodCall ($1, $3, $6) }
+  | expr O_RIGHTARROW name
+      { Property($1, $3) }
+  | expr O_RIGHTARROW P_LSQUARE expr P_RSQUARE
+      { Sub($1, $4) }
   | O_NOT factor
       { MethodCall($2, createName "not", []) }
   | K_NIL

@@ -5,7 +5,7 @@ ENDHDR
 DEFINE Nil
 WORD 0
 
-PROC baozi.make 0 0 0
+PROC baozi.%make 0 0 0
 LDLW 12
 LDLW 16
 CONST 0
@@ -32,7 +32,7 @@ RETURNW
 END
 
 ! Procedure for creating a new primitive object
-PROC baozi.makePrim 0 0 0
+PROC baozi.%makePrim 0 0 0
 ! Need 8 bytes for a primitive
 CONST 8
 ! Load the class pointer
@@ -50,8 +50,28 @@ STNW 4
 RETURNW
 END
 
+PROC baozi.%makeInt 0 0 0
+LDLW 12
+CONST 10
+JLEQ 10
+LABEL 11
+LDLW 12
+GLOBAL Integer.%desc
+GLOBAL baozi.%makePrim
+CALLW 2
+RETURNW
+LABEL 10
+LDLW 12
+CONST -10
+JLT 11
+GLOBAL boazi.%const.%ints
+LDLW 12
+LDIW
+RETURNW
+END
+
 ! Procedure for allocating and initialising a new array object
-PROC baozi.makeArray 4 0 0x110001
+PROC baozi.%makeArray 4 0 0x110001
 ! 	Allocate 12 bytes for Array
 CONST 12
 GLOBAL Array.%desc
@@ -62,7 +82,7 @@ STLW -4
 ! 	Create the body of the Array
 LDLW 12
 LDNW 4
-GLOBAL baozi.makeArrayData
+GLOBAL baozi.%makeArrayData
 CALLW 1
 !	Offset, so we are pointing to the first element
 CONST 4
@@ -79,7 +99,7 @@ RETURNW
 END
 
 ! Procedure for allocating and initialising the elements and GC map in an array
-PROC baozi.makeArrayData 0 0 0
+PROC baozi.%makeArrayData 0 0 0
 ! 	Allocate 4*n + 32 bytes of memory
 LDLW 12
 CONST 4
@@ -158,7 +178,7 @@ POP 1
 RETURNW
 END
 
-PROC baozi.makeString 0 0 0x200001
+PROC baozi.%makeString 0 0 0x200001
 CONST 12
 GLOBAL String.%desc
 CONST 0
@@ -169,7 +189,7 @@ CONST 4
 OFFSET
 LDLW 12
 GLOBAL Integer.%desc
-GLOBAL baozi.makePrim
+GLOBAL baozi.%makePrim
 STKMAP 0x19
 CALLW 2
 SWAP
@@ -183,7 +203,7 @@ STOREW
 RETURNW
 END
 
-PROC baozi.print 0 0 0x100001
+PROC baozi.%print 0 0 0x100001
 LDLW 12
 CONST 0
 GLOBAL lib.print_string
@@ -191,7 +211,7 @@ PCALLW 1
 RETURN
 END
 
-PROC baozi.println 0 0 0x100001
+PROC baozi.%println 0 0 0x100001
 LDLW 12
 CONST 0
 GLOBAL lib.print_string
@@ -201,7 +221,7 @@ PCALLW 0
 RETURN
 END
 
-PROC baozi.printnum 0 0 0x100001
+PROC baozi.%printnum 0 0 0x100001
 LDLW 12
 CONST 0
 GLOBAL lib.print_num
@@ -209,7 +229,7 @@ PCALLW 1
 RETURN
 END
 
-PROC baozi.printnumln 0 0 0x100001
+PROC baozi.%printnumln 0 0 0x100001
 LDLW 12
 CONST 0
 GLOBAL lib.print_num
@@ -348,26 +368,27 @@ WORD Output.String
 WORD Output.StringLn
 WORD Output.Ln
 
-PROC Object.equals 0 0 0x0
+PROC Object.equals 0 0 0x300001
 LDLW 12
 LDLW 16
-EQ
-GLOBAL Bool.%desc
-GLOBAL baozi.makePrim
-CALLW 2
+JEQ 12
+GLOBAL baozi.%const.%false
+RETURNW
+LABEL 12
+GLOBAL baozi.%const.%true
 RETURNW
 END
 
-PROC Object.GetType 0 0 0x0
+PROC Object.GetType 0 0 0x100001
 LDLW 12
 LOADW
 GLOBAL Type.%desc
-GLOBAL baozi.makePrim
+GLOBAL baozi.%makePrim
 CALLW 2
 RETURNW
 END
 
-PROC Object.Is 12 0 0x0
+PROC Object.Is 12 0 0x300001
 LDLW 16
 LDNW 4
 STLW -4
@@ -393,18 +414,14 @@ LOADW
 LDLW -4
 JNEQ 5
 LABEL 6
-CONST 1
-GLOBAL baozi.makePrim
-CALLW 1
+GLOBAL baozi.%const.%true
 RETURNW
 LABEL 7
-CONST 0
-GLOBAL baozi.makePrim
-CALLW 1
+GLOBAL baozi.%const.%false
 RETURNW
 END
 
-PROC Object.Print 0 0 0x0
+PROC Object.Print 0 0 0x100001
 LDLW 12
 LOADW
 LDNW 8
@@ -414,15 +431,21 @@ PCALLW 1
 RETURNW
 END
 
+PROC Object.%constructor 0 0 0x100001
+LDLW 12
+RETURNW
+END
+
 PROC Integer.equals 0 0 0x300001
 LDLW 12
 LDNW 4
 LDLW 16
 LDNW 4
-EQ
-GLOBAL Bool.%desc
-GLOBAL baozi.makePrim
-CALLW 2
+JEQ 13
+GLOBAL baozi.%const.%false
+RETURNW
+LABEL 13
+GLOBAL baozi.%const.%true
 RETURNW
 END
 
@@ -441,9 +464,8 @@ LDNW 4
 LDLW 16
 LDNW 4
 PLUS
-GLOBAL Integer.%desc
-GLOBAL baozi.makePrim
-CALLW 2
+GLOBAL baozi.%makeInt
+CALLW 1
 RETURNW
 END
 
@@ -453,9 +475,8 @@ LDNW 4
 LDLW 16
 LDNW 4
 TIMES
-GLOBAL Integer.%desc
-GLOBAL baozi.makePrim
-CALLW 2
+GLOBAL baozi.%makeInt
+CALLW 1
 RETURNW
 END
 
@@ -465,9 +486,8 @@ LDNW 4
 LDLW 16
 LDNW 4
 MINUS
-GLOBAL Integer.%desc
-GLOBAL baozi.makePrim
-CALLW 2
+GLOBAL baozi.%makeInt
+CALLW 1
 RETURNW
 END
 
@@ -477,9 +497,8 @@ LDNW 4
 LDLW 16
 LDNW 4
 DIV
-GLOBAL Integer.%desc
-GLOBAL baozi.makePrim
-CALLW 2
+GLOBAL baozi.%makeInt
+CALLW 1
 RETURNW
 END
 
@@ -489,9 +508,8 @@ LDNW 4
 LDLW 16
 LDNW 4
 MOD
-GLOBAL Integer.%desc
-GLOBAL baozi.makePrim
-CALLW 2
+GLOBAL baozi.%makeInt
+CALLW 1
 RETURNW
 END
 
@@ -499,9 +517,8 @@ PROC Integer.uminus 0 0 0x100001
 LDLW 12
 LDNW 4
 UMINUS
-GLOBAL Integer.%desc
-GLOBAL baozi.makePrim
-CALLW 2
+GLOBAL baozi.%makeInt
+CALLW 1
 RETURNW
 END
 
@@ -510,10 +527,11 @@ LDLW 12
 LDNW 4
 LDLW 16
 LDNW 4
-NEQ
-GLOBAL Bool.%desc
-GLOBAL baozi.makePrim
-CALLW 2
+JNEQ 14
+GLOBAL baozi.%const.%false
+RETURNW
+LABEL 14
+GLOBAL baozi.%const.%true
 RETURNW
 END
 
@@ -522,10 +540,11 @@ LDLW 12
 LDNW 4
 LDLW 16
 LDNW 4
-LT
-GLOBAL Bool.%desc
-GLOBAL baozi.makePrim
-CALLW 2
+JLT 14
+GLOBAL baozi.%const.%false
+RETURNW
+LABEL 14
+GLOBAL baozi.%const.%true
 RETURNW
 END
 
@@ -534,10 +553,11 @@ LDLW 12
 LDNW 4
 LDLW 16
 LDNW 4
-GT
-GLOBAL Bool.%desc
-GLOBAL baozi.makePrim
-CALLW 2
+JGT 15
+GLOBAL baozi.%const.%false
+RETURNW
+LABEL 15
+GLOBAL baozi.%const.%true
 RETURNW
 END
 
@@ -546,10 +566,11 @@ LDLW 12
 LDNW 4
 LDLW 16
 LDNW 4
-LEQ
-GLOBAL Bool.%desc
-GLOBAL baozi.makePrim
-CALLW 2
+JLEQ 16
+GLOBAL baozi.%const.%false
+RETURNW
+LABEL 16
+GLOBAL baozi.%const.%true
 RETURNW
 END
 
@@ -558,10 +579,11 @@ LDLW 12
 LDNW 4
 LDLW 16
 LDNW 4
-GEQ
-GLOBAL Bool.%desc
-GLOBAL baozi.makePrim
-CALLW 2
+JGEQ 17
+GLOBAL baozi.%const.%false
+RETURNW
+LABEL 17
+GLOBAL baozi.%const.%true
 RETURNW
 END
 
@@ -570,14 +592,15 @@ LDLW 12
 LDNW 4
 LDLW 16
 LDNW 4
-EQ
-GLOBAL Bool.%desc
-GLOBAL baozi.makePrim
-CALLW 2
+JEQ 18
+GLOBAL baozi.%const.%false
+RETURNW
+LABEL 18
+GLOBAL baozi.%const.%true
 RETURNW
 END
 
-PROC Bool.Print 4 0 0x0
+PROC Bool.Print 4 0 0x100001
 LDLW 12
 LDNW 4
 JEQZ 4
@@ -594,41 +617,46 @@ PCALLW 1
 RETURN
 END
 
-PROC Bool.and 4 0 0x0
+PROC Bool.and 4 0 0x300001
 LDLW 12
 LDNW 4
 LDLW 16
 LDNW 4
-EQ
-GLOBAL Bool.%desc
-GLOBAL baozi.makePrim
-CALLW 2
+AND
+JEQZ 19
+GLOBAL baozi.%const.%true
+RETURNW
+LABEL 19
+GLOBAL baozi.%const.%false
 RETURNW
 END
 
-PROC Bool.or 4 0 0x0
+PROC Bool.or 4 0 0x300001
 LDLW 12
 LDNW 4
 LDLW 16
 LDNW 4
-EQ
-GLOBAL Bool.%desc
-GLOBAL baozi.makePrim
-CALLW 2
+OR
+JEQZ 20
+GLOBAL baozi.%const.%true
+RETURNW
+LABEL 20
+GLOBAL baozi.%const.%false
 RETURNW
 END
 
-PROC Bool.not 4 0 0x0
+PROC Bool.not 4 0 0x100001
 LDLW 12
 LDNW 4
-NOT
-GLOBAL Bool.%desc
-GLOBAL baozi.makePrim
-CALLW 2
+JEQZ 21
+GLOBAL baozi.%const.%false
+RETURNW
+LABEL 21
+GLOBAL baozi.%const.%true
 RETURNW
 END
 
-PROC String.Print 0 0 0x0
+PROC String.Print 0 0 0x100001
 LDLW 12
 GLOBAL Output.String
 CALLW 1
@@ -796,3 +824,26 @@ WORD 0
 DEFINE baozi.%const.%true
 WORD Bool.%desc
 WORD 1
+
+WORD baozi.%const.%-10
+WORD baozi.%const.%-9
+WORD baozi.%const.%-8
+WORD baozi.%const.%-7
+WORD baozi.%const.%-6
+WORD baozi.%const.%-5
+WORD baozi.%const.%-4
+WORD baozi.%const.%-3
+WORD baozi.%const.%-2
+WORD baozi.%const.%-1
+DEFINE boazi.%const.%ints
+WORD baozi.%const.%0
+WORD baozi.%const.%1
+WORD baozi.%const.%2
+WORD baozi.%const.%3
+WORD baozi.%const.%4
+WORD baozi.%const.%5
+WORD baozi.%const.%6
+WORD baozi.%const.%7
+WORD baozi.%const.%8
+WORD baozi.%const.%9
+WORD baozi.%const.%10

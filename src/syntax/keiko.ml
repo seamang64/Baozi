@@ -62,6 +62,7 @@ type code =
   | SWAP
   | DUP of int
   | NOP                         (* Null operation *)
+  | TYPE of string
   | COMMENT of string
   | END
 
@@ -166,5 +167,5 @@ let rec print_keiko prog =
    | DUP n -> printf "DUP %d\n" n
    | COMMENT s -> printf "\n! %s" s
    | END -> printf "END\n"
-   | NOP -> ()
+   | NOP | TYPE _ -> ()
    | _ -> printf "Unrecongised Keiko"; exit 1

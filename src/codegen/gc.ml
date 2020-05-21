@@ -2,21 +2,25 @@ open Printf
 open Syntax.Keiko
 open Errors
 
+(* Get 2^(n/4) - 1 *)
 let rec gen_ones n =
   match n with
   | 0 -> 0
   | _ -> ((gen_ones (n-4)) lsl 1) + 1
 
+(* Create the GC Map for a class *)
 let gen_class_gc_map n =
   if n > 0 then sprintf "0x%X" (gen_ones (n+4))
   else "0"
 
+(* Create the GC map for a procedure *)
 let gen_proc_gc_map locals params =
   let local_off = 17 - (locals/4) and param_off = 20 in
     let gc = ((gen_ones locals) lsl local_off) lor ((gen_ones (params * 4)) lsl param_off) in
-      if gc > 0 then gc+1
+      if gc > 0 then gc+1 (* GC map must have 1 in the least-significant bit *)
       else 0
 
+(* Create a GC map from an evaluation stack, for a STKMAP instruction *)
 let gen_stack_gc n stack =
   let rec hex m stk =
       match stk with
@@ -27,12 +31,15 @@ let gen_stack_gc n stack =
       | false::st -> (hex (m-1) st) lsl 1
   in let h = hex n stack in
     if h == 0 then NOP
-    else STKMAP ((h lsl 1) + 1)
+    else STKMAP ((h lsl 1) + 1) (* GC map must have 1 in the least-significant bit *)
 
+(* Swap two values on the evaluation stack *)
 let swap stk =
   match stk with
   | x::y::st -> y::x::st
   | _ -> raise InvalidExpression
+
+(* duplicate a value on the evaluation stack *)
 let dup n stk =
   let rec dup' n' stk' =
     match (n', stk') with
@@ -41,6 +48,7 @@ let dup n stk =
     | _ -> raise InvalidExpression
   in (dup' n stk)::stk
 
+(* Simulate the evaluation stack and place any STKMAP instructions that are needed *)
 let gen_stack_maps code =
   let rec gen_map code' stack =
     match code' with
@@ -61,5 +69,6 @@ let gen_stack_maps code =
         let (kcode, stk) = List.fold_left (fun (k', s) k -> let (nk, s') = gen_map k s in (k' @ [nk], s')) ([], stack) ss in
           (SEQ kcode, stk)
     | NOP -> (NOP, stack)
+    | TYPE s -> (TYPE s, stack)
     | s -> print_keiko s; raise InvalidExpression
   in let (k, _) = gen_map code [] in k

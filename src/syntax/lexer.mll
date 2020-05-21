@@ -4,6 +4,7 @@
   open Source
   open Errors
 
+  (* Create a hash type and add values to it *)
   let make_hash n ps =
     let t = Hashtbl.create n in
     List.iter (fun (k, v) -> Hashtbl.add t k v) ps; t
@@ -35,7 +36,7 @@
     "and", O_AND;
     "or", O_OR;
     "not", O_NOT;
-    "Is", O_IS;
+    "InstanceOf", O_IS;
     "TypeOf", O_TYPEOF;
 
     "If", K_IF;
@@ -55,12 +56,14 @@
 
   let idtable = Hashtbl.create 64
 
+  (* Lookup a string in the keyword table *)
   let lookup s =
     try Hashtbl.find kwtable s with
       Not_found ->
         Hashtbl.replace idtable s ();
         IDENT s
 
+  (* List of all string constants in the program *)
   let strtable = ref []
 
   let get_string s =
