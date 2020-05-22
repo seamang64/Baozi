@@ -57,12 +57,12 @@ let prim_print m =
 
 let get_op n =
   match n with
-  | 12 -> Neq
-  | 52 -> Eq
-  | 56 -> Geq
-  | 60 -> Leq
-  | 64 -> Gt
-  | 68 -> Lt
+  | 16 -> Neq
+  | 56 -> Eq
+  | 60 -> Geq
+  | 64 -> Leq
+  | 68 -> Gt
+  | 72 -> Lt
   | _ -> raise InvalidExpression
 
 (* |find_label| -- find data about equivalence class of a label *)
@@ -173,15 +173,15 @@ let ruleset replace =
     | CONST s :: BINOP Times :: OFFSET :: STOREW :: _ ->
         replace 4 [STI]
 
-    (*| CONST 0 :: JUMPC (w, lab) :: _ ->
+    | CONST 0 :: JUMPC (w, lab) :: _ ->
         replace 2 [JUMPCZ (w, lab)]
-    | DUP 0 :: LOADW :: LDNW n :: TYPE "Integer" :: CALLW 2 :: LDNW 4 :: JUMPCZ (_, lab) :: _ when n = 12 || n >= 52 ->
+    | DUP 0 :: LOADW :: LDNW n :: TYPE "Integer" :: CALLW 2 :: LDNW 4 :: JUMPCZ (_, lab) :: _ when n = 16 || n >= 56 ->
         replace 7 [LDNW 4; SWAP; LDNW 4; JUMPC(get_op n, lab)]
-    | DUP 0 :: LOADW :: LDNW n :: TYPE "Integer" :: STKMAP _ :: CALLW 2 :: LDNW 4 :: JUMPCZ (_, lab) :: _ when n = 12 || n >= 52 ->
-        replace 8 [LDNW 4; SWAP; LDNW 4; JUMPC(get_op n, lab)]*)
-    | DUP 0 :: LOADW :: LDNW 12 :: TYPE "Object" :: CALLW 2 :: LDNW 4 :: JUMPCZ (_, lab) :: _  ->
+    | DUP 0 :: LOADW :: LDNW n :: TYPE "Integer" :: STKMAP _ :: CALLW 2 :: LDNW 4 :: JUMPCZ (_, lab) :: _ when n = 16 || n >= 56 ->
+        replace 8 [LDNW 4; SWAP; LDNW 4; JUMPC(get_op n, lab)]
+    | DUP 0 :: LOADW :: LDNW 16 :: TYPE "Object" :: CALLW 2 :: LDNW 4 :: JUMPCZ (_, lab) :: _  ->
         replace 7 [JUMPC(Neq, lab)]
-    | DUP 0 :: LOADW :: LDNW 12 :: TYPE "Object" :: STKMAP _ :: CALLW 2 :: LDNW 4 :: JUMPCZ (_, lab) :: _  ->
+    | DUP 0 :: LOADW :: LDNW 16 :: TYPE "Object" :: STKMAP _ :: CALLW 2 :: LDNW 4 :: JUMPCZ (_, lab) :: _  ->
         replace 8 [JUMPC(Neq, lab)]
 
     | LINE n :: LABEL a :: _ ->

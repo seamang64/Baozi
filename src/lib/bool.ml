@@ -108,25 +108,25 @@ and method_not =
   { m_name=not_name; m_type=(ClassType bool_class); m_static=false; m_size=4; m_arguments=[Prop(arg_x, VoidType)]; m_body=empty_stmt; m_main=false; m_replace=false; m_origin=Mine}
 
 and equals_name =
-  {x_name="equals"; x_def={d_kind=MethodDef (12, false); d_type=(ClassType bool_class)}}
+  {x_name="equals"; x_def={d_kind=MethodDef (16, false); d_type=(ClassType bool_class)}}
 
 and get_type_name =
-  {x_name="GetType"; x_def={d_kind=MethodDef (16, false); d_type=VoidType}}
+  {x_name="GetType"; x_def={d_kind=MethodDef (20, false); d_type=VoidType}}
 
 and is_name =
-  {x_name="Is"; x_def={d_kind=MethodDef (20, false); d_type=ClassType bool_class}}
+  {x_name="InstanceOf"; x_def={d_kind=MethodDef (24, false); d_type=ClassType bool_class}}
 
 and print_name =
-  {x_name="Print"; x_def={d_kind=MethodDef (24, false); d_type=VoidType}}
+  {x_name="Print"; x_def={d_kind=MethodDef (28, false); d_type=VoidType}}
 
 and and_name =
-  {x_name="and"; x_def={d_kind=MethodDef (28, false); d_type=(ClassType bool_class)}}
+  {x_name="and"; x_def={d_kind=MethodDef (32, false); d_type=(ClassType bool_class)}}
 
 and or_name =
-  {x_name="or"; x_def={d_kind=MethodDef (32, false); d_type=(ClassType bool_class)}}
+  {x_name="or"; x_def={d_kind=MethodDef (36, false); d_type=(ClassType bool_class)}}
 
 and not_name =
-  {x_name="not"; x_def={d_kind=MethodDef (36, false); d_type=(ClassType bool_class)}}
+  {x_name="not"; x_def={d_kind=MethodDef (40, false); d_type=(ClassType bool_class)}}
 
 and arg_x =
   {x_name="x"; x_def=arg_def}

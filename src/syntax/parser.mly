@@ -266,7 +266,7 @@ expr:
   | simple O_OR simple
       { MethodCall($1, createName "or", [$3]) }
   | simple O_IS simple
-      { MethodCall($1, createName "Is", [$3]) }
+      { MethodCall($1, createName "InstanceOf", [$3]) }
 
 simple :
   | term

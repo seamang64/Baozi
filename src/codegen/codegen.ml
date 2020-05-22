@@ -112,11 +112,12 @@ and gen_expr e =
         GLOBAL "baozi.%make";
         CALLW 2;
       ]
-  | NewArray (_, e) ->
+  | NewArray (n, e) ->
       SEQ [
+        GLOBAL ((Arrays.make_name n.x_def.d_type) ^ ".%desc");
         gen_expr e;
         GLOBAL "baozi.%makeArray";
-        CALLW 1;
+        CALLW 2;
       ]
   | Parent -> SEQ [LOCAL 12; LOADW]
   | Nil -> LDG "Nil"
@@ -190,6 +191,10 @@ and gen_assigment e1 e2 =
           v;
           (* Get the array the we are indexing from *)
           gen_expr e3;
+          (* Type check the element we are adding *)
+          DUP 1;
+          GLOBAL "baozi.%typeCheck";
+          CALLW 2;
           (* Get the "Data" *)
           CONST 4;
           OFFSET;
@@ -277,30 +282,6 @@ and gen_method_name meth cls =
   | Mine -> WORD (SYMBOL (cls.c_name.x_name ^ "." ^ meth.m_name.x_name))
   | Inherited n -> WORD (SYMBOL (n ^ "." ^ meth.m_name.x_name))
 
-(* Generate a hex string from a char *)
-and gen_hex_string c =
-  let chr = Char.code c and hex = "0123456789ABCDEF" in
-    (Char.escaped (hex.[chr / 16])) ^ (Char.escaped (hex.[chr mod 16]))
-
-(* Create a hex string from a string *)
-and fold_string s =
-  match s with
-  | "" -> ""
-  | _ -> (gen_hex_string (s.[0])) ^ (fold_string (String.sub s 1 ((String.length s) - 1)))
-
-(* Generate a definintion in the data segment for a string constant *)
-and gen_string (lab, s) =
-  let strings = split_string s in
-    let string_code = List.map (fun s -> STRING (fold_string s)) strings in
-      SEQ [COMMENT (sprintf "String \"%s\"" s); DEFINE lab; SEQ string_code]
-
-(* Split the a string into 32 bit chunks *)
-and split_string s =
-  let n = String.length s in
-    if n > 31 then
-      (String.sub s 0 32) :: (split_string (String.sub s 32 (n-32)))
-    else [s ^ "\000"]
-
 (* Generate code for a class *)
 and gen_class c =
   let name = c.c_name.x_name in
@@ -310,13 +291,14 @@ and gen_class c =
     WORD (SYMBOL (gen_class_gc_map c.c_size)); (* Create GC Map *)
     WORD (SYMBOL (name ^ ".%anc"));
     WORD (SYMBOL (name ^ ".%string"));
+    WORD (DEC 0);
     SEQ (List.map (fun m -> gen_method_name m c) c.c_methods);
     COMMENT (sprintf "Ancestor Table for %s" name);
     DEFINE (name ^ ".%anc"); (* Create ancestor table *)
     WORD (DEC (1 + (List.length c.c_ancestors)));
     WORD (SYMBOL (name ^ ".%desc"));
     SEQ (List.map (fun c -> WORD (SYMBOL (c.c_name.x_name ^ ".%desc"))) c.c_ancestors);
-    gen_string (name ^ ".%string", name);
+    Arrays.gen_string (name ^ ".%string", name);
   ]
 
 (* Generate code for the whole program *)
@@ -324,8 +306,10 @@ and gen_program (Program(cs)) =
   SEQ [
     SEQ (List.map gen_methods cs);
     SEQ (List.map gen_class cs);
-    SEQ (List.map gen_string !strtable);
+    SEQ (List.map Arrays.gen_string !strtable);
+    Arrays.create_fake_classes ();
     (* Create the MAIN method *)
+    COMMENT "MAIN procedure";
     PROC ("MAIN", 0, 0, 0);
     GLOBAL !Analyse.mainMethod;
     CALLW 0;

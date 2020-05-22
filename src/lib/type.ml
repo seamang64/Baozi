@@ -21,16 +21,16 @@ and method_print =
   { m_name=print_name; m_type=VoidType; m_static=false; m_size=0; m_arguments=[Prop(arg_x, ClassType type_class)]; m_body=empty_stmt; m_main=false; m_replace=false; m_origin=Inherited "Object"}
 
 and equals_name =
-  {x_name="equals"; x_def={d_kind=MethodDef (12, false); d_type=ClassType bool_class}}
+  {x_name="equals"; x_def={d_kind=MethodDef (16, false); d_type=ClassType bool_class}}
 
 and get_type_name =
-  {x_name="GetType"; x_def={d_kind=MethodDef (16, false); d_type=ClassType type_class}}
+  {x_name="GetType"; x_def={d_kind=MethodDef (20, false); d_type=ClassType type_class}}
 
 and is_name =
-  {x_name="Is"; x_def={d_kind=MethodDef (20, false); d_type=ClassType bool_class}}
+  {x_name="InstanceOf"; x_def={d_kind=MethodDef (24, false); d_type=ClassType bool_class}}
 
 and print_name =
-  {x_name="Print"; x_def={d_kind=MethodDef (24, false); d_type=VoidType}}
+  {x_name="Print"; x_def={d_kind=MethodDef (28, false); d_type=VoidType}}
 
 and arg_x =
   {x_name="x"; x_def=arg_def}

@@ -2,9 +2,8 @@ Define Program
 $>
     ClassMethod Main {} => {}
     $>
-        xs : Array Of Int = New Array Of Int<-[12].
-        xs->[11] = 15.
-        Output->IntLn<-{xs->[11]}.
+        xs : Array Of Int = New Array Of Int<-[10].
+        xs->[9] = 6.
         Return.
     <$
 <$

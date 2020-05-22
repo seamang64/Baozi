@@ -70,11 +70,10 @@ LDIW
 RETURNW
 END
 
-! Procedure for allocating and initialising a new array object
-PROC baozi.%makeArray 4 0 0x110001
+PROC baozi.%makeArray 4 0 0x310001
 ! 	Allocate 12 bytes for Array
 CONST 12
-GLOBAL Array.%desc
+LDLW 16
 CONST 0
 GLOBAL lib.newgc
 PCALLW 2
@@ -203,6 +202,40 @@ STOREW
 RETURNW
 END
 
+PROC baozi.%typeCheck 12 0 0x310001
+LDLW 16
+LOADW
+LDNW 12
+STLW -4
+CONST 0
+LDLW 12
+LOADW
+LDNW 4
+DUP 0
+LOADW
+STLW -8
+LABEL 5
+SWAP
+DUP 0
+LDLW -8
+JEQ 7
+CONST 1
+PLUS
+SWAP
+CONST 4
+OFFSET
+DUP 0
+LOADW
+LDLW -4
+JNEQ 5
+LABEL 6
+LDLW 16
+RETURNW
+LABEL 7
+ERROR 1 0
+RETURNW
+END
+
 PROC baozi.%print 0 0 0x100001
 LDLW 12
 CONST 0
@@ -243,9 +276,10 @@ DEFINE Object.%desc
 WORD 0
 WORD Object.%anc
 WORD Object.%string
+WORD 0
 WORD Object.equals
 WORD Object.GetType
-WORD Object.Is
+WORD Object.InstanceOf
 WORD Object.Print
 
 DEFINE Object.%anc
@@ -259,9 +293,10 @@ DEFINE Integer.%desc
 WORD 0
 WORD Integer.%anc
 WORD Integer.%string
+WORD 0
 WORD Integer.equals
 WORD Object.GetType
-WORD Object.Is
+WORD Object.InstanceOf
 WORD Integer.Print
 WORD Integer.add
 WORD Integer.times
@@ -287,9 +322,10 @@ DEFINE Bool.%desc
 WORD 0
 WORD Bool.%anc
 WORD Bool.%string
+WORD 0
 WORD Bool.equals
 WORD Object.GetType
-WORD Object.Is
+WORD Object.InstanceOf
 WORD Bool.Print
 WORD Bool.and
 WORD Bool.or
@@ -312,9 +348,10 @@ DEFINE Array.%desc
 WORD 0x7
 WORD Array.%anc
 WORD Array.%string
+WORD 0
 WORD Object.equals
 WORD Object.GetType
-WORD Object.Is
+WORD Object.InstanceOf
 WORD Object.Print
 
 DEFINE Array.%anc
@@ -329,9 +366,10 @@ DEFINE Type.%desc
 WORD 0
 WORD Type.%anc
 WORD Type.%string
+WORD 0
 WORD Object.equals
 WORD Object.GetType
-WORD Object.Is
+WORD Object.InstanceOf
 WORD Object.Print
 
 DEFINE Type.%anc
@@ -346,9 +384,10 @@ DEFINE String.%desc
 WORD 3
 WORD String.%anc
 WORD String.%string
+WORD 0
 WORD Object.equals
 WORD Object.GetType
-WORD Object.Is
+WORD Object.InstanceOf
 WORD String.Print
 
 DEFINE String.%anc
@@ -388,7 +427,7 @@ CALLW 2
 RETURNW
 END
 
-PROC Object.Is 12 0 0x300001
+PROC Object.InstanceOf 12 0 0x310001
 LDLW 16
 LDNW 4
 STLW -4
@@ -404,7 +443,7 @@ SWAP
 DUP 0
 LDLW -8
 JEQ 7
-CONST 4
+CONST 1
 PLUS
 SWAP
 CONST 4

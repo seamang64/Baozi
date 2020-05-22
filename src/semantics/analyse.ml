@@ -1,5 +1,6 @@
 open Syntax.Tree
 open Errors
+open Arrays
 open Lib.Lib_all
 open Lib.Type
 open Lib.String
@@ -10,7 +11,7 @@ open Printf
 let propertyOffset = 4 (* offset of properties in an object record *)
 let argumentOffset = 12 (*offset of arguments in stack frame *)
 let variableOffset = -4 (*offset of variables in stack frame *)
-let vtableOffset = 12 (* offset of the vtable in the class descriptor *)
+let vtableOffset = 16 (* offset of the vtable in the class descriptor *)
 let variableIndex = ref 0 (* number of local variables *)
 let p_type = ref VoidType (* parent type of class *)
 let mainMethod = ref "" (* Main method *)
@@ -190,6 +191,8 @@ let rec annotate_expr expr env =
   | NewArray (n, e) ->
       ignore(annotate_expr e env);
       let d = get_type n.x_def.d_type env in
+        (* Create fake classes from d *)
+        add_type d;
         n.x_def <- create_def ClassDef d; d (* Names following New are classes *)
   | Parent -> !p_type
   | Nil -> object_def.d_type
@@ -203,7 +206,7 @@ let rec annotate_stmt stmt env =
       (* Annotate the assinged value *)
       ignore(annotate_expr e env);
       (* Variables are marked as Variables and have a type depending on their temporary type *)
-      n.x_def <- create_def (VariableDef(variableOffset - !variableIndex)) (get_type t env);
+      n.x_def <- create_def (VariableDef(variableOffset - !variableIndex)) (get_type t env );
       variableIndex := !variableIndex + 4;
       (* Add this new variable to the environment *)
       define n.x_name n.x_def env
@@ -250,7 +253,7 @@ let annotate_methods methods env=
   let rec annotate meths i e =
     match meths with
     | m::ms ->
-        (*  Methods are marked as Methods and have a type depending on their temporary type *)
+        (*  Methods are marked as Methods with their offset and whether thy're static, and have a type depending on their temporary type *)
         m.m_name.x_def <- create_def (MethodDef(vtableOffset + i, m.m_static)) (get_type m.m_type e);
         annotate ms (i + 4) e
     | _ -> ()

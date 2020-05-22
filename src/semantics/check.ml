@@ -60,7 +60,7 @@ let check_compatible type1 type2 =
     | (ClassType c1, GenericClassType (c2,_)) ->
         if c1.c_name.x_name == c2.c_name.x_name then () (* Generic class can be compatible with normal class *)
         else check t1 c2.c_ptype
-    | (ArrayType d1, ArrayType d2) -> check_strict_comp d1 d2  (* Arrays are invarient *)
+    | (ArrayType d1, ArrayType d2) -> check d1 d2  (* Arrays are invarient *)
     | (ClassType c, ArrayType _ ) ->
         if c.c_name.x_name == "Object" then () (* Arrays are subtypes of Object *)
         else raise (TypeError((print_type !pt1), (print_type !pt2)))

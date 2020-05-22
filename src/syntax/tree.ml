@@ -59,7 +59,7 @@ and m_method =
     m_replace: bool;
     mutable m_size: int;
     mutable m_arguments: property list;
-    mutable m_body: stmt;
+    m_body: stmt;
     m_origin: origin }
 
 and c_class =

@@ -31,19 +31,19 @@ and method_add =
   {m_name=add_name; m_type=ClassType string_class; m_static=false; m_size=0; m_arguments=[Prop(arg_x, VoidType); Prop(arg_y, VoidType)]; m_body=empty_stmt; m_main=false; m_replace=false; m_origin=Mine}
 
 and equals_name =
-  {x_name="equals"; x_def={d_kind=MethodDef (12, true); d_type=ClassType bool_class}}
+  {x_name="equals"; x_def={d_kind=MethodDef (16, true); d_type=ClassType bool_class}}
 
 and get_type_name =
-  {x_name="GetType"; x_def={d_kind=MethodDef (16, false); d_type=ClassType type_class}}
+  {x_name="GetType"; x_def={d_kind=MethodDef (20, false); d_type=ClassType type_class}}
 
 and is_name =
-  {x_name="Is"; x_def={d_kind=MethodDef (20, false); d_type=ClassType bool_class}}
+  {x_name="InstanceOf"; x_def={d_kind=MethodDef (24, false); d_type=ClassType bool_class}}
 
 and print_name =
-  {x_name="Print"; x_def={d_kind=MethodDef (24, false); d_type=ClassType string_class}}
+  {x_name="Print"; x_def={d_kind=MethodDef (28, false); d_type=ClassType string_class}}
 
 and add_name =
-  {x_name="add"; x_def={d_kind=MethodDef (28, true); d_type=ClassType string_class}}
+  {x_name="add"; x_def={d_kind=MethodDef (32, true); d_type=ClassType string_class}}
 
 and length =
   {x_name="Length"; x_def={d_kind=VariableDef 4; d_type=(ClassType integer_class)}}

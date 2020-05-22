@@ -124,49 +124,49 @@ and method_greater_than_equal =
   { m_name=greater_than_equal_name; m_type=(ClassType bool_class); m_static=false; m_size=4; m_arguments=[Prop(arg_x, VoidType); Prop(arg_y, VoidType)]; m_body=empty_stmt; m_main=false; m_replace=false; m_origin=Mine}
 
 and equals_name =
-  {x_name="equals"; x_def={d_kind=MethodDef (12, false); d_type=(ClassType bool_class)}}
+  {x_name="equals"; x_def={d_kind=MethodDef (16, false); d_type=(ClassType bool_class)}}
 
 and get_type_name =
-  {x_name="GetType"; x_def={d_kind=MethodDef (16, false); d_type=ClassType type_class}}
+  {x_name="GetType"; x_def={d_kind=MethodDef (20, false); d_type=ClassType type_class}}
 
 and is_name =
-  {x_name="Is"; x_def={d_kind=MethodDef (20, false); d_type=ClassType bool_class}}
+  {x_name="InstanceOf"; x_def={d_kind=MethodDef (24, false); d_type=ClassType bool_class}}
 
 and print_name =
-  {x_name="Print"; x_def={d_kind=MethodDef (24, false); d_type=VoidType}}
+  {x_name="Print"; x_def={d_kind=MethodDef (28, false); d_type=VoidType}}
 
 and add_name =
-  {x_name="add"; x_def={d_kind=MethodDef (28, false); d_type=(ClassType integer_class)}}
+  {x_name="add"; x_def={d_kind=MethodDef (32, false); d_type=(ClassType integer_class)}}
 
 and times_name =
-  {x_name="times"; x_def={d_kind=MethodDef (32, false); d_type=(ClassType integer_class)}}
+  {x_name="times"; x_def={d_kind=MethodDef (36, false); d_type=(ClassType integer_class)}}
 
 and sub_name =
-  {x_name="sub"; x_def={d_kind=MethodDef (36, false); d_type=(ClassType integer_class)}}
+  {x_name="sub"; x_def={d_kind=MethodDef (40, false); d_type=(ClassType integer_class)}}
 
 and div_name =
-  {x_name="div"; x_def={d_kind=MethodDef (40, false); d_type=(ClassType integer_class)}}
+  {x_name="div"; x_def={d_kind=MethodDef (44, false); d_type=(ClassType integer_class)}}
 
 and mod_name =
-  {x_name="mod"; x_def={d_kind=MethodDef (44, false); d_type=(ClassType integer_class)}}
+  {x_name="mod"; x_def={d_kind=MethodDef (48, false); d_type=(ClassType integer_class)}}
 
 and uminus_name =
-  {x_name="uminus"; x_def={d_kind=MethodDef (48, false); d_type=(ClassType integer_class)}}
+  {x_name="uminus"; x_def={d_kind=MethodDef (52, false); d_type=(ClassType integer_class)}}
 
 and not_equals_name =
-  {x_name="notEquals"; x_def={d_kind=MethodDef (52, false); d_type=(ClassType bool_class)}}
+  {x_name="notEquals"; x_def={d_kind=MethodDef (56, false); d_type=(ClassType bool_class)}}
 
 and less_than_name =
-  {x_name="lessThan"; x_def={d_kind=MethodDef (56, false); d_type=(ClassType bool_class)}}
+  {x_name="lessThan"; x_def={d_kind=MethodDef (60, false); d_type=(ClassType bool_class)}}
 
 and greater_than_name =
-  {x_name="greaterThan"; x_def={d_kind=MethodDef (60, false); d_type=(ClassType bool_class)}}
+  {x_name="greaterThan"; x_def={d_kind=MethodDef (64, false); d_type=(ClassType bool_class)}}
 
 and less_than_equal_name =
-  {x_name="lessThanEq"; x_def={d_kind=MethodDef (64, false); d_type=(ClassType bool_class)}}
+  {x_name="lessThanEq"; x_def={d_kind=MethodDef (68, false); d_type=(ClassType bool_class)}}
 
 and greater_than_equal_name =
-  {x_name="greaterThanEq"; x_def={d_kind=MethodDef (68, false); d_type=(ClassType bool_class)}}
+  {x_name="greaterThanEq"; x_def={d_kind=MethodDef (72, false); d_type=(ClassType bool_class)}}
 
 and arg_x =
   {x_name="x"; x_def=arg_def}
