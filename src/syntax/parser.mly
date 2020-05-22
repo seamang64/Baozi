@@ -297,26 +297,22 @@ factor :
       { Constant ($1, TempType (Ident "Int")) }
   | C_STR
       { let (lab, s) = $1 in String (lab, s) }
-  | expr O_RIGHTARROW name O_LEFTARROW P_LCURL arguments P_RCURL
+  | factor O_RIGHTARROW name O_LEFTARROW P_LCURL arguments P_RCURL
       { MethodCall ($1, $3, $6) }
-  | expr O_RIGHTARROW name
+  | factor O_RIGHTARROW name
       { Property($1, $3) }
-  | expr O_RIGHTARROW P_LSQUARE expr P_RSQUARE
+  | factor O_RIGHTARROW P_LSQUARE expr P_RSQUARE
       { Sub($1, $4) }
   | O_NOT factor
       { MethodCall($2, createName "not", []) }
   | K_NIL
       { Nil }
-  | K_NEW ttype O_LEFTARROW P_LCURL arguments P_RCURL
-      { MethodCall (New (createTypeName (TempType $2)), createName "%constructor", $5) }
   | K_NEW ttype O_LEFTARROWSQUARE expr P_RSQUARE
       { NewArray (createTypeName (TempType $2), $4) }
   | K_NEW ttype
       { New (createTypeName (TempType $2)) }
   | K_ME
       { Name (createName "Me") }
-  | K_PARENT O_LEFTARROW P_LCURL arguments P_RCURL
-      { MethodCall (Parent, createName "%constructor", $4) }
   | K_PARENT
       { Parent }
   | C_TRUE
