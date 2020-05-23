@@ -3,36 +3,41 @@ open Syntax.Keiko
 open Errors
 open Printf
 
-module Hashset = Set.Make(
+(* Set of all arrays in the program *)
+module ArraySet = Set.Make(
   struct
     let compare = compare
     type t = def_type
   end )
 
-let arraytypes = ref Hashset.empty
+let arraytypes = ref ArraySet.empty
 
+(* Generate the ancestor types of an array *)
 let rec anc_types t =
   match t with
   | ClassType c | GenericClassType (c, _) -> t :: (anc_types c.c_ptype)
   | ArrayType d -> List.map (fun t' -> ArrayType t') (anc_types d)
-  | GenericType (_, d) -> anc_types d
   | VoidType -> []
   | _ -> raise IncorrectSyntaxError
 
+(* Add and array type the set *)
 let rec add_type t =
   match t with
+  | ClassType _ -> ()
   | ArrayType d ->
-      arraytypes := List.fold_right Hashset.add (anc_types t) !arraytypes;
-      add_type d
-  | _ -> ()
+      arraytypes := List.fold_right ArraySet.add (anc_types t) !arraytypes; (* Need to add all the ancestors *)
+      add_type d (*Need to add the elements of the array *)
+  | GenericType (_, _) | GenericClassType (_, _) -> raise GenericArrayError (* Cannot have arrays of generics *)
+  | _ -> raise IncorrectSyntaxError
 
+(* Make a name for an array class descriptor *)
 let rec make_name t =
   match t with
   | ClassType c | GenericClassType (c, _) -> c.c_name.x_name
   | ArrayType d -> sprintf "array.%%%s" (make_name d)
-  | GenericType (_, d) -> make_name d
   | _ -> raise IncorrectSyntaxError
 
+(* Generate the names of the ancestor table *)
 let rec gen_anc t =
   match t with
   | ClassType c | GenericClassType (c, _) -> c.c_name.x_name :: (gen_anc c.c_ptype)
@@ -65,6 +70,7 @@ and split_string s =
       (String.sub s 0 32) :: (split_string (String.sub s 32 (n-32)))
     else [s ^ "\000"]
 
+(* Generate the code for the array class descriptors *)
 let create_fake_classes () =
   let gen_descriptor (ArrayType t) =
     let tn = (make_name t) and anc = gen_anc (ArrayType t) and pn = Check.print_type (ArrayType t) in
@@ -87,4 +93,4 @@ let create_fake_classes () =
           WORD (SYMBOL ("Object.%desc"));
           gen_string (n ^ ".%string", pn)
         ]
-  in SEQ (List.map gen_descriptor (Hashset.elements !arraytypes))
+  in SEQ (List.map gen_descriptor (ArraySet.elements !arraytypes))

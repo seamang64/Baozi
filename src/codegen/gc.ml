@@ -53,11 +53,11 @@ let gen_stack_maps code =
   let rec gen_map code' stack =
     match code' with
     | CONST n -> (CONST n, false::stack)
-    | GLOBAL s -> (GLOBAL s, true::stack)
+    | GLOBAL s -> (GLOBAL s, false::stack)
     | LOCAL n -> (LOCAL n, true::stack)
     | LOADW -> (LOADW, true::(List.tl stack))
     | STOREW -> (STOREW, drop 2 stack)
-    | CALLW n ->
+    | CALLW n -> (* At a CALLW statement, we may need to add a STKMAP instruction *)
       let stkmap = gen_stack_gc n (List.tl stack) in
         (SEQ [stkmap; CALLW n], true::(drop (n+1) stack))
     | BINOP op -> (BINOP op, false::(drop 2 stack))

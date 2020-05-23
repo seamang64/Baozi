@@ -38,6 +38,8 @@ exception InvalidParent
 
 exception UnexpectedEnd
 
+exception GenericArrayError
+
 let print_exception e =
   match e with
   | UnknownName n -> printf "Error: The name '%s' does not exist in the current context\n" n
@@ -59,4 +61,5 @@ let print_exception e =
   | InvalidGeneric -> printf "Error in creating a generic object.\n"
   | InvalidParent -> printf "Cannot inheirit from an Array type.\n"
   | UnexpectedEnd -> printf "Error: End of file in comment\n."
+  | GenericArrayError -> printf "Error: Cannot create an array using a generic type\n"
   | _ -> printf "Unknown Error\n";
