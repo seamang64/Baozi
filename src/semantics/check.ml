@@ -246,7 +246,7 @@ let check_method meth parent =
   begin
     let p_meth = find_method meth.m_name parent and get_types args = List.map (fun (Prop(x, _)) -> get_type VoidType x.x_def.d_type) args in
       check_compatible p_meth.m_name.x_def.d_type meth.m_name.x_def.d_type;
-      check_args (get_types meth.m_arguments) (get_types p_meth.m_arguments);
+      check_args (get_types (List.tl p_meth.m_arguments)) (get_types (List.tl meth.m_arguments));
   end;
   (* Check the body of the method *)
   check_stmt meth.m_body meth.m_name.x_def.d_type

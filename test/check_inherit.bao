@@ -8,7 +8,7 @@ $>
 
 Define B <- A
 $>
-    ReplaceMethod DoNothing {b : B} => {}
+    ReplaceMethod DoNothing {b : Object} => {}
     $>
         Return.
     <$
