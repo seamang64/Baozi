@@ -46,6 +46,7 @@
     "For", K_FOR;
     "Step", K_STEP;
     "Test", K_TEST;
+    "Cast", K_CAST;
 
     "Array", K_ARRAY;
     "New", K_NEW;

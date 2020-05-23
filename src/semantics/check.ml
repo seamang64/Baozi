@@ -193,6 +193,13 @@ and check_expr e =
       let t = check_expr e and d = n.x_def.d_type in
         validate_type d; (* Validate the type of the new object *)
         check_compatible t integer_def.d_type; d (* Check that the length is an integer *)
+  | Cast (e, n) ->
+      let t = check_expr e and d = n.x_def in
+      begin
+        match d.d_kind with
+        | ClassDef -> check_compatible t d.d_type; d.d_type
+        | _ -> raise InvalidExpression
+      end
   | Parent -> !p_type
   | Nil -> NilType
 

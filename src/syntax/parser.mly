@@ -42,6 +42,7 @@
 %token K_FOR
 %token K_STEP
 %token K_TEST
+%token K_CAST
 
 /* Boolean Constants */
 %token C_TRUE
@@ -303,6 +304,8 @@ factor :
       { Property($1, $3) }
   | factor O_RIGHTARROW P_LSQUARE expr P_RSQUARE
       { Sub($1, $4) }
+  | K_CAST P_LPAR expr P_RPAR O_RIGHTARROW name
+      { Cast($3, $6)}
   | O_NOT factor
       { MethodCall($2, createName "not", []) }
   | K_NIL

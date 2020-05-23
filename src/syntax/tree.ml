@@ -32,6 +32,7 @@ and expr =
   | TypeOf of name
   | New of name
   | NewArray of name * expr
+  | Cast of expr * name
   | Parent
 
 and stmt =

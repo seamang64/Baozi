@@ -1,0 +1,29 @@
+Define Program
+$>
+    ClassMethod Main {} => {}
+    $>
+        x : A = New A.
+        !! x->p = 5. !!
+
+        Program->castMethod<-{x}.
+        Return.
+    <$
+
+    ClassMethod castMethod {a : A} => {}
+    $>
+        Output->IntLn<-{(Cast(a)->B)->p}.
+        Return.
+    <$
+<$
+
+Define A
+$>
+<$
+
+Define B <- A
+$>
+    Properties
+    $>
+        p : Int,
+    <$
+<$

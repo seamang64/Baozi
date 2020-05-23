@@ -50,25 +50,23 @@ let dup n stk =
 
 (* Simulate the evaluation stack and place any STKMAP instructions that are needed *)
 let gen_stack_maps code =
-  let rec gen_map code' stack =
-    match code' with
-    | CONST n -> (CONST n, false::stack)
-    | GLOBAL s -> (GLOBAL s, true::stack)
-    | LOCAL n -> (LOCAL n, true::stack)
-    | LOADW -> (LOADW, true::(List.tl stack))
-    | STOREW -> (STOREW, drop 2 stack)
-    | CALLW n ->
+  let rec gen_map cd stack =
+    match cd with
+    | CONST _ | GLOBAL _ -> (cd, false::stack)
+    | LOCAL _ -> (cd, true::stack)
+    | LOADW -> (cd, true::(List.tl stack))
+    | STOREW -> (cd, drop 2 stack)
+    | CALLW n | CALL n ->
       let stkmap = gen_stack_gc n (List.tl stack) in
-        (SEQ [stkmap; CALLW n], true::(drop (n+1) stack))
-    | BINOP op -> (BINOP op, false::(drop 2 stack))
-    | MONOP op -> (MONOP op, false::(List.tl stack))
-    | OFFSET -> (OFFSET, true::(drop 2 stack))
-    | SWAP -> (SWAP, swap stack)
-    | DUP n -> (DUP n, dup n stack)
+        (SEQ [stkmap; cd], true::(drop (n+1) stack))
+    | BINOP _ -> (cd, false::(drop 2 stack))
+    | MONOP _ -> (cd, false::(List.tl stack))
+    | OFFSET -> (cd, true::(drop 2 stack))
+    | SWAP -> (cd, swap stack)
+    | DUP n -> (cd, dup n stack)
     | SEQ ss ->
         let (kcode, stk) = List.fold_left (fun (k', s) k -> let (nk, s') = gen_map k s in (k' @ [nk], s')) ([], stack) ss in
           (SEQ kcode, stk)
-    | NOP -> (NOP, stack)
-    | TYPE s -> (TYPE s, stack)
+    | NOP | TYPE _ -> (cd, stack)
     | s -> print_keiko s; raise InvalidExpression
   in let (k, _) = gen_map code [] in k

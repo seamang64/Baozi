@@ -35,6 +35,7 @@ type code =
   | STKMAP of int
   | PCALLW of int               (* Call procedure (nparams, rsize) *)
   | CALLW of int
+  | CALL of int
   | RETURN of int               (* Procedure return (rsize) *)
   | MONOP of op                 (* Perform unary operation (op) *)
   | BINOP of op                 (* Perform binary operation (op) *)
@@ -145,6 +146,7 @@ let rec print_keiko prog =
    | STKMAP n -> printf "STKMAP 0x%X\n" n
    | PCALLW n -> printf "PCALLW %d\n" n
    | CALLW n -> printf "CALLW %d\n" n
+   | CALL n -> printf "CALL %d\n" n
    | RETURN n -> printf "RETURN%s\n" (fType n)
    | BINOP op -> printf "%s\n" (print_op op)
    | MONOP op -> printf "%s\n" (print_op op)

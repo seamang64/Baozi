@@ -156,7 +156,7 @@ let annotate_properties properties env =
 
 let rec annotate_expr expr env =
   match expr with
-  | Name n -> let d = lookup n.x_name env in n.x_def <- d; n.x_def.d_type (* Find the name in the environment *)
+  | Name n ->  let d = lookup n.x_name env in n.x_def <- d; n.x_def.d_type (* Find the name in the environment *)
   | Constant (_, d) -> get_type d env
   | String _ -> string_def.d_type;
   | TypeOf _ -> type_def.d_type
@@ -191,6 +191,11 @@ let rec annotate_expr expr env =
       ignore(annotate_expr e env);
       let d = get_type n.x_def.d_type env in
         n.x_def <- create_def ClassDef d; d (* Names following New are classes *)
+  | Cast (e, n) ->
+      ignore(annotate_expr e env);
+      let d = lookup n.x_name env in
+        n.x_def <- d;
+        d.d_type
   | Parent -> !p_type
   | Nil -> object_def.d_type
 

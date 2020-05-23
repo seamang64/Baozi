@@ -118,6 +118,14 @@ and gen_expr e =
         GLOBAL "baozi.%makeArray";
         CALLW 1;
       ]
+  | Cast (e, n) ->
+      SEQ [
+        gen_expr e;
+        DUP 0;
+        GLOBAL (n.x_name ^ ".%desc");
+        GLOBAL "baozi.%typeCheck";
+        CALL 2;
+      ]
   | Parent -> SEQ [LOCAL 12; LOADW]
   | Nil -> LDG "Nil"
 
