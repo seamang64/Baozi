@@ -15,11 +15,6 @@ and origin =
     Mine
   | Inherited of string
 
-(* Generic type with name and most general type *)
-and generic_type =
-    { g_name: name;
-      mutable g_ptype: def_type}
-
 (* Language constructs *)
 and expr =
     Name of name
@@ -70,7 +65,7 @@ and c_class =
     mutable c_properties: property list;
     mutable c_methods: m_method list;
     mutable c_ancestors: c_class list;
-    c_generics: generic_type list }
+    c_generics: name list }
 
 and program =
   Program of c_class list
@@ -142,14 +137,14 @@ let seq =
 let createClass (n, p, props, meths, generics) =
   { c_name=n; c_ptype=p; c_size=0; c_properties=props; c_methods=meths; c_ancestors=[]; c_generics=generics }
 
-let createGeneric n t =
-  { g_name=n; g_ptype=t }
-
 let createMethod (n, static, args, t, stmt, main, replace) =
   { m_name=n; m_type=t; m_static=static; m_size=0; m_arguments=args; m_body=stmt; m_main=main; m_replace=replace; m_origin=Mine }
 
 let createName n =
   { x_name=n; x_def=empty_def }
+
+let createGeneric n t =
+  { x_name=n; x_def={d_kind=NoneKind; d_type=t} }
 
 let createTypeName t =
   { x_name="type_delc"; x_def={d_kind=NoneKind; d_type=t} }

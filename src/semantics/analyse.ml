@@ -50,7 +50,7 @@ let rec get_temp_type t env =
   | Generic (n, ts) ->
       let c = get_class (lookup n env).d_type in (* Find the name in in the enviroment *)
         (* Then do the same for all the types that are passed to the type variables *)
-        try GenericClassType (c, List.combine (List.map (fun g -> g.g_name.x_name) c.c_generics) (List.map (fun x -> get_temp_type x env) ts))
+        try GenericClassType (c, List.combine (List.map (fun g -> g.x_name) c.c_generics) (List.map (fun x -> get_temp_type x env) ts))
           with Invalid_argument _ -> raise InvalidGeneric
 
 let get_type t env =
@@ -95,8 +95,8 @@ let find_method meth cls =
   | TempType n -> raise (UnannotatedName (print_temp_type n))
 
 (* Find a property within an class *)
-let find_properties prop cls =
-  match cls with
+let find_properties prop t =
+  match t with
   | ClassType c ->
       begin (* Find a property in c with the same name as prop *)
         try (List.find (fun n -> prop.x_name = n.x_name) (List.map (fun (Prop(n, _)) -> n) c.c_properties)).x_def with
@@ -241,15 +241,10 @@ let rec annotate_stmt stmt env =
   | Nop -> env
 
 let annotate_generics env generic =
-  match generic.g_ptype with
-  | VoidType ->
-      (* VoidType denotes no parent type. Most general type therefore is Object *)
-      define generic.g_name.x_name (create_def ClassDef (GenericType (generic.g_name.x_name, (ClassType object_class)))) env
-  | t ->
-      let d = get_type t env in
-      generic.g_ptype <- d;
-      (* Create new generic type in enviroment with it's mpost general type *)
-      define generic.g_name.x_name (create_def ClassDef (GenericType (generic.g_name.x_name, d))) env
+  let d = get_type generic.x_def.d_type env in
+    generic.x_def <- create_def ClassDef (GenericType (generic.x_name, d));
+    (* Create new generic type in enviroment with it's mpost general type *)
+    define generic.x_name generic.x_def env
 
 let annotate_methods methods env=
   let rec annotate meths i e =

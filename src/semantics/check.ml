@@ -27,51 +27,48 @@ let rec print_type t =
   | TempType d -> sprintf "Temp %s" (print_temp_type d)
   | NilType -> "Nil"
 
-(* Check strict compatibility between types *)
-let check_strict_comp type1 type2 =
-  let pt1 = ref VoidType and pt2 = ref VoidType in
-  let rec check t1 t2 =
-    match (t1, t2) with
-    | (ClassType c1, ClassType c2) ->
-        if c1.c_name.x_name == c2.c_name.x_name then () (* Classes must be identical *)
-        else raise (TypeError((print_type t1), (print_type t2)))
-    | (ArrayType d1, ArrayType d2) -> check d1 d2 (* Recurse on the type of the array elements *)
-    | (GenericType (n1, _), GenericType (n2, _)) ->
-        if n1 == n2 then () (* Generic types must have the same name *)
-        else raise (TypeError((print_type t1), (print_type t2)))
-    | (_, NilType) -> () (* Nil is compatible with anything *)
-    | _ -> raise (TypeError((print_type !pt1), (print_type !pt2)))
-  in pt1 := type1; pt2 := type2; check type1 type2
-
 (* Check to see if two types are compatible with each other *)
 let check_compatible type1 type2 =
   let pt1 = ref VoidType and pt2 = ref VoidType in
-  let rec check t1 t2 =
-    match (t1, t2) with
-    | (ClassType c1, ClassType c2) ->
-        if c1.c_name.x_name == c2.c_name.x_name then ()
-        else check t1 c2.c_ptype (* Recurse and check t1 against t2's paraent type *)
-    | (GenericClassType (c1, ts1), GenericClassType (c2, ts2)) ->
-        check (ClassType c1) (ClassType c2); (* Check the classes are compatible *)
-        begin
-          try List.iter2 (fun (_, x) (_, y) -> check_strict_comp x y) ts1 ts2 (* Then check that the type arguments are the same *)
-          with Invalid_argument _ -> raise (TypeError((print_type !pt1), (print_type !pt2)))
-        end
-    | (ClassType c1, GenericClassType (c2,_)) ->
-        if c1.c_name.x_name == c2.c_name.x_name then () (* Generic class can be compatible with normal class *)
-        else check t1 c2.c_ptype
-    | (ArrayType d1, ArrayType d2) -> check_strict_comp d1 d2  (* Arrays are invarient *)
-    | (ClassType c, ArrayType _ ) ->
-        if c.c_name.x_name == "Object" then () (* Arrays are subtypes of Object *)
-        else raise (TypeError((print_type !pt1), (print_type !pt2)))
-    | (GenericType (n1, d1), GenericType (n2, d2)) ->
-        if n1 == n2 then () (* Generic types should have the same name or be in a subtype relation *)
-        else check t1 d2
-    | (ClassType c, GenericType(_, t)) -> check t1 t (* Check the most-general type of the generic against the class type *)
-    | (_, NilType) -> () (* Nil is compatible with anything *)
-    | (VoidType, VoidType) -> () (* Void is compatible with itself *)
-    | _ -> raise (TypeError((print_type !pt1), (print_type !pt2)))
-  in pt1 := type1; pt2 := type2; check type1 type2
+    (* Check strict compatibility between types *)
+    let rec check_strict_comp t1 t2 =
+      match (t1, t2) with
+      | (ClassType c1, ClassType c2) ->
+          if c1.c_name.x_name == c2.c_name.x_name then () (* Classes must be identical *)
+          else raise (TypeError((print_type t1), (print_type t2)))
+      | (ArrayType d1, ArrayType d2) -> check_strict_comp d1 d2 (* Recurse on the type of the array elements *)
+      | (GenericType (n1, _), GenericType (n2, _)) ->
+          if n1 == n2 then () (* Generic types must have the same name *)
+          else raise (TypeError((print_type t1), (print_type t2)))
+      | (_, NilType) -> () (* Nil is compatible with anything *)
+      | _ -> raise (TypeError((print_type !pt1), (print_type !pt2))) in
+    let rec check t1 t2 =
+      match (t1, t2) with
+      | (ClassType c1, ClassType c2) ->
+          if c1.c_name.x_name == c2.c_name.x_name then ()
+          else check t1 c2.c_ptype (* Recurse and check t1 against t2's paraent type *)
+      | (GenericClassType (c1, ts1), GenericClassType (c2, ts2)) ->
+          check (ClassType c1) (ClassType c2); (* Check the classes are compatible *)
+          begin
+            (* Then check that the type arguments are the same *)
+            try List.iter2 (fun (_, x) (_, y) -> check_strict_comp x y) ts1 ts2
+            with Invalid_argument _ -> raise (TypeError((print_type !pt1), (print_type !pt2)))
+          end
+      | (ClassType c1, GenericClassType (c2,_)) ->
+          if c1.c_name.x_name == c2.c_name.x_name then () (* Generic class can be compatible with normal class *)
+          else check t1 c2.c_ptype
+      | (ArrayType d1, ArrayType d2) -> check_strict_comp d1 d2  (* Arrays are invarient *)
+      | (ClassType c, ArrayType _ ) ->
+          if c.c_name.x_name == "Object" then () (* Arrays are subtypes of Object *)
+          else raise (TypeError((print_type !pt1), (print_type !pt2)))
+      | (GenericType (n1, d1), GenericType (n2, d2)) ->
+          if n1 == n2 then () (* Generic types should have the same name or be in a subtype relation *)
+          else check t1 d2
+      | (ClassType c, GenericType(_, t)) -> check t1 t (* Check the most-general type of the generic against the class type *)
+      | (_, NilType) -> () (* Nil is compatible with anything *)
+      | (VoidType, VoidType) -> () (* Void is compatible with itself *)
+      | _ -> raise (TypeError((print_type !pt1), (print_type !pt2)))
+    in pt1 := type1; pt2 := type2; check type1 type2
 
 (* Validate that the types supplied to a generic do not violate the restrictions *)
 let validate_generics generics =
@@ -84,8 +81,8 @@ let validate_generics generics =
       | pt -> check_compatible pt t
       in function
         | (t, g)::gs ->
-            validate_pair t g.g_ptype;
-            validate ((g.g_name.x_name, g.g_ptype)::prev) gs
+            validate_pair t g.x_def.d_type;
+            validate ((g.x_name, g.x_def.d_type)::prev) gs
         | _ -> ()
   in validate [] generics
 

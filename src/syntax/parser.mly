@@ -117,14 +117,14 @@ generics :
 
 /* List of generic definitions */
 generic_list :
-  | name
+  | IDENT
       { [createGeneric $1 (TempType (Ident "Object"))] }
-  | name O_LEFTARROW IDENT
-      { [createGeneric $1 (TempType (Ident $3))] }
-  | name P_COMMA generic_list
+  | IDENT O_LEFTARROW ttype
+      { [createGeneric $1 (TempType $3)] }
+  | IDENT P_COMMA generic_list
       { (createGeneric $1 (TempType (Ident "Object"))) :: $3 }
-  | name O_LEFTARROW IDENT P_COMMA generic_list
-      { (createGeneric $1 (TempType (Ident $3))) :: $5 }
+  | IDENT O_LEFTARROW ttype P_COMMA generic_list
+      { (createGeneric $1 (TempType $3)) :: $5 }
 
 /* Parent type of class */
 parent :
@@ -267,7 +267,7 @@ expr:
   | simple O_OR simple
       { MethodCall($1, createName "or", [$3]) }
   | simple O_IS simple
-      { MethodCall($1, createName "Is", [$3]) }
+      { MethodCall($1, createName "InstanceOf", [$3]) }
 
 simple :
   | term
