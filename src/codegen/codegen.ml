@@ -193,6 +193,11 @@ and gen_assigment e1 e2 =
           gen_expr e3;
           (* Type check the element we are adding *)
           DUP 1;
+          DUP 1;
+          LOADW;
+          CONST 12;
+          OFFSET;
+          LOADW;
           GLOBAL "baozi.%typeCheck";
           CALLW 2;
           (* Get the "Data" *)
