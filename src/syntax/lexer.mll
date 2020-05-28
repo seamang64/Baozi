@@ -90,7 +90,6 @@ rule token = parse
   | "/"                 { O_DIV }
   | "%"                 { O_MOD }
   | "="                 { O_ASSIGN }
-  | "<-["               { O_LEFTARROWSQUARE }
   | "->"                { O_RIGHTARROW }
   | "<-"                { O_LEFTARROW }
   | "=="                { O_EQUALS }

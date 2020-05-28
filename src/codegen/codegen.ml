@@ -45,7 +45,7 @@ let is_static m =
 let unbox = SEQ [CONST 4; OFFSET; LOADW]
 
 (* Generate code for getting the address assoicated with a name *)
-let rec gen_addr n =
+let rec gen_name_addr n =
   match n.x_def.d_kind with
   | ClassDef -> SEQ [GLOBAL (n.x_name ^ ".%desc")]
   | VariableDef off -> SEQ [LOCAL off]
@@ -53,10 +53,33 @@ let rec gen_addr n =
   | MethodDef (off, _) -> SEQ [CONST off; OFFSET]
   | NoneKind -> raise (NoneKindError n.x_name)
 
+(* Generate code for an address *)
+and gen_addr expr =
+  match expr with
+  | Name n -> gen_name_addr n
+  | Property (e, n) -> SEQ[gen_expr e; gen_name_addr n]
+  | Sub (e1, e2) ->
+      SEQ [
+        (* Get the array the we are indexing from *)
+        gen_expr e1;
+        (* Get the "Data" *)
+        CONST 4;
+        OFFSET;
+        LOADW;
+        (* Get the index *)
+        gen_expr e2;
+        unbox;
+        (* The element we want is at offset 4*i *)
+        CONST 4;
+        BINOP Times;
+        OFFSET;
+      ]
+    | _ -> raise InvalidAssigment
+
 (* Generate code for an expression *)
 and gen_expr e =
   match e with
-  | Name n -> SEQ [gen_addr n; LOADW]
+  | Name n -> SEQ [gen_name_addr n; LOADW]
   | Constant (x, d) ->
     begin
       match d with
@@ -83,25 +106,8 @@ and gen_expr e =
   | MethodCall (e1, m, args) ->
       if is_static m then gen_static_call e1 m args
       else gen_call e1 m args
-  | Property (e1, n) -> SEQ [gen_expr e1; gen_addr n; LOADW]
-  | Sub (e1, e2) ->
-      SEQ [
-        (* Get the array the we are indexing from *)
-        gen_expr e1;
-        (* Get the "Data" *)
-        CONST 4;
-        OFFSET;
-        LOADW;
-        (* Get the index *)
-        gen_expr e2;
-        unbox;
-        (* The element we want is at offset 4*i *)
-        CONST 4;
-        BINOP Times;
-        OFFSET;
-        (* Load the element *)
-        LOADW;
-      ]
+  | Property (_, _) -> SEQ [gen_addr e; LOADW]
+  | Sub (_, _) -> SEQ [gen_addr e; LOADW]
   | New n ->
       SEQ [
         (* get the address of the class descriptor *)
@@ -168,7 +174,7 @@ and gen_call expr meth args =
         (* Load the class descriptor from the object *)
         LOADW;
         (* find the offset for the method *)
-        gen_addr meth;
+        gen_name_addr meth;
         (* load the method *)
         LOADW;
         (* call the method *)
@@ -186,41 +192,12 @@ and gen_cond tlab flab test =
     JUMP flab
   ]
 
-(* Generate code for an assignment *)
-and gen_assigment e1 e2 =
-  let code =
-    let v = gen_expr e2 in
-    match e1 with
-    | Name n -> SEQ [v; gen_addr n; STOREW]
-    | Property (e, n) -> SEQ[v; gen_expr e; gen_addr n; STOREW]
-    | Sub (e3, e4) ->
-        SEQ [
-          v;
-          (* Get the array the we are indexing from *)
-          gen_expr e3;
-          (* Get the "Data" *)
-          CONST 4;
-          OFFSET;
-          LOADW;
-          (* Get the index *)
-          gen_expr e4;
-          unbox;
-          (* The element we want is at offset 4*i *)
-          CONST 4;
-          BINOP Times;
-          OFFSET;
-          (* Load the element *)
-          STOREW;
-        ]
-    | _ -> raise InvalidAssigment
-  in gen_stack_maps code
-
 (*Generate code for a statement *)
 and gen_stmt stmt =
   let rec code s =
     match s.s_guts with
-    | Assign (e1, e2) -> gen_assigment e1 e2
-    | Delc (n, _, e) -> SEQ [gen_stack_maps (gen_expr e); gen_addr n; STOREW]
+    | Assign (e1, e2) -> SEQ [gen_stack_maps (SEQ [gen_expr e2; gen_addr e1]); STOREW]
+    | Delc (n, _, e) -> SEQ [gen_stack_maps (gen_expr e); gen_name_addr n; STOREW]
     | Call e  -> gen_stack_maps (gen_expr e)
     | Return r ->
       begin

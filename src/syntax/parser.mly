@@ -57,7 +57,6 @@
 %token O_ASSIGN
 %token O_RIGHTARROW
 %token O_LEFTARROW
-%token O_LEFTARROWSQUARE
 %token O_EQUALS
 %token O_NOTEQUALS
 %token O_LESSTHAN
@@ -310,7 +309,7 @@ factor :
       { MethodCall($2, createName "not", []) }
   | K_NIL
       { Nil }
-  | K_NEW ttype O_LEFTARROWSQUARE expr P_RSQUARE
+  | K_NEW ttype O_LEFTARROW O_LSQUARE expr P_RSQUARE
       { NewArray (createTypeName (TempType $2), $4) }
   | K_NEW ttype
       { New (createTypeName (TempType $2)) }

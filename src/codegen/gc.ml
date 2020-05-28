@@ -56,9 +56,12 @@ let gen_stack_maps code =
     | LOCAL _ -> (cd, true::stack)
     | LOADW -> (cd, true::(List.tl stack))
     | STOREW -> (cd, drop 2 stack)
-    | CALLW n | CALL n -> (* At call instruction, we may need to add a STKMAP *)
-      let stkmap = gen_stack_gc n (List.tl stack) in
-        (SEQ [stkmap; cd], true::(drop (n+1) stack))
+    | CALLW n -> (* At call instruction, we may need to add a STKMAP *)
+        let stkmap = gen_stack_gc n (List.tl stack) in
+          (SEQ [stkmap; cd], true::(drop (n+1) stack))
+    | CALL n -> (* At call instruction, we may need to add a STKMAP *)
+        let stkmap = gen_stack_gc n (List.tl stack) in
+          (SEQ [stkmap; cd], (drop (n+1) stack))
     | BINOP _ -> (cd, false::(drop 2 stack))
     | MONOP _ -> (cd, false::(List.tl stack))
     | OFFSET -> (cd, true::(drop 2 stack))
