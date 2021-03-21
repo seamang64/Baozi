@@ -1,5 +1,5 @@
 # Baozi
-Keiko compiler for the Baozi Language
+Keiko compiler for the Baozi Language - a simple object-oriented language I created for my Master's project. The full project report is part of this repository. Why is it called "Baoz"i? A baozi is a type of Chinese bun and - since this is an object-orieted langauge - I conceptualized the objects a little self-contained baozi, each filled with delicious methods and properties. 
 
 
 # Installation
