@@ -15,7 +15,7 @@ This is the extent of my project. If you would like to run the Keiko code, you w
 
 --------------------------------
   
-In order to run the keiko code, you will need Mike Spivey's Keiko interpreter.
+In order to run the keiko code, you will need Dr Mike Spivey's Keiko interpreter.
 
 Easier way to get that is to run `hg clone http://spivey.oriel.ox.ac.uk/hg/compilers`.
 
