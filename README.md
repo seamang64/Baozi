@@ -19,7 +19,7 @@ Easier way to get that is to run `hg clone http://spivey.oriel.ox.ac.uk/hg/compi
 
 Run `make` in every `compilers/keiko`, `compilers/lib` and `compilers/ppc`
 
-Copy 'kompile' and `a.k` to `compilers`
+Copy `kompile` and `a.k` to `compilers`
 
 Copy 'lib/baozi.k` to `compilers\keiko`
 
