@@ -1,5 +1,4 @@
 open Printf
-open Source
 
 type codelab = int
 type symbol = string

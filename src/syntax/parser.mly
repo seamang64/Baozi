@@ -273,6 +273,8 @@ simple :
       { $1 }
   | O_MINUS term %prec O_UMINUS
       { MethodCall($2, createName "uminus", []) }
+  | O_NOT term
+      { MethodCall($2, createName "not", []) }
   | simple O_PLUS term
       { MethodCall($1, createName "add", [$3]) }
   | simple O_MINUS term
@@ -305,8 +307,6 @@ factor :
       { Sub($1, $4) }
   | K_CAST P_LPAR expr P_RPAR O_RIGHTARROW name
       { Cast($3, $6)}
-  | O_NOT factor
-      { MethodCall($2, createName "not", []) }
   | K_NIL
       { Nil }
   | K_NEW ttype O_LEFTARROW P_LSQUARE expr P_RSQUARE

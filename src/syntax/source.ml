@@ -1,5 +1,3 @@
-open Printf
-
 let filename = ref ""
 let chan = ref stdin
 let linetab = Hashtbl.create 100
