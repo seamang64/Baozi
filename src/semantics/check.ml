@@ -21,7 +21,7 @@ let rec print_type t =
   match t with
   | ClassType c -> c.c_name.x_name
   | ArrayType d -> sprintf "Array of %s" (print_type d)
-  | GenericClassType (c, ts) -> (sprintf "%s with " c.c_name.x_name) ^ (List.fold_right (fun (n, t') s -> (print_type t') ^ s) ts "")
+  | GenericClassType (c, ts) -> (sprintf "%s with " c.c_name.x_name) ^ (List.fold_right (fun (_, t') s -> (print_type t') ^ s) ts "")
   | GenericType (n, d) -> sprintf "%s as %s" n (print_type d)
   | VoidType -> "Void"
   | TempType d -> sprintf "Temp %s" (print_temp_type d)
@@ -61,10 +61,10 @@ let check_compatible type1 type2 =
       | (ClassType c, ArrayType _ ) ->
           if c.c_name.x_name == "Object" then () (* Arrays are subtypes of Object *)
           else raise (TypeError((print_type !pt1), (print_type !pt2)))
-      | (GenericType (n1, d1), GenericType (n2, d2)) ->
+      | (GenericType (n1, _), GenericType (n2, d2)) ->
           if n1 == n2 then () (* Generic types should have the same name or be in a subtype relation *)
           else check t1 d2
-      | (ClassType c, GenericType(_, t)) -> check t1 t (* Check the most-general type of the generic against the class type *)
+      | (ClassType _, GenericType(_, t)) -> check t1 t (* Check the most-general type of the generic against the class type *)
       | (_, NilType) -> () (* Nil is compatible with anything *)
       | (VoidType, VoidType) -> () (* Void is compatible with itself *)
       | _ -> raise (TypeError((print_type !pt1), (print_type !pt2)))
@@ -75,8 +75,8 @@ let validate_generics generics =
   let rec validate prev =
     let validate_pair t gt =
       match gt with
-      | GenericType (n1, d1) ->
-          let (n, d) = List.find (fun (n2, d2) -> n1 == n2) prev in
+      | GenericType (n1, _) ->
+          let (_, d) = List.find (fun (n2, _) -> n1 == n2) prev in
             check_compatible d t
       | pt -> check_compatible pt t
       in function

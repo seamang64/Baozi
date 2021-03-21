@@ -309,8 +309,8 @@ factor :
       { MethodCall($2, createName "not", []) }
   | K_NIL
       { Nil }
-  | K_NEW ttype O_LEFTARROW O_LSQUARE expr P_RSQUARE
-      { NewArray (createTypeName (TempType $2), $4) }
+  | K_NEW ttype O_LEFTARROW P_LSQUARE expr P_RSQUARE
+      { NewArray (createTypeName (TempType $2), $5) }
   | K_NEW ttype
       { New (createTypeName (TempType $2)) }
   | K_ME

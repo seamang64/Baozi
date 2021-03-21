@@ -91,8 +91,8 @@ let equate x1 x2 =
 let do_refs f =
   function
       JUMP x -> f (ref_count x)
-    | JUMPC (w, x) -> f (ref_count x)
-    | JUMPCZ (w, x) -> f (ref_count x)
+    | JUMPC (_, x) -> f (ref_count x)
+    | JUMPCZ (_, x) -> f (ref_count x)
     | JCASE labs -> List.iter (fun x -> f (ref_count x)) labs
     | _ -> ()
 
@@ -158,8 +158,6 @@ let ruleset replace =
         replace 2 [LDG x]
     | GLOBAL x :: STOREW :: _ ->
         replace 2 [STG x]
-    | CONST n :: OFFSET :: CONST m :: OFFSET :: _ ->
-        replace 4 [CONST (n+m); OFFSET]
     | CONST n :: OFFSET :: LOADW :: _->
         replace 3 [LDNW n]
     | CONST n :: OFFSET :: STOREW :: _ ->
@@ -168,17 +166,17 @@ let ruleset replace =
         replace 3 [LDNW (n+m)]
     | CONST n :: OFFSET :: STNW m :: _ ->
         replace 3 [STNW (n+m)]
-    | CONST s :: BINOP Times :: OFFSET :: LOADW :: _ ->
+    | CONST _ :: BINOP Times :: OFFSET :: LOADW :: _ ->
         replace 4 [LDI]
-    | CONST s :: BINOP Times :: OFFSET :: STOREW :: _ ->
+    | CONST _ :: BINOP Times :: OFFSET :: STOREW :: _ ->
         replace 4 [STI]
 
-    (*| CONST 0 :: JUMPC (w, lab) :: _ ->
+    | CONST 0 :: JUMPC (w, lab) :: _ ->
         replace 2 [JUMPCZ (w, lab)]
     | DUP 0 :: LOADW :: LDNW n :: TYPE "Integer" :: CALLW 2 :: LDNW 4 :: JUMPCZ (_, lab) :: _ when n = 12 || n >= 52 ->
         replace 7 [LDNW 4; SWAP; LDNW 4; JUMPC(get_op n, lab)]
     | DUP 0 :: LOADW :: LDNW n :: TYPE "Integer" :: STKMAP _ :: CALLW 2 :: LDNW 4 :: JUMPCZ (_, lab) :: _ when n = 12 || n >= 52 ->
-        replace 8 [LDNW 4; SWAP; LDNW 4; JUMPC(get_op n, lab)]*)
+        replace 8 [LDNW 4; SWAP; LDNW 4; JUMPC(get_op n, lab)]
     | DUP 0 :: LOADW :: LDNW 12 :: TYPE "Object" :: CALLW 2 :: LDNW 4 :: JUMPCZ (_, lab) :: _  ->
         replace 7 [JUMPC(Neq, lab)]
     | DUP 0 :: LOADW :: LDNW 12 :: TYPE "Object" :: STKMAP _ :: CALLW 2 :: LDNW 4 :: JUMPCZ (_, lab) :: _  ->
@@ -186,7 +184,7 @@ let ruleset replace =
 
     | LINE n :: LABEL a :: _ ->
         replace 2 [LABEL a; LINE n]
-    | LINE n :: LINE m :: _ ->
+    | LINE _ :: LINE _ :: _ ->
         replace 1 []
     | LABEL a :: LABEL b :: _ ->
         equate a b; replace 2 [LABEL a]
@@ -198,13 +196,13 @@ let ruleset replace =
         replace 2 [JUMPCZ (opposite w, b)]
     | JUMP a :: LABEL b :: _ when same_lab a b ->
         replace 1 []
-    | JUMP a :: LABEL b :: _ ->
+    | JUMP _ :: LABEL _ :: _ ->
         ()
     | JUMP a :: _ :: _ ->
         replace 2 [JUMP a]
-    | RETURN s :: END :: _ ->
+    | RETURN _ :: END :: _ ->
         ()
-    | RETURN s :: LABEL a :: _ ->
+    | RETURN _ :: LABEL _ :: _ ->
         ()
     | RETURN s :: _ :: _ ->
         replace 2 [RETURN s]

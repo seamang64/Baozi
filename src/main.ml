@@ -17,7 +17,6 @@ let main () =
   let in_chan = open_in in_file in
   let lexbuf = Lexing.from_channel in_chan in
   Source.init in_file in_chan;
-  ignore (Parsing.set_trace (true));
 
   let prog =
     try Parser.program Lexer.token lexbuf with
